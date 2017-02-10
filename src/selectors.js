@@ -1,6 +1,27 @@
+import createSelector from './createSelector';
+
+// export const $value = (value) => {
+//   return createSelector({
+//     transform: (key, object, next, path) => {
+//       return value;
+//     }
+//   });
+// };
+
+const __$value = createSelector({
+  transform: (selector, object, next, path) => {
+    return selector[1];
+  }
+});
+
+export const $value = (value) => {
+  return [__$value, value];
+};
+
+/*
 import objectAssign from 'object-assign';
 
-export default {
+export const $values = {
   select: (object, remaining, select) => {
     const values = Object.keys(object).map(key => object[key]);
     const results = values.map(item => select(remaining, item));
@@ -27,3 +48,4 @@ export default {
     }, object);
   }
 };
+*/

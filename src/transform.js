@@ -1,8 +1,16 @@
+/*
 import invariant from 'invariant';
 import objectAssign from 'object-assign';
+import isStringPath from './isStringPath';
+import setIn from './methods/setIn';
 
-const transform = (path, update, object) => {
+const transform = (object, path, update) => {
   invariant(Array.isArray(path), 'Path to transform must be an array.');
+  if (isStringPath) {
+    if (typeof update !== 'function') {
+      return setIn(object, path);
+    }
+  }
   if (path.length === 0) {
     if (typeof update === 'function') {
       return update(object);
@@ -12,12 +20,12 @@ const transform = (path, update, object) => {
   const selector = path[0];
   const remaining = path.slice(1);
   // transform property
-  if (typeof selector === 'string') {
+  if (typeof selector === 'string' || typeof selector === 'number') {
     if (!object || typeof object !== 'object') {
       return object;
     }
     const value = object[selector];
-    const newValue = transform(remaining, update, object[selector]);
+    const newValue = transform(object[selector], remaining, update);
     if (value === newValue) {
       return object;
     }
@@ -25,7 +33,7 @@ const transform = (path, update, object) => {
   // transform predicate
   } else if (typeof selector === 'function') {
     if (selector(object)) {
-      return transform(remaining, update, object);
+      return transform(object, remaining, update);
     }
     return object;
   // transform custom
@@ -36,3 +44,4 @@ const transform = (path, update, object) => {
 };
 
 export default transform;
+*/

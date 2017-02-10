@@ -4,7 +4,6 @@ import exists from './exists';
 import parseKeyPath from './parseKeyPath';
 
 export const get = (thing, keys, defaultValue) => {
-  let context = null;
   let keyIndex = 0;
 
   if (!exists(keys)) {
@@ -17,17 +16,7 @@ export const get = (thing, keys, defaultValue) => {
 
   while (keyIndex < keys.length && exists(thing)) {
     let key = keys[keyIndex];
-    if (Array.isArray(key)) {
-      if (typeof thing === 'function') {
-        thing = thing.apply(context, key);
-        context = null;
-      } else {
-        thing = undefined;
-      }
-    } else {
-      context = thing;
-      thing = thing[key];
-    }
+    thing = thing[key];
     keyIndex++;
   }
 

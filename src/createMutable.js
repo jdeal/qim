@@ -1,5 +1,42 @@
 import objectAssign from 'object-assign';
 
+function isInt(value) {
+  var x;
+  return isNaN(value) ? !1 : (x = parseFloat(value), (0 | x) === x);
+}
+
+const setIn = (obj, path, value) => {
+  var nextObj, pathIndex, pathSetIndex, key, nextKey, setKey;
+  var subObj = obj;
+
+  if (path == null || typeof path !== 'object' || typeof path.length !== 'number') {
+    throw new TypeError('getIn requires array-like object for path');
+  }
+
+  if (!isMutable(obj)) {
+    return obj;
+  }
+
+  for (pathIndex = 0; pathIndex < path.length - 1; pathIndex++) {
+    key = path[pathIndex];
+    nextObj = subObj.get(key);
+    if (!isMutable(nextObj)) {
+      nextKey = path[pathIndex + 1];
+      if (isInt(nextKey)) {
+        subObj.set(key, []);
+      } else {
+        subObj.set(key, {});
+      }
+      nextObj = subObj.get(key);
+    }
+    subObj = nextObj;
+  }
+
+  subObj.set(path[path.length - 1], value);
+
+  return obj;
+};
+
 class Mutable {
 
   constructor(obj, parent, key) {
@@ -62,18 +99,18 @@ class Mutable {
     return this;
   }
 
+  setIn(path, value) {
+    return setIn(this, path, value);
+  }
+
   value() {
     return this._obj;
   }
 
 }
 
-export const isMutable = (object) => {
-  return object instanceof Mutable;
-};
+export const isMutable = (object) => object instanceof Mutable;
 
-const createMutable = obj => {
-  return new Mutable(obj);
-};
+const createMutable = (obj) => new Mutable(obj);
 
 export default createMutable;

@@ -3,7 +3,7 @@ import test from 'ava';
 import 'babel-core/register';
 
 import select from 'im-js/src/select';
-import $values from 'im-js/src/selectors/values';
+import {$values} from 'im-js/src/selectors';
 
 test('select from primitive', t => {
   t.deepEqual(
@@ -24,7 +24,7 @@ test('select from primitive', t => {
   );
 });
 
-test('select from from object', t => {
+test('select from object', t => {
   t.deepEqual(
     select([], {x: 1}),
     [{x: 1}]
