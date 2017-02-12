@@ -1,47 +1,86 @@
-/*
-import invariant from 'invariant';
 import objectAssign from 'object-assign';
-import isStringPath from './isStringPath';
-import setIn from './methods/setIn';
 
-const transform = (object, path, update) => {
-  invariant(Array.isArray(path), 'Path to transform must be an array.');
-  if (isStringPath) {
-    if (typeof update !== 'function') {
-      return setIn(object, path);
-    }
-  }
-  if (path.length === 0) {
-    if (typeof update === 'function') {
-      return update(object);
-    }
-    return update;
-  }
-  const selector = path[0];
-  const remaining = path.slice(1);
-  // transform property
-  if (typeof selector === 'string' || typeof selector === 'number') {
-    if (!object || typeof object !== 'object') {
-      return object;
-    }
-    const value = object[selector];
-    const newValue = transform(object[selector], remaining, update);
-    if (value === newValue) {
-      return object;
-    }
-    return objectAssign({}, object, {[selector]: newValue});
-  // transform predicate
-  } else if (typeof selector === 'function') {
-    if (selector(object)) {
-      return transform(object, remaining, update);
-    }
+import isInteger from './utils/isInteger';
+import {transformKey, navigatorRef} from './createNavigator';
+
+const transformEach = (path, object, pathIndex) => {
+  if (pathIndex >= path.length) {
     return object;
-  // transform custom
-  } else if (selector && typeof selector.select === 'function') {
-    return selector.transform(object, remaining, update, transform);
   }
-  throw new Error('invalid selector');
+  const nav = path[pathIndex];
+  if (!nav || typeof nav === 'string' || typeof nav === 'number' || typeof nav === 'boolean') {
+    if (object && typeof object === 'object') {
+      const value = object[nav];
+      const newValue = transformEach(path, value, pathIndex + 1);
+      if (value === newValue) {
+        return object;
+      }
+      if (Array.isArray(object)) {
+        const newObject = object.slice(0);
+        newObject[nav] = newValue;
+        return newObject;
+      }
+      return objectAssign({}, object, {[nav]: newValue});
+    } else {
+      // if (pathIndex === 0) {
+      //   return object;
+      // }
+      object = isInteger(nav) ? [] : {};
+      const value = object[nav];
+      const newValue = transformEach(path, value, pathIndex + 1);
+      object[nav] = newValue;
+      return object;
+    }
+  }
+  if (typeof nav === 'function') {
+    if (nav(object)) {
+      return transformEach(path, object, pathIndex + 1);
+    } else {
+      return object;
+    }
+  }
+  let transformFn;
+  if (nav[transformKey]) {
+    transformFn = nav[transformKey];
+  } else {
+    if (nav[0] === navigatorRef) {
+      const childSelector = nav[1];
+      if (childSelector && childSelector[transformKey]) {
+        transformFn = childSelector[transformKey];
+      }
+    } else {
+      // Transform multiple sub paths.
+      if (isInteger(nav.length)) {
+        let newObject = object;
+        for (let subPathIndex = 0; subPathIndex < nav.length; subPathIndex++) {
+          let subPath = nav[subPathIndex];
+          if (!subPath || typeof subPath !== 'object' || typeof subPath.length !== 'number' || subPath[0] === navigatorRef) {
+            subPath = [subPath];
+          }
+          newObject = transformEach(subPath, newObject, 0);
+        }
+        return newObject;
+      }
+    }
+  }
+  if (!transformFn) {
+    throw new Error(`invalid navigator at path index ${pathIndex}`);
+  }
+  return transformFn(nav, object, path, pathIndex, transformEach);
+};
+
+const transform = function (path, object) {
+  if (!path || typeof path !== 'object' || typeof path.length !== 'number') {
+    path = [path];
+  }
+  if (arguments.length > 1) {
+    return transformEach(path, object, 0);
+  } else if (arguments.length === 1) {
+    return (_object) => {
+      return transformEach(path, _object, 0);
+    };
+  }
+  return transform;
 };
 
 export default transform;
-*/

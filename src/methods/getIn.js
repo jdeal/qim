@@ -7,6 +7,7 @@ const getIn = (obj, path, defaultValue) => {
 
   while (pathIndex < path.length && obj !== null) {
     key = path[pathIndex];
+    //const isPrimitive = !key || typeof key === 'string' || typeof key === 'number' || typeof key === 'boolean';
     obj = obj[key];
     pathIndex++;
   }

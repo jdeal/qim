@@ -1,10 +1,9 @@
 import Benchmark from 'benchmark';
 import _ from 'lodash';
-import fp from 'lodash/fp';
 
 const suite = new Benchmark.Suite();
 
-import select, {selectInline, createSelectFn} from '../src/select';
+import select from '../src/select';
 import getIn from '../src/methods/getIn';
 
 const state = {
@@ -24,8 +23,6 @@ const safeGet = (obj, fn) => {
     return undefined;
   }
 };
-
-const selectFirstName = createSelectFn(['users', 'joe', 'name', 'first']);
 
 suite
   // .add('native', () => {
@@ -47,14 +44,8 @@ suite
   .add('getIn', () => {
     const result = getIn(state, ['users', 'joe', 'name', 'first']);
   })
-  .add('select inline', () => {
-    const result = selectInline(['users', 'joe', 'name', 'first'], state);
-  })
   .add('select', () => {
     const result = select(['users', 'joe', 'name', 'first'], state);
-  })
-  .add('select cached', () => {
-    const result = selectFirstName(state);
   })
   .on('complete', function() {
     //console.log(this);
