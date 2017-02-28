@@ -3,7 +3,6 @@ import Benchmark from 'benchmark';
 const suite = new Benchmark.Suite();
 
 import update from 'immutability-helper';
-import zupdate from '../external/update';
 import transform from '../src/transform';
 import $set from '../src/navigators/$set';
 
@@ -29,11 +28,11 @@ const state = {
   }
 };
 
-const newState = transform(['entities', 'user', 'joe', 'name', 'first', $set('Joseph')], state);
-
-console.log(JSON.stringify(newState, null, 2));
-
-process.exit();
+// const newState = transform(['entities', 'user', 'joe', 'name', 'first', $set('Joseph')], state);
+//
+// console.log(JSON.stringify(newState, null, 2));
+//
+// process.exit();
 
 suite
   .add('spread', () => {
@@ -58,23 +57,6 @@ suite
         // }
       }
     };
-  })
-  .add('zupdate', () => {
-    const newState = zupdate(state, {
-      entities: {
-        user: {
-          joe: {
-            name: {
-              first: {$set: 'Joseph'},
-              //last: {$set: 'Foozle'}
-            }
-          }
-        },
-        // friend: {
-        //   joe: {$push: ['mary']}
-        // }
-      }
-    });
   })
   .add('update', () => {
     const newState = update(state, {

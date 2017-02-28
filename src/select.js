@@ -9,7 +9,7 @@ const selectEach = (path, object, pathIndex) => {
     if (object && typeof object === 'object') {
       return selectEach(path, object[nav], pathIndex + 1);
     } else {
-      return selectEach(path, undefined, pathIndex + 1);
+      return [undefined];
     }
   }
   if (typeof nav === 'function') {
