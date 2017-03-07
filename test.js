@@ -1,21 +1,31 @@
-import traverse from './src/traverse';
-import {isNone} from './src/none';
+import selectIn from './src/selectIn';
+import getIn from './src/getIn';
+import updateIn from './src/updateIn';
+import setIn from './src/setIn';
 
-const obj = {x: 1, y: 2};
+//const state = {name: {first: 'Joe'}};
 
-for (let key of obj) {
-  console.log(key);
-}
-
-const result = traverse(['x', 'y', value => value % 2 === 0], (data) => {
-  if (isNone(data)) {
-    return [];
+const state = {
+  users: {
+    joe: {
+      name: {
+        first: 'Joe'
+      }
+    }
   }
-  return data;
-}, {
-  x: {
-    y: 1
-  }
-});
+};
 
-console.log(result);
+//console.log(getIn(['name', 'first', first => first.length > 5], state));
+
+//console.log(updateIn(['a',() => false,'b'], () => 5, {}));
+
+
+//console.log(setIn(['users', 'joe', 'name', 'first'], 'Joseph', state));
+
+//console.log(updateIn(['users', 'joe', 'name', 'first'], () => 'Joseph', state))
+//
+
+
+const same = updateIn(['users', 'joe', 'name', 'first'], () => 'Joe', state)
+
+console.log(same === state);

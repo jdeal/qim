@@ -1,5 +1,5 @@
 export const selectKey = '@@im/select';
-export const transformKey = '@@im/transform';
+export const updateKey = '@@im/transform';
 export const navigatorRef = {};
 
 const createNavigator = (config) => {
@@ -10,7 +10,7 @@ const createNavigator = (config) => {
   }
 
   if (typeof config.transform === 'function') {
-    nav[transformKey] = config.transform;
+    nav[updateKey] = config.transform;
   }
 
   return nav;
