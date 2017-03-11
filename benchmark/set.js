@@ -3,6 +3,7 @@ import fp from 'lodash/fp';
 
 const suite = new Benchmark.Suite();
 
+import set from '../src/set';
 import setIn from '../src/setIn';
 import updateIn from '../src/updateIn';
 
@@ -18,7 +19,26 @@ const state = {
 
 //process.exit();
 
+const name = {
+  first: 'Joe',
+  last: 'Foo',
+
+};
+
 suite
+  .add('flow with set', () => {
+    let newName = set('first', 'Joseph', name);
+    set('last', 'Foozle', newName);
+    set('last', 'Foozle', newName);
+    set('last', 'Foozle', newName);
+  })
+  .add('flow with set', () => {
+    let newName = set('first', 'Joseph', name);
+    set('last', 'Foozle', newName, true);
+    set('last', 'Foozle', newName, true);
+    set('last', 'Foozle', newName, true);
+  })
+/*
   .add('lodash set', () =>
     fp.set(['users', 'joe', 'name', 'first'], 'Joe', state)
   )
@@ -28,6 +48,7 @@ suite
   .add('updateIn', () =>
     updateIn(['users', 'joe', 'name', 'first'], () => 'Joe', state)
   )
+*/
   .on('complete', function() {
     //console.log(this);
     console.log(this.map(bench => {

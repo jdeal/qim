@@ -1,11 +1,13 @@
 import {curry3} from './utils/curry';
 
-const set = (key, value, obj, hasMutation) => {
+const update = (key, modify, obj, hasMutation) => {
   if (obj == null || typeof obj !== 'object') {
     return obj;
   }
 
-  if (obj[key] === value) {
+  const newValue = modify(obj[key]);
+
+  if (obj[key] === newValue) {
     return obj;
   }
 
@@ -17,9 +19,9 @@ const set = (key, value, obj, hasMutation) => {
     }
   }
 
-  obj[key] = value;
+  obj[key] = newValue;
 
   return obj;
 };
 
-export default curry3(set);
+export default curry3(update);

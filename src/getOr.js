@@ -1,7 +1,11 @@
-import get from './get';
+import {curry3} from './utils/curry';
 
 const getOr = (defaultValue, key, obj) => {
-  obj = get(key, obj);
+  if (obj == null) {
+    return defaultValue;
+  }
+
+  obj = obj[key];
 
   if (typeof obj === 'undefined') {
     return defaultValue;
@@ -10,4 +14,4 @@ const getOr = (defaultValue, key, obj) => {
   return obj;
 };
 
-export default getOr;
+export default curry3(getOr);

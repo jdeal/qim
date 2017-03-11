@@ -1,15 +1,18 @@
 import objectAssign from 'object-assign';
 
 import createNavigator from '../createNavigator';
+import reduceSequence from '../utils/reduceSequence';
 
-const $keys = createNavigator({
-  transform: (nav, object, path, pathIndex, next) => {
-    if (!object || typeof object !== 'object') {
-      object = [object];
-    }
+const $eachKey = createNavigator({
+  select: (nav, object, next) => {
+    return reduceSequence((result, key) => {
+      return next(key);
+    }, undefined, object);
+  },
+  update: (nav, object, next) => {
     const isArray = Array.isArray(object);
-    return Object.keys(object).reduce((result, key) => {
-      const newKey = next(path, key, pathIndex + 1);
+    return reduceSequence((result, key) => {
+      const newKey = next(key);
       if (newKey !== key) {
         if (object === result) {
           if (isArray) {
@@ -24,8 +27,8 @@ const $keys = createNavigator({
         result[newKey] = object[key];
       }
       return result;
-    }, object);
+    }, object, object);
   }
 });
 
-export default $keys;
+export default $eachKey;

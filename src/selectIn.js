@@ -11,9 +11,14 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
   const nav = path[pathIndex];
   if (!nav || typeof nav === 'string' || typeof nav === 'number' || typeof nav === 'boolean') {
     if (object && typeof object === 'object') {
-      return selectEach(state, resultFn, path, object[nav], pathIndex + 1);
+      const subObject = object[nav];
+      if (typeof subObject === 'undefined' && !(nav in object)) {
+        return none;
+      }
+      return selectEach(state, resultFn, path, subObject, pathIndex + 1);
     } else {
-      return resultFn(state, undefined);
+      return none;
+      //return resultFn(state, undefined);
     }
   }
   if (typeof nav === 'function') {
@@ -44,9 +49,6 @@ continueSelectEach = (state, resultFn, selectFn, nav, object, path, pathIndex) =
   selectFn(nav, object, (subObject) => selectEach(state, resultFn, path, subObject, pathIndex + 1));
 
 const selectInResultFn = (state, result) => {
-  if (state.length === 0) {
-    return [result];
-  }
   state.push(result);
   return state;
 };
@@ -55,7 +57,9 @@ const selectIn = (path, object) => {
   if (!path || typeof path !== 'object' || typeof path.length !== 'number') {
     path = [path];
   }
-  return selectEach([], selectInResultFn, path, object, 0);
+  const result = [];
+  selectEach(result, selectInResultFn, path, object, 0);
+  return result;
 };
 
 export default curry2(selectIn);

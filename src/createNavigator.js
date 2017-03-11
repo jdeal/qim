@@ -9,8 +9,8 @@ const createNavigator = (config) => {
     nav[selectKey] = config.select;
   }
 
-  if (typeof config.transform === 'function') {
-    nav[updateKey] = config.transform;
+  if (typeof config.update === 'function') {
+    nav[updateKey] = config.update;
   }
 
   return nav;

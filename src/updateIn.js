@@ -8,6 +8,13 @@ let continueUpdateEach;
 
 export const updateEach = (resultFn, path, object, pathIndex) => {
   if (pathIndex >= path.length) {
+    if (Array.isArray(resultFn)) {
+      let result = object;
+      resultFn.forEach((update) => {
+        result = update(result);
+      });
+      return result;
+    }
     return resultFn(object);
   }
   const nav = path[pathIndex];
