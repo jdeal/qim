@@ -1,4 +1,5 @@
 import Benchmark from 'benchmark';
+import _ from 'lodash';
 
 const suite = new Benchmark.Suite();
 
@@ -48,17 +49,86 @@ const punishBalance = (balance) => balance - 10;
 //   , null, 2)
 // );
 //
+// console.log(
+//   updateIn(['users', $eachValue], [
+//     set('balance', 0),
+//     set('prizes', [])
+//     // updateIn(['name', 'first'], toUpperCase),
+//     // updateIn([hasIn(['balance', isBalanceHigh]), 'prizes'], push('bear')),
+//     // updateIn(['balance', isBalanceLow], punishBalance)
+//   ], state)
+// );
+//
 // process.exit();
 
 // 98,342
 //
 // 172,437
+//
+
+const value = {x: 1, y: 2};
+
+_.range(100).forEach((key) => {
+  //value[`_${key}`] = key;
+  Object.keys(state.users).forEach(key => {
+    state.users[key][key] = key;
+  });
+});
+
+//console.log(value)
+
+
+
+// const mutator = createMutator(value);
+//
+// //mutator.set('x', 2);
+// //mutator.set('y', 3);
+//
+// set('x', 2, mutator);
+// set('y', 3, mutator);
+//
+// console.log(mutator.value());
+// //console.log(value);
+//
+// process.exit();
+//
+
+
+//console.log(set['@@im-js/canMutate']);
+
+    // updateIn(['users', $eachValue], [
+    //   set('balance', 0),
+    //   set('prizes', []),
+    //   // set('balance', 1),
+    //   // set('prizes', ['foo'])
+    //   // updateIn(['name', 'first'], toUpperCase),
+    //   // updateIn([hasIn(['balance', isBalanceHigh]), 'prizes'], push('bear')),
+    //   // updateIn(['balance', isBalanceLow], punishBalance)
+    // ], state)
+    //
+    // process.exit();
 
 suite
+  // .add('mutable', () => {
+  //   const mutator = createMutator(value);
+  //
+  //   set('x', 2, mutator);
+  //   set('y', 3, mutator);
+  //   //set('z', 3, mutator);
+  //   const newValue = mutator.value();
+  // })
+  // .add('immutable', () => {
+  //   let newValue = value;
+  //   newValue = set('x', 2, newValue);
+  //   newValue = set('y', 3, newValue);
+  //   //newValue = set('z', 4, newValue);
+  // })
   .add('updateIn', () =>
     updateIn(['users', $eachValue], [
       set('balance', 0),
-      set('prizes', [])
+      set('prizes', []),
+      // set('balance', 1),
+      // set('prizes', ['foo'])
       // updateIn(['name', 'first'], toUpperCase),
       // updateIn([hasIn(['balance', isBalanceHigh]), 'prizes'], push('bear')),
       // updateIn(['balance', isBalanceLow], punishBalance)

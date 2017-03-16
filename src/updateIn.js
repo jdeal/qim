@@ -3,16 +3,43 @@ import objectAssign from 'object-assign';
 import isInteger from './utils/isInteger';
 import {updateKey, navigatorRef} from './createNavigator';
 import {curry3} from './utils/curry';
+import mutateMarker from './utils/mutateMarker';
 
 let continueUpdateEach;
 
 export const updateEach = (resultFn, path, object, pathIndex) => {
   if (pathIndex >= path.length) {
     if (Array.isArray(resultFn)) {
-      let result = object;
-      resultFn.forEach((update) => {
-        result = update(result);
-      });
+
+      const flowLength = resultFn.length;
+
+      if (flowLength === 0) {
+        return object;
+      }
+
+      let result = resultFn[0](object);
+
+      for (let i = 1; i < flowLength; i++) {
+        const update = resultFn[i];
+        if (update['@@im-js/canMutate'] === true) {
+          result = update(result, object, mutateMarker);
+        } else {
+          result = update(result);
+        }
+        // if (source) {
+        //   if (update['@@im-js/canMutate'] === true) {
+        //     result = update(result, source);
+        //   } else {
+        //     result = update(result);
+        //   }
+        // } else if (result !== object) {
+        //   source = new Source(object);
+        //   result = update(result, source);
+        // } else {
+        //   result = update(result);
+        // }
+      }
+
       return result;
     }
     return resultFn(object);

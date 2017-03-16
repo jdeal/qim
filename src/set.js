@@ -1,6 +1,7 @@
 import {curry3} from './utils/curry';
+import mutateMarker from './utils/mutateMarker';
 
-const set = (key, value, obj, hasMutation) => {
+const set = (key, value, obj, sourceObj, marker) => {
   if (obj == null || typeof obj !== 'object') {
     return obj;
   }
@@ -9,7 +10,7 @@ const set = (key, value, obj, hasMutation) => {
     return obj;
   }
 
-  if (hasMutation !== true) {
+  if (marker !== mutateMarker || sourceObj === obj) {
     if (Array.isArray(obj)) {
       obj = obj.slice(0);
     } else {
@@ -21,5 +22,7 @@ const set = (key, value, obj, hasMutation) => {
 
   return obj;
 };
+
+set['@@im-js/canMutate'] = true;
 
 export default curry3(set);
