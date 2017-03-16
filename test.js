@@ -23,6 +23,10 @@ const state = {
 
 const print = (obj) => console.log(JSON.stringify(obj, null, 2));
 
+print(
+  updateIn(['users', $eachValue, 'balance', bal => bal >= 1000], bal => bal + 10, state)
+);
+
 // print(
 //   setIn(['users', 'joe', 'name', 'first'], 'Joseph', state)
 // );
