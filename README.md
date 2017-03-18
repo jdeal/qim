@@ -62,7 +62,7 @@ import {$eachValue} from 'qim';
 const newUsers = updateIn([$eachValue, 'balance'], bal => bal + 10);
 ```
 
-Each part of the path in `qim` functions are actually "navigators". Strings navigate to keys. `$eachValue` is a
+Each part of the path in `qim` functions is actually a "navigator". Strings navigate to keys. `$eachValue` is a
 navigator that navigates to each value of an array or object. Kind of like `mapValues` from `lodash`, but navigators in
 `qim` are only worried about what they navigate to, never about anything they don't navigate to. Let's see what that
 means.
