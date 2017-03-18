@@ -21,13 +21,13 @@ export const updateEach = (resultFn, path, object, pathIndex) => {
 
       for (let i = 1; i < flowLength; i++) {
         const update = resultFn[i];
-        if (update['@@im-js/canMutate'] === true) {
+        if (update['@@qim/canMutate'] === true) {
           result = update(result, object, mutateMarker);
         } else {
           result = update(result);
         }
         // if (source) {
-        //   if (update['@@im-js/canMutate'] === true) {
+        //   if (update['@@qim/canMutate'] === true) {
         //     result = update(result, source);
         //   } else {
         //     result = update(result);

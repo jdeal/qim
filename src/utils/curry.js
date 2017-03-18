@@ -1,6 +1,6 @@
 const forwardCanMutate = (parentFn, childFn) => {
-  if (parentFn['@@im-js/canMutate'] === true) {
-    childFn['@@im-js/canMutate'] = true;
+  if (parentFn['@@qim/canMutate'] === true) {
+    childFn['@@qim/canMutate'] = true;
   }
   return childFn;
 };

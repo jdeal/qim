@@ -23,6 +23,6 @@ const set = (key, value, obj, sourceObj, marker) => {
   return obj;
 };
 
-set['@@im-js/canMutate'] = true;
+set['@@qim/canMutate'] = true;
 
 export default curry3(set);

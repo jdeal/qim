@@ -1,4 +1,4 @@
-# im-js
+# qim
 
 Functional style immutability for plain JS with special query sauce.
 
@@ -28,7 +28,7 @@ Think Facebook's immutability helper but:
 `im` has a bunch of helpers to, uh, help you select or update plain JS objects.
 
 ```js
-import {set, setIn, pushIn} from 'im-js';
+import {set, setIn, pushIn} from 'qim';
 
 const users = {
   mary: {
@@ -82,7 +82,7 @@ This is useful if you have some code that sets default values. You can avoid che
 `im` includes an `updateIn` like you might expect, so you can update a value based on a function, like so:
 
 ```js
-import {updateIn} from 'im-js';
+import {updateIn} from 'qim';
 
 const users5 = updateIn(['joe', 'balance'], bal => bal + 10, users4);
 
@@ -118,7 +118,7 @@ const users5 = Object.keys(users4)
 Hmm, that's getting kind of ugly. We have to concern ourselves with other properties we don't care about and also other users we don't care about. Let's use `im`'s special query sauce instead.
 
 ```js
-import {$eachValue} from 'im-js';
+import {$eachValue} from 'qim';
 
 const users5 = updateIn([$eachValue, 'balance', bal => bal >= 1000], bal => bal + 10, users4);
 ```

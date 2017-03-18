@@ -3,11 +3,11 @@ import test from 'ava';
 import 'babel-core/register';
 import fp from 'lodash/fp';
 
-import updateIn from 'im-js/src/updateIn';
-import update from 'im-js/src/update';
-import $eachValue from 'im-js/src/navigators/$eachValue';
-import $eachKey from 'im-js/src/navigators/$eachKey';
-import $eachPair from 'im-js/src/navigators/$eachPair';
+import updateIn from 'qim/src/updateIn';
+import update from 'qim/src/update';
+import $eachValue from 'qim/src/navigators/$eachValue';
+import $eachKey from 'qim/src/navigators/$eachKey';
+import $eachPair from 'qim/src/navigators/$eachPair';
 
 const increment = value => value + 1;
 const isEven = value => value % 2 === 0;

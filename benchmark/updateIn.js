@@ -94,7 +94,7 @@ _.range(100).forEach((key) => {
 //
 
 
-//console.log(set['@@im-js/canMutate']);
+//console.log(set['@@qim/canMutate']);
 
     // updateIn(['users', $eachValue], [
     //   set('balance', 0),

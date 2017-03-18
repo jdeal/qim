@@ -1,5 +1,5 @@
 {
-  "name": "im-js",
+  "name": "qim",
   "version": "0.0.0",
   "description": "Immutable helpers for plain JS objects and arrays",
   "main": "index.js",

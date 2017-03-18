@@ -1,6 +1,6 @@
 class Source {
   constructor(value) {
-    this['@@im-js/value'] = value;
+    this['@@qim/value'] = value;
   }
 }
 
