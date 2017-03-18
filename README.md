@@ -4,32 +4,9 @@ Functional style immutability for plain JS with special query sauce.
 
 ## What?
 
-Think lodash/fp or Ramda but:
-
-- Smaller lib focused only on making it simple to select from and update plain JS objects and arrays.
-- Makes sure to share structure whenever possible and avoid cloning an object if it doesn't change.
-- Special query sauce makes it easy (and reasonably performant) to select from and update multiple paths.
-
-Think Immutable.js but:
-
-- Just helper functions, no new prototype here. Easy to compose with your own functions.
-- Your data remains plain JS, so no cognitive or performance overhead of marshaling data back and forth to compose with other plain JS functions.
-- Functions are data last and curried. Again, just to facilitate composition.
-- Special query sauce makes it easy (and reasonably performant) to select from and update multiple paths.
-
-Think Facebook's immutability helper but:
-
-- Without the weird `$` properties. More concise path syntax instead.
-- Avoids cloning objects that don't change.
-- Special query sauce, yada yada.
-
-## Show me
-
-`im` has a bunch of helpers to, uh, help you select or update plain JS objects.
+Let's start with some data like this:
 
 ```js
-import {set, setIn, pushIn} from 'qim';
-
 const users = {
   mary: {
     name: {
@@ -38,100 +15,111 @@ const users = {
     },
     friends: [],
     balance: 1000
+  },
+  {
+    name: {
+      first: 'Joe',
+      last: 'Foo'
+    },
+    friends: [],
+    balance: 100
   }
 };
-
-const users1 = set('joe', {
-  name: {
-    first: 'Joe',
-    last: 'Foo'
-  },
-  friends: [],
-  balance: 100
-}, users);
-
-const users2 = setIn(['joe', 'name', 'first'], 'Joseph', users1);
-
-const users3 = pushIn(['joe', 'friends'], 'mary');
 ```
 
-At this point, you probably know the immutability and structural sharing drill. These are both true:
+`qim` has a bunch of helpers like this that make it easy to reach in and modify an object:
 
 ```js
-users1.mary === users3.mary
+import {setIn, updateIn, pushIn} from 'qim';
 
-users1.joe.name !== users3.joe.name
+const newUsers1 = setIn(['joe', 'name', 'first'], 'Joseph', users);
+const newUsers2 = updateIn(['mary', 'balance'], bal => bal + 10, users);
+const newUsers3 = pushIn(['joe', 'friends'], 'mary', users);
 ```
 
-If we try to set a value to what it's already set:
+And of course, these modifications are immutable, but they share unmodified branches:
 
 ```js
-const users4 = setIn(['mary', 'name', 'first'], 'Mary', users3);
+console.log(newUsers1 !== users);
+// true
+console.log(newUsers1.mary === users.mary);
+// true
 ```
 
-Then nothing changes:
+Changing something to its current value is a no-op:
 
 ```js
-users1.mary === users3.mary
+const newUsers = setIn(['mary', 'name', 'first'], 'Mary', users);
+console.log(newUsers === users);
+// true
 ```
 
-This is useful if you have some code that sets default values. You can avoid checking for whether or not the values are set and just go ahead and update them. `im` will check them for you.
-
-## Okay, what about that special sauce?
-
-`im` includes an `updateIn` like you might expect, so you can update a value based on a function, like so:
+Okay, now let's make things more interesting. Let's increase everyone's balance by 10.
 
 ```js
-import {updateIn} from 'qim';
+import {$eachValue} from 'qim';
 
-const users5 = updateIn(['joe', 'balance'], bal => bal + 10, users4);
-
-// Joe's balance is now 110.
+const newUsers = updateIn([$eachValue, 'balance'], bal => bal + 10);
 ```
 
-But what if we want to increase everyone's balance by 10? Hmm... traditionally, we'd have to do this instead.
+Each part of the path in `qim` functions are actually "navigators". Strings navigate to keys. `$eachValue` is a
+navigator that navigates to each value of an array or object. Kind of like `mapValues` from `lodash`, but navigators in
+`qim` are only worried about what they navigate to, never about anything they don't navigate to. Let's see what that
+means.
+
+Let's say we want to increase everyone's balance by 10, but only if the balance is 500 or greater. Hmm, that sounds like
+a map and a filter. But we want to modify the object, so we can't really filter. We have to do something like this:
 
 ```js
-const users5 = Object.keys(users4)
-  .map(username => ({
-    ...users4[username],
-    balance: users4[username].balance + 10
-  }))
-```
+import {mapValues} from 'lodash/fp';
 
-Unfortunately, we have to worry about other properties besides balance. What if we want to boost the balance of only customers with a balance of 1000 or more? Sounds like a filter and a map? Hmm, no, we can't filter, because we'll lose our object. So we have to do something like this:
-
-```js
-const users5 = Object.keys(users4)
-  .map(username => {
-    const user = users4[username];
-    if (user.balance < 1000) {
+const newUsers = mapValues(
+  user => {
+    if (user.balance < 500) {
       return user;
     }
     return {
       ...user,
       balance: user.balance + 10
     };
-  });
+  }
+, users);
 ```
 
-Hmm, that's getting kind of ugly. We have to concern ourselves with other properties we don't care about and also other users we don't care about. Let's use `im`'s special query sauce instead.
+This is a simple example, but there are already a couple problems here. We have to worry about returning users that we
+don't actually touch, _and_ we have to worry about the rest of the user properties that we don't touch. With `qim`, you
+can do this instead:
 
 ```js
-import {$eachValue} from 'qim';
-
-const users5 = updateIn([$eachValue, 'balance', bal => bal >= 1000], bal => bal + 10, users4);
+const newUsers = updateIn([$eachValue, 'balance', bal => bal >= 500], bal => bal + 10, users);
 ```
 
-Whoa, what's going on there? Let's spread that out to explain:
+Here we introduce a predicate selector. Any function that appears in a path acts as a filter, and we only continue
+navigating if the predicate passes. But we don't have to worry about the unfiltered users. Those remain unchanged. And
+we only have to worry about the `balance` property. Other properties are also unchanged.
+
+These navigators are useful for selecting data too.
 
 ```js
-const users5 = updateIn([
-  $eachValue,          // This is a "navigator", and this one says to apply the rest of this query to each value.
-  'balance'            // Navigate into the `'balance'` key.
-  bal => bal >= 1000,  // This is a predicate which says to only keep going if balance >= 1000.
-],
-  bal => bal + 10,     // Update the balance by 10. This only applies to the balances we actually navigated to.
-  users4
-);
+import {selectIn} from 'qim';
+
+const names = selectIn([$eachValue, 'name', 'first'], users);
+// ['Joe', 'Mary']
 ```
+
+Let's get a little more fancy. Let's grab all the first names of people that have high balances.
+
+```js
+import {hasIn} from 'qim';
+
+// All functions are curried, so you can leave off the data to get a function.
+const hasHighBalance = hasIn(['balance', bal => bal >= 500]);
+
+const names = selectIn([$eachValue, hasHighBalance, 'name', 'first']);
+// ['Mary']
+```
+
+`hasIn` checks if a selection returns anything. We use currying to create a function for checking if a user's balance
+is high, and we use that as a predicate to select first names of users with a high balance.
+
+Cool, huh?
