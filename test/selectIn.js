@@ -20,11 +20,11 @@ test('selectIn from primitive', t => {
   );
   t.deepEqual(
     selectIn(['x'], 1),
-    [undefined]
+    []
   );
   t.deepEqual(
     selectIn(['x'], null),
-    [undefined]
+    []
   );
 });
 
