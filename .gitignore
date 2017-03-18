@@ -24,8 +24,4 @@ coverage
 .node_repl_history
 
 # Build directory
-/lib
-/react-redux-element-portal/lib
-/react-redux-element-portal/package.json
-/react-redux-element-portal/node_modules
-/test/helpers/ReduxElementPortal.js
+/build

@@ -4,7 +4,7 @@ const suite = new Benchmark.Suite();
 
 import update from 'immutability-helper';
 import transform from '../src/transform';
-import $set from '../src/navigators/$set';
+import $set from '../src/$set';
 
 const state = {
   entities: {

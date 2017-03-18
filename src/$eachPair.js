@@ -1,7 +1,7 @@
 import objectAssign from 'object-assign';
 
-import createNavigator from '../createNavigator';
-import reduceSequence from '../utils/reduceSequence';
+import createNavigator from './createNavigator';
+import reduceSequence from './utils/reduceSequence';
 
 const $eachPair = createNavigator({
   select: (nav, object, next) => {

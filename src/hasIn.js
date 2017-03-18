@@ -18,13 +18,17 @@ const hasIn = (path, obj) => {
   }
 
   while (pathIndex < path.length) {
-    if (obj == null) {
-      return false;
-    }
     key = path[pathIndex];
     if (key && typeof key !== 'string' && typeof key !== 'number' && typeof key !== 'boolean') {
-      const selectResult = unreduced(selectEach(null, selectOneResultFn, path, obj, pathIndex));
+      let selectResult = selectEach(null, selectOneResultFn, path, obj, pathIndex);
+      if (typeof selectResult === 'undefined') {
+        return false;
+      }
+      selectResult = unreduced(selectResult);
       return isNone(selectResult) ? false : true;
+    }
+    if (obj == null) {
+      return false;
     }
     parentObj = obj;
     obj = obj[key];
@@ -35,7 +39,7 @@ const hasIn = (path, obj) => {
     if (path.length === 0) {
       return true;
     }
-    if (!(key in parentObj)) {
+    if (!parentObj || typeof parentObj !== 'object' || !(key in parentObj)) {
       return false;
     }
   }

@@ -2,10 +2,12 @@ import test from 'ava';
 
 import 'babel-core/register';
 
-import selectIn from 'qim/src/selectIn';
-import $eachValue from 'qim/src/navigators/$eachValue';
-import $eachKey from 'qim/src/navigators/$eachKey';
-import $eachPair from 'qim/src/navigators/$eachPair';
+import {
+  selectIn,
+  $eachValue,
+  $eachKey,
+  $eachPair
+} from 'qim/src';
 
 const isEven = value => value % 2 === 0;
 

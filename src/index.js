@@ -11,4 +11,7 @@ export {default as set} from './set';
 export {default as setIn} from './setIn';
 export {default as update} from './update';
 export {default as updateIn} from './updateIn';
-export {default as $eachValue} from './navigators/$eachValue';
+
+export {default as $eachKey} from './$eachKey';
+export {default as $eachPair} from './$eachPair';
+export {default as $eachValue} from './$eachValue';

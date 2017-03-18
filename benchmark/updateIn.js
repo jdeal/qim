@@ -7,7 +7,7 @@ import updateIn from '../src/updateIn';
 import hasIn from '../src/hasIn';
 import push from '../src/push';
 import set from '../src/set';
-import $eachValue from '../src/navigators/$eachValue';
+import $eachValue from '../src/$eachValue';
 const toUpperCase = s => s.toUpperCase();
 
 const state = {

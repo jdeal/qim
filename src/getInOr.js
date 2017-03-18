@@ -15,11 +15,15 @@ const getInOr = (defaultValue, path, obj) => {
     throw new TypeError('getIn requires array-like object for path');
   }
 
-  while (pathIndex < path.length && obj !== null) {
+  while (pathIndex < path.length) {
     key = path[pathIndex];
     if (key && typeof key !== 'string' && typeof key !== 'number' && typeof key !== 'boolean') {
       const selectResult = unreduced(selectEach(null, selectOneResultFn, path, obj, pathIndex));
       return isNone(selectResult) ? undefined : selectResult;
+    }
+    if (obj == null) {
+      obj = undefined;
+      break;
     }
     obj = obj[key];
     pathIndex++;
