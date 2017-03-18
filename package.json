@@ -1,7 +1,7 @@
 {
   "name": "qim",
   "version": "0.0.0",
-  "description": "Immutable helpers for plain JS objects and arrays",
+  "description": "Functional style immutability for plain JS with special query sauce.",
   "main": "index.js",
   "scripts": {
     "test": "ava test"
