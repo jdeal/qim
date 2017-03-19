@@ -10,6 +10,8 @@ Object.keys(benchmarks).forEach((key) => {
   }
 });
 
+const benchmarkName = process.argv.length > 2 ? process.argv[2] : '';
+
 const testBenchmark = (name, tests) => {
   return new Promise((resolve, reject) => {
     tests = tests.map(test => ({
@@ -70,12 +72,15 @@ const testBenchmark = (name, tests) => {
       } else {
         resolve();
       }
+      console.log('\n');
     }).run({async: true});
   });
 };
 
 Promise.all(
-  Object.keys(benchmarks).map(key => testBenchmark(key, benchmarks[key]))
+  Object.keys(benchmarks)
+    .filter(key => !benchmarkName || benchmarkName === key)
+    .map(key => testBenchmark(key, benchmarks[key]))
 )
   .then(() => {
     console.log('\nAll benchmark tests passed.');

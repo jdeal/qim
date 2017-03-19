@@ -16,7 +16,7 @@ const users = {
     friends: [],
     balance: 1000
   },
-  {
+  joe: {
     name: {
       first: 'Joe',
       last: 'Foo'
