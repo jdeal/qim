@@ -4,13 +4,14 @@
   "description": "Functional style immutability for plain JS with special query sauce.",
   "main": "index.js",
   "scripts": {
+    "benchmark": "babel-node benchmark.js",
     "test": "ava test",
     "prebuild": "rm -rf build && mkdir -p build",
     "build": "babel src --out-dir build",
     "build-package": "babel-node build-package.js",
     "prepublish-package": "npm run build && npm run build-package",
     "publish-package": "babel-node publish-package.js",
-    "patch-release": "npm version patch && npm run publish-package && git push --follow-tags"
+    "patch-release": "npm run benchmark && npm version patch && npm run publish-package && git push --follow-tags"
   },
   "keywords": [
     "immutable",
@@ -30,6 +31,7 @@
     "benchmark": "^2.1.2",
     "eslint": "^3.9.0",
     "immutability-helper": "^2.1.1",
+    "require-dir": "^0.3.1",
     "shelljs": "^0.7.7",
     "sinon": "^1.17.6",
     "sprout-data": "^0.2.3"
