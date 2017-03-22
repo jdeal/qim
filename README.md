@@ -1,5 +1,7 @@
 # qim
 
+WARNING: This is experimental right now. The API could still wildly change!
+
 Functional style immutability for plain JS with special query sauce.
 
 ## What?
@@ -123,3 +125,7 @@ const names = selectIn([$eachValue, hasHighBalance, 'name', 'first']);
 is high, and we use that as a predicate to select first names of users with a high balance.
 
 Cool, huh?
+
+## Thanks
+
+The whole "navigator" idea is borrowed from https://github.com/nathanmarz/specter.

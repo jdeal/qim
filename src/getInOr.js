@@ -9,6 +9,20 @@ const selectOneResultFn = (state, result) => {
 
 const getInOr = (defaultValue, path, obj) => {
 
+  if (!path || typeof path !== 'object') {
+    if (obj == null) {
+      return defaultValue;
+    }
+
+    obj = obj[path];
+
+    if (typeof obj === 'undefined') {
+      return defaultValue;
+    }
+
+    return obj;
+  }
+
   var pathIndex = 0, key;
 
   if (path == null || typeof path !== 'object' || typeof path.length !== 'number') {

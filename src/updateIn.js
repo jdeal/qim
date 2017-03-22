@@ -109,11 +109,11 @@ export const updateEach = (resultFn, path, object, pathIndex) => {
 continueUpdateEach = (resultFn, updateFn, nav, object, path, pathIndex) =>
   updateFn(nav, object, (subObject) => updateEach(resultFn, path, subObject, pathIndex + 1));
 
-const updateIn = function (path, update, object) {
+const updateIn = function (path, update, obj) {
   if (!path || typeof path !== 'object' || typeof path.length !== 'number') {
     path = [path];
   }
-  return updateEach(update, path, object, 0);
+  return updateEach(update, path, obj, 0);
 };
 
 export default curry3(updateIn);

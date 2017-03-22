@@ -1,13 +1,11 @@
 import {curry2} from './utils/curry';
 
-const push = (item, array, hasMutation) => {
+const push = (item, array) => {
   if (!Array.isArray(array)) {
     throw new Error('can only push onto array');
   }
 
-  if (hasMutation !== true) {
-    array = array.slice(0);
-  }
+  array = array.slice(0);
 
   array.push(item);
 

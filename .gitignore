@@ -25,3 +25,4 @@ coverage
 
 # Build directory
 /build
+test.js
