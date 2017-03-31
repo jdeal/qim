@@ -1,7 +1,7 @@
 import fp from 'lodash/fp';
 import update from 'immutability-helper';
 
-import {setIn} from '../src';
+import {setIn, _update, $set} from '../src';
 
 const state = {
   users: {
@@ -50,6 +50,13 @@ export default [
   {
     name: 'qim setIn',
     test: () => setIn(['users', 'joe', 'name', 'first'], 'Joseph', state),
+    compare: {
+      lodashFpSet: 3
+    }
+  },
+  {
+    name: 'qim _update',
+    test: () => _update(['users', 'joe', 'name', 'first', $set('Joseph')], state),
     compare: {
       lodashFpSet: 3
     }

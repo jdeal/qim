@@ -18,3 +18,8 @@ export {default as $eachValue} from './$eachValue';
 export {default as $slice} from './$slice';
 export {default as $begin} from './$begin';
 export {default as $end} from './$end';
+
+export {default as _update} from './_update';
+export {default as $apply} from './$apply';
+export {default as $set} from './$set';
+export {default as $update} from './$update';
