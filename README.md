@@ -75,7 +75,7 @@ console.log(newUsers.joe === users.joe);
 Changing something to its current value is a no-op:
 
 ```js
-const newUsers = setIn(['joe', 'name', 'first', () => 'Joe'], users);
+const newUsers = update(['joe', 'name', 'first', () => 'Joe'], users);
 console.log(newUsers === users);
 // true
 ```
@@ -85,7 +85,7 @@ Okay, now let's make things more interesting. Let's increase everyone's balance 
 ```js
 import {$eachValue} from 'qim';
 
-const newUsers = updateIn([$eachValue, 'balance', bal => bal + 10], users);
+const newUsers = update([$eachValue, 'balance', bal => bal + 10], users);
 ```
 
 As mentioned, each part of a query path in `qim` is actually a "navigator". Strings navigate to keys, and
@@ -119,7 +119,7 @@ can do this instead:
 ```js
 import {$if} from 'qim';
 
-const newUsers = updateIn([$eachValue, 'balance', $if(bal => bal >= 500), bal => bal + 10], users);
+const newUsers = update([$eachValue, 'balance', $if(bal => bal >= 500), bal => bal + 10], users);
 ```
 
 Here we introduce `$if`, which is a predicate selector. Any function given to `$if` acts as a filter, and we only
