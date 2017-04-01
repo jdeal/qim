@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import {getIn} from '../src';
+import {get} from '../src';
 
 const state = {
   users: {
@@ -19,8 +19,8 @@ export default [
     key: 'lodashGet'
   },
   {
-    name: 'qim getIn',
-    test: () => getIn(['users', 'joe', 'name', 'first'], state),
+    name: 'qim get',
+    test: () => get(['users', 'joe', 'name', 'first'], state),
     compare: {
       lodashGet: .9
     }
