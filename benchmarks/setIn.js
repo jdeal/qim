@@ -3,6 +3,8 @@ import update from 'immutability-helper';
 
 import {setIn, _update, $set} from '../src';
 
+import isInteger from '../src/utils/isInteger';
+
 const state = {
   users: {
     mary: {
@@ -24,8 +26,22 @@ const state = {
   }
 };
 
+const someArray = [1, 2, 3, 4];
+
 export default [
   {
+    name: 'Array.isArray',
+    test: () => (
+      Array.isArray(someArray)
+    )
+  },
+  {
+    name: 'check length',
+    test: () => (
+      someArray && isInteger(someArray.length)
+    )
+  }
+/*  {
     name: 'lodash fp set',
     test: () => (
       fp.set(['users', 'joe', 'name', 'first'], 'Joseph', state)
@@ -60,5 +76,5 @@ export default [
     compare: {
       lodashFpSet: 3
     }
-  }
+  }*/
 ];

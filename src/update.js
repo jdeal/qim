@@ -1,27 +1,83 @@
-import {curry3} from './utils/curry';
+import objectAssign from 'object-assign';
 
-const update = (key, modify, obj, hasMutation) => {
-  if (obj == null || typeof obj !== 'object') {
-    return obj;
+import isInteger from './utils/isInteger';
+import {updateKey, navigatorRef} from './createNavigator';
+import {curry2} from './utils/curry';
+import {$applyKey} from './$apply';
+import {$setKey} from './$set';
+
+let continueUpdateEach;
+let update;
+
+export const updateEach = (path, object, pathIndex) => {
+  if (pathIndex >= path.length) {
+    return object;
   }
-
-  const newValue = modify(obj[key]);
-
-  if (obj[key] === newValue) {
-    return obj;
-  }
-
-  if (hasMutation !== true) {
-    if (Array.isArray(obj)) {
-      obj = obj.slice(0);
+  const nav = path[pathIndex];
+  if (!nav || typeof nav === 'string' || typeof nav === 'number' || typeof nav === 'boolean') {
+    if (object && typeof object === 'object') {
+      const value = object[nav];
+      const newValue = updateEach(path, value, pathIndex + 1);
+      if (value === newValue) {
+        return object;
+      }
+      if (Array.isArray(object)) {
+        const newObject = object.slice(0);
+        newObject[nav] = newValue;
+        return newObject;
+      }
+      return objectAssign({}, object, {[nav]: newValue});
     } else {
-      obj = {...obj};
+      // if (pathIndex === 0) {
+      //   return object;
+      // }
+      object = isInteger(nav) ? [] : {};
+      const value = object[nav];
+      const newValue = updateEach(path, value, pathIndex + 1);
+      object[nav] = newValue;
+      return object;
     }
   }
-
-  obj[key] = newValue;
-
-  return obj;
+  if (typeof nav === 'function') {
+    if (nav(object)) {
+      return updateEach(path, object, pathIndex + 1);
+    } else {
+      return object;
+    }
+  }
+  let updateFn;
+  switch (nav[0]) {
+  case $setKey:
+    return updateEach(path, nav[1], pathIndex + 1);
+  case $applyKey:
+    return updateEach(path, nav[1](object), pathIndex + 1);
+  }
+  if (nav[updateKey]) {
+    updateFn = nav[updateKey];
+  } else {
+    if (nav[0] === navigatorRef) {
+      const childSelector = nav[1];
+      if (childSelector && childSelector[updateKey]) {
+        updateFn = childSelector[updateKey];
+      }
+    } else if (Array.isArray(nav)) {
+      return updateEach(path, update(nav, object), pathIndex + 1);
+    }
+  }
+  if (!updateFn) {
+    throw new Error(`invalid navigator at path index ${pathIndex}`);
+  }
+  return continueUpdateEach(updateFn, nav, object, path, pathIndex);
 };
 
-export default curry3(update);
+continueUpdateEach = (updateFn, nav, object, path, pathIndex) =>
+  updateFn(nav, object, (subObject) => updateEach(path, subObject, pathIndex + 1));
+
+update = function (path, obj) {
+  if (!Array.isArray(path)) {
+    path = [path];
+  }
+  return updateEach(path, obj, 0);
+};
+
+export default curry2(update);
