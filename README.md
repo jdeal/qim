@@ -85,7 +85,7 @@ Okay, now let's make things more interesting. Let's increase everyone's balance 
 ```js
 import {$eachValue} from 'qim';
 
-const newUsers = updateIn([$eachValue, 'balance'], bal => bal + 10);
+const newUsers = updateIn([$eachValue, 'balance', bal => bal + 10], users);
 ```
 
 As mentioned, each part of a query path in `qim` is actually a "navigator". Strings navigate to keys, and
