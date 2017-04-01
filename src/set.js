@@ -1,28 +1,30 @@
+import {updateEach} from './update';
 import {curry3} from './utils/curry';
-import mutateMarker from './utils/mutateMarker';
+import $nav from './$nav';
 
-const set = (key, value, obj, sourceObj, marker) => {
-  if (obj == null || typeof obj !== 'object') {
-    return obj;
-  }
+const set = (path, value, obj) => {
 
-  if (obj[key] === value) {
-    return obj;
-  }
+  if (!path || typeof path !== 'object') {
+    if (obj == null || typeof obj !== 'object') {
+      return obj;
+    }
 
-  if (marker !== mutateMarker || sourceObj === obj) {
+    if (obj[path] === value) {
+      return obj;
+    }
+
     if (Array.isArray(obj)) {
       obj = obj.slice(0);
     } else {
       obj = {...obj};
     }
+
+    obj[path] = value;
+
+    return obj;
   }
 
-  obj[key] = value;
-
-  return obj;
+  return updateEach([$nav(path), () => value], obj, 0);
 };
-
-set['@@qim/canMutate'] = true;
 
 export default curry3(set);

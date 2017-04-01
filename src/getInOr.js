@@ -1,4 +1,4 @@
-import {selectEach} from './selectIn';
+import {selectEach} from './select';
 import reduced, {unreduced} from './utils/reduced';
 import {curry3} from './utils/curry';
 import {isNone} from './utils/none';

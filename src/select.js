@@ -1,8 +1,11 @@
 import {selectKey, navigatorRef} from './createNavigator';
 import none from './utils/none';
 import {curry2} from './utils/curry';
+import {$setKey} from './$set';
+import {$ifKey} from './$if';
 
 let continueSelectEach;
+let select;
 
 export const selectEach = (state, resultFn, path, object, pathIndex) => {
   if (pathIndex >= path.length) {
@@ -21,14 +24,22 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
       //return resultFn(state, undefined);
     }
   }
+
   if (typeof nav === 'function') {
-    if (nav(object)) {
-      return selectEach(state, resultFn, path, object, pathIndex + 1);
-    } else {
-      return none;
-    }
+    return selectEach(state, resultFn, path, nav(object), pathIndex + 1);
   }
   let selectFn;
+  switch (nav[0]) {
+    case $ifKey: {
+      if (nav[1](object)) {
+        return selectEach(state, resultFn, path, object, pathIndex + 1);
+      } else {
+        return none;
+      }
+    }
+    case $setKey:
+      return selectEach(state, resultFn, path, nav[1], pathIndex + 1);
+  }
   if (nav[selectKey]) {
     selectFn = nav[selectKey];
   } else {
@@ -37,6 +48,8 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
       if (childSelector && childSelector[selectKey]) {
         selectFn = childSelector[selectKey];
       }
+    } else if (Array.isArray(nav)) {
+      return selectEach(state, resultFn, path, select(nav, object), pathIndex + 1);
     }
   }
   if (!selectFn) {
@@ -48,18 +61,18 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
 continueSelectEach = (state, resultFn, selectFn, nav, object, path, pathIndex) =>
   selectFn(nav, object, (subObject) => selectEach(state, resultFn, path, subObject, pathIndex + 1));
 
-const selectInResultFn = (state, result) => {
+const selectResultFn = (state, result) => {
   state.push(result);
   return state;
 };
 
-const selectIn = (path, object) => {
+select = (path, object) => {
   if (!path || typeof path !== 'object' || typeof path.length !== 'number') {
     path = [path];
   }
   const result = [];
-  selectEach(result, selectInResultFn, path, object, 0);
+  selectEach(result, selectResultFn, path, object, 0);
   return result;
 };
 
-export default curry2(selectIn);
+export default curry2(select);

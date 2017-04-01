@@ -6,7 +6,8 @@ import {
   hasIn,
   $eachValue,
   $eachKey,
-  $eachPair
+  $eachPair,
+  $if
 } from 'qim/src';
 
 const isEven = value => value % 2 === 0;
@@ -25,14 +26,14 @@ test('hasIn from object', t => {
 });
 
 test('hasIn predicate', t => {
-  t.false(hasIn([isEven], 1));
-  t.true(hasIn([isEven], 2));
+  t.false(hasIn([$if(isEven)], 1));
+  t.true(hasIn([$if(isEven)], 2));
 });
 
 test('hasIn values', t => {
   t.true(hasIn([$eachValue], [1, 2, 3]));
-  t.true(hasIn([$eachValue, isEven], [1, 2, 3, 4]));
-  t.false(hasIn([$eachValue, isEven], [1, 3]));
+  t.true(hasIn([$eachValue, $if(isEven)], [1, 2, 3, 4]));
+  t.false(hasIn([$eachValue, $if(isEven)], [1, 3]));
   t.true(hasIn([$eachValue, 'x'], [{x: 1}, {x: 2}]));
   t.false(hasIn([$eachValue, 'y'], [{x: 1}, {x: 2}]));
 });
