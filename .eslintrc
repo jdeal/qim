@@ -10,7 +10,7 @@
     "camelcase": 0,
     "no-underscore-dangle": 0,
     "new-cap": 0,
-    "indent": [2, 2],
+    "indent": [2, 2, { "SwitchCase": 1 }],
     "jsx-quotes": [2, "prefer-double"],
 
     "comma-dangle": 0,
