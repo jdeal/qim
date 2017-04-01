@@ -1,6 +1,6 @@
 {
   "name": "qim",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Functional style immutability for plain JS with special query sauce.",
   "main": "index.js",
   "scripts": {
