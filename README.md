@@ -95,7 +95,7 @@ Okay, that's a lot more concise, but there are still some problems:
 3. If we nest deeper _and_ break out of point-free style, it gets pretty awkward to write or read the code. We could clean that up by splitting this into multiple functions, but remember how concise the requirement is vs the resulting code complexity.
 4. If none of our accounts actually match these criteria, we'll still end up with a new state object.
 
-`qim` boils this down to the essential declarative parts, using an expressive query path and avoids unnecessary mutations.
+`qim` boils this down to the essential declarative parts, using an expressive query path, and it avoids unnecessary mutations.
 
 ```js
 import {update, $eachValue, $apply} from 'qim';
@@ -134,6 +134,8 @@ const newState = update([
 ], state);
 ```
 
+Because navigators are only ever working on the part of the object that you've navigated to, you don't ever have to worry the parts of the object that you don't touch. Those parts remain intact.
+
 These modifications are immutable, and they share unmodified branches:
 
 ```js
@@ -150,6 +152,32 @@ const newState = update(['entity', 'account', 300, 'type', () => 'checking'], st
 console.log(newState === state);
 // true
 ```
+
+These navigators are useful for selecting data too. Instead of modifying an object, the `select` method navigates to each matching part of the query and returns all the matching parts in an array.
+
+```js
+import {select} from 'qim';
+
+const names = select(['entity', 'account', $eachValue, 'owner'], state);
+// ['joe', 'mary', 'bob']
+```
+
+Let's get a little more fancy. Let's grab all the usernames of people that have high balances.
+
+```js
+import {has} from 'qim';
+
+// All functions are curried, so you can leave off the data to get a function.
+const hasHighBalance = has(['balance', bal => bal >= 1000]);
+
+const usernames = select(['entity', 'account', $eachValue, hasHighBalance, 'owner'], state);
+// ['mary']
+```
+
+`has` checks if a selection returns anything. We use currying to create a function for checking if an account balance
+is high, and we use that as a predicate to select the owners with a high balance.
+
+Cool, huh?
 
 ## API
 
