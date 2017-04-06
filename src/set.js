@@ -1,6 +1,7 @@
 import {updateEach} from './update';
 import {curry3} from './utils/curry';
 import $nav from './$nav';
+import $apply from './$apply';
 
 const set = (path, value, obj) => {
 
@@ -24,7 +25,7 @@ const set = (path, value, obj) => {
     return obj;
   }
 
-  return updateEach([$nav(path), () => value], obj, 0);
+  return updateEach([$nav(path), $apply(() => value)], obj, 0);
 };
 
 export default curry3(set);

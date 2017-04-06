@@ -6,8 +6,7 @@ import {
   get,
   $eachValue,
   $eachKey,
-  $eachPair,
-  $if
+  $eachPair
 } from 'qim/src';
 
 const isEven = value => value % 2 === 0;
@@ -44,11 +43,11 @@ test('get from object', t => {
 
 test('get predicate', t => {
   t.deepEqual(
-    get([$if(isEven)], 1),
+    get([isEven], 1),
     undefined
   );
   t.deepEqual(
-    get([$if(isEven)], 2),
+    get([isEven], 2),
     2
   );
 });
@@ -59,7 +58,7 @@ test('get values', t => {
     1
   );
   t.deepEqual(
-    get([$eachValue, $if(isEven)], [1, 2, 3, 4]),
+    get([$eachValue, isEven], [1, 2, 3, 4]),
     2
   );
   t.deepEqual(

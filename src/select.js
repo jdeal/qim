@@ -2,7 +2,7 @@ import {selectKey, navigatorRef} from './createNavigator';
 import none from './utils/none';
 import {curry2} from './utils/curry';
 import {$setKey} from './$set';
-import {$ifKey} from './$if';
+import {$applyKey} from './$apply';
 
 let continueSelectEach;
 let select;
@@ -26,16 +26,16 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
   }
 
   if (typeof nav === 'function') {
-    return selectEach(state, resultFn, path, nav(object), pathIndex + 1);
+    if (nav(object)) {
+      return selectEach(state, resultFn, path, object, pathIndex + 1);
+    } else {
+      return none;
+    }
   }
   let selectFn;
   switch (nav[0]) {
-    case $ifKey: {
-      if (nav[1](object)) {
-        return selectEach(state, resultFn, path, object, pathIndex + 1);
-      } else {
-        return none;
-      }
+    case $applyKey: {
+      return selectEach(state, resultFn, path, nav[1](object), pathIndex + 1);
     }
     case $setKey:
       return selectEach(state, resultFn, path, nav[1], pathIndex + 1);

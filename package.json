@@ -1,7 +1,7 @@
 {
   "name": "qim",
   "version": "0.0.10",
-  "description": "Functional style immutability for plain JS with special query sauce.",
+  "description": "Immutable/functional select/update queries for plain JS.",
   "main": "index.js",
   "scripts": {
     "benchmark": "babel-node benchmark.js",

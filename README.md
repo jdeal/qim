@@ -2,155 +2,154 @@
 
 WARNING: This is experimental right now. The API could still wildly change!
 
-Query your plain JS objects with powerful select and update functions. Immutable and functional.
+Immutable/functional select/update queries for plain JS.
 
-## What?
+## Say what?
 
 Let's start with some data like this:
 
 ```js
-const users = {
-  mary: {
-    name: {
-      first: 'Mary',
-      last: 'Bar'
-    },
-    friends: [],
-    balance: 1000
-  },
-  joe: {
-    name: {
-      first: 'Joe',
-      last: 'Foo'
-    },
-    friends: [],
-    balance: 100
+const state = {
+  entity: {
+    account: {
+      100: {
+        owner: 'joe',
+        type: 'savings',
+        balance: 90
+      },
+      200: {
+        owner: 'mary',
+        type: 'savings',
+        balance: 1100
+      },
+      300: {
+        owner: 'bob',
+        type: 'checking',
+        balance: 50
+      }
+    }
   }
 };
 ```
 
-`qim` makes it easy to reach in and modify an object. `qim`'s `update` function takes a query as an array of
-"navigators" (more about that in a bit) and an object to modify.
+Let's say we want to change our `state` so that for every _savings account_, we:
+
+1. Add 5% interest to any balance > 1000.
+2. Subtract 10 from any balance < 100. Cause fees are how banks make money, right?
+
+(And I know banks should have transactions, yada, yada.)
+
+Let's try this with vanilla JS:
 
 ```js
-import {update} from 'qim';
-
-const newUsers = update(['mary', 'balance', bal => bal + 10], users);
-```
-
-Strings navigate into the object, and functions apply modifications to that part of the object.
-
-After this, Mary's balance has 10 more dollars, and our new object looks like:
-
-```js
-const users = {
-  mary: {
-    name: {
-      first: 'Mary',
-      last: 'Bar'
-    },
-    friends: [],
-    balance: 1010
-  },
-  joe: {
-    name: {
-      first: 'Joe',
-      last: 'Foo'
-    },
-    friends: [],
-    balance: 100
+const newState = {
+  ...state,
+  entity: {
+    ...state.entity,
+    account: Object.keys(state.entity.account).reduce((result, id) => {
+      const account = state.entity.account[id];
+      if (account.type === 'savings') {
+        if (account.balance >= 1000) {
+          result[id] = {
+            ...account,
+            balance: account.balance * 1.05
+          };
+          return result;
+        }
+        if (account.balance < 100) {
+          result[id] = {
+            ...account,
+            balance: account.balance - 10
+          };
+          return result;
+        }
+      }
+      result[id] = account;
+      return result;
+    }, {})
   }
 };
+```
+
+Yuck. That is ugly. Our relatively simple requirements ballooned into quite a bit of code. Lots of references to
+things we don't really care about. Okay, hopefully nobody writes code like that. Let's use lodash-fp to clean that up.
+
+```js
+import fp from 'lodash/fp';
+
+const newState = fp.update(['entity', 'account'], fp.mapValues(account =>
+  account.type === 'savings' ? (
+    fp.update('balance', fp.cond([
+      [bal => bal >= 1000, bal => bal * 1.05],
+      [bal => bal < 100, bal => bal - 10],
+      [fp.stubTrue, bal => bal]
+    ]), account)
+  ) : account
+), state)
+```
+
+Okay, that's a lot more concise, but there are still some problems:
+
+1. We have to return `account` in the case where it's not a savings account. Our original requirement was really to filter out savings accounts and operate on those, but we can't really do that, because we want to modify the whole state. Using a `filter` would strip out the accounts we don't modify.
+2. Similarly, we have return the balance even if it's not a low or high balance that we want to change.
+3. If we nest deeper _and_ break out of point-free style, it gets pretty awkward to write or read the code. We could clean that up by splitting this into multiple functions, but remember how concise the requirement is vs the resulting code complexity.
+4. If none of our accounts actually match these criteria, we'll still end up with a new state object.
+
+`qim` boils this down to the essential declarative parts, using an expressive query path and avoids unnecessary mutations.
+
+```js
+import {update, $eachValue, $apply} from 'qim';
+
+const newState = update(['entity', 'account', $eachValue,
+  account => account.type === 'savings', 'balance',
+  [bal => bal >= 1000, $apply(bal => bal * 1.05)],
+  [bal => bal < 100, $apply(bal => bal - 10)]
+], state);
+```
+
+Even if you've never seen this before, hopefully you have a rough idea of what's going on. Instead of only accepting an array of strings for a path, `qim`'s `update` function accepts an array of "navigators". Using different types of navigators together creates a rich query path for selecting from and updating a nested object. Let's stretch out the previous example to take a closer look at some of the navigators used.
+
+```js
+const newState = update([
+  // A string navigates to that key in the object.
+  'entity', 'account',
+  // $eachValue is like a wildcard that matches each value of an object or array.
+  $eachValue,
+  // Functions act like predicates and navigate only if it matches.
+  account => account.type === 'savings',
+  'balance',
+  // Arrays are just nested queries and will descend...
+  [
+    bal => bal >= 1000,
+    // $apply is used to transform that part of the object.
+    $apply(bal => bal * 1.05)
+  ],
+  // ...and then return
+  [
+    bal => bal < 100,
+    // Having the transform function inside the query path allows
+    // us to do multiple transformations on different paths.
+    $apply(bal => bal - 10)
+  ]
+], state);
 ```
 
 These modifications are immutable, and they share unmodified branches:
 
 ```js
-console.log(newUsers !== users);
+console.log(newState !== state);
 // true
-console.log(newUsers.joe === users.joe);
+console.log(newState[300] === state[300]);
 // true
 ```
 
 Changing something to its current value is a no-op:
 
 ```js
-const newUsers = update(['joe', 'name', 'first', () => 'Joe'], users);
-console.log(newUsers === users);
+const newState = update(['entity', 'account', 300, 'type', () => 'checking'], state);
+console.log(newState === state);
 // true
 ```
-
-Okay, now let's make things more interesting. Let's increase everyone's balance by 10.
-
-```js
-import {$eachValue} from 'qim';
-
-const newUsers = update([$eachValue, 'balance', bal => bal + 10], users);
-```
-
-As mentioned, each part of a query path in `qim` is actually a "navigator". Strings navigate to keys, and
-functions apply modifications. `$eachValue` is a navigator that navigates to each value of an array or object. Kind of
-like `mapValues` from `lodash`, but navigators in `qim` are only worried about what they navigate to, never about
-anything they don't navigate to. Let's see what that means.
-
-Let's say we want to increase everyone's balance by 10, but only if the balance is 500 or greater. Hmm, that sounds like
-a map and a filter. But we want to modify the object, so we can't really filter. We have to do something like this:
-
-```js
-import {mapValues} from 'lodash/fp';
-
-const newUsers = mapValues(
-  user => {
-    if (user.balance < 500) {
-      return user;
-    }
-    return {
-      ...user,
-      balance: user.balance + 10
-    };
-  }
-, users);
-```
-
-This is a simple example, but there are already a couple problems here. We have to worry about returning users that we
-don't actually touch, _and_ we have to worry about the rest of the user properties that we don't touch. With `qim`, you
-can do this instead:
-
-```js
-import {$if} from 'qim';
-
-const newUsers = update([$eachValue, 'balance', $if(bal => bal >= 500), bal => bal + 10], users);
-```
-
-Here we introduce `$if`, which is a predicate selector. Any function given to `$if` acts as a filter, and we only
-continue navigating if the predicate passes. But we don't have to worry about the unfiltered users. Those remain
-unchanged. And we only have to worry about the `balance` property. Other properties are also unchanged.
-
-These navigators are useful for selecting data too.
-
-```js
-import {select} from 'qim';
-
-const names = select([$eachValue, 'name', 'first'], users);
-// ['Joe', 'Mary']
-```
-
-Let's get a little more fancy. Let's grab all the first names of people that have high balances.
-
-```js
-import {has} from 'qim';
-
-// All functions are curried, so you can leave off the data to get a function.
-const hasHighBalance = has(['balance', $if(bal => bal >= 500)]);
-
-const names = select([$eachValue, $if(hasHighBalance), 'name', 'first']);
-// ['Mary']
-```
-
-`has` checks if a selection returns anything. We use currying to create a function for checking if a user's balance
-is high, and we use that as a predicate to select first names of users with a high balance.
-
-Cool, huh?
 
 ## API
 

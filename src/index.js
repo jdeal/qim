@@ -11,5 +11,5 @@ export {default as $slice} from './$slice';
 export {default as $begin} from './$begin';
 export {default as $end} from './$end';
 export {default as $set} from './$set';
-export {default as $if} from './$if';
+export {default as $apply} from './$apply';
 export {default as $nav} from './$nav';

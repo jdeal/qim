@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import {update, $eachValue, $if} from '../src';
+import {update, $eachValue, $apply} from '../src';
 
 const state = {
   users: {
@@ -43,7 +43,7 @@ export default [
   },
   {
     name: 'qim _update',
-    test: () => update(['users', $eachValue, 'balance', $if(bal => bal >= 500), bal => bal + 10], state),
+    test: () => update(['users', $eachValue, 'balance', bal => bal >= 500, $apply(bal => bal + 10)], state),
     compare: {
       lodashMapValues: .5
     }

@@ -5,7 +5,7 @@ import {updateKey, navigatorRef} from './createNavigator';
 import {curry2} from './utils/curry';
 import {$setKey} from './$set';
 import {$navKey} from './$nav';
-import {$ifKey} from './$if';
+import {$applyKey} from './$apply';
 
 let continueUpdateEach;
 let update;
@@ -43,16 +43,16 @@ export const updateEach = (path, object, pathIndex, returnFn) => {
     }
   }
   if (typeof nav === 'function') {
-    return updateEach(path, nav(object), pathIndex + 1, returnFn);
+    if (nav(object)) {
+      return updateEach(path, object, pathIndex + 1, returnFn);
+    } else {
+      return object;
+    }
   }
   let updateFn;
   switch (nav[0]) {
-    case $ifKey: {
-      if (nav[1](object)) {
-        return updateEach(path, object, pathIndex + 1, returnFn);
-      } else {
-        return object;
-      }
+    case $applyKey: {
+      return updateEach(path, nav[1](object), pathIndex + 1, returnFn);
     }
     case $setKey:
       return updateEach(path, nav[1], pathIndex + 1, returnFn);
