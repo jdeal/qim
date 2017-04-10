@@ -124,15 +124,18 @@ const newState = update([
   $eachValue,
   // Functions act like predicates and navigate only if it matches.
   account => account.type === 'savings',
+  // Another key navigator.
   'balance',
   // Arrays are just nested queries and will descend...
   [
+    // Another predicate to test for a high balance.
     bal => bal >= 1000,
     // $apply is used to transform that part of the object.
     $apply(bal => bal * 1.05)
   ],
   // ...and then return
   [
+    // Another predicate to test for a low balance.
     bal => bal < 100,
     // Having the transform function inside the query path allows
     // us to do multiple transformations on different paths.
@@ -557,6 +560,14 @@ update(
   [1, 2, 3, 4, 5, 6]
 )
 // [0, 0, 0, 4, 5, 6]
+```
+
+```js
+update(
+  [$slice(2, 4), $set([])],
+  ['a', 'b', 'c', 'd', 'e', 'f']
+)
+// ['a', 'b', 'e', 'f']
 ```
 
 ## Thanks
