@@ -356,7 +356,7 @@ update(
 
 ### Named navigators
 
-By convention, all navigators are prefixed with a `$`. This is mainly intended to visually distinguish them in a query path. But it also is meant to distinguish them form normal functions. Navigators are declarative, meaning they represent a navigation to be performed, rather than actually doing an operation.
+By convention, all navigators are prefixed with a `$`. This is mainly intended to visually distinguish them in a query path. But it also is meant to distinguish them from normal functions. Navigators are declarative, meaning they represent a navigation to be performed, rather than actually doing an operation.
 
 #### `$apply(fn)`
 
