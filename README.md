@@ -108,7 +108,7 @@ const newState = fp.update(['entity', 'account'], fp.mapValues(account =>
 Okay, that's a lot more concise, but there are still some problems:
 
 1. We have to return `account` in the case where it's not a savings account. Our original requirement was really to filter out savings accounts and operate on those, but we can't really do that, because we want to modify the whole state. Using a `filter` would strip out the accounts we don't modify.
-2. Similarly, we have return the balance even if it's not a low or high balance that we want to change.
+2. Similarly, we have to return the balance even if it's not a low or high balance that we want to change.
 3. If we nest deeper _and_ break out of point-free style, it gets pretty awkward to write or read the code. We could clean that up by splitting this into multiple functions, but remember how concise the requirement is vs the resulting code complexity.
 4. If none of our accounts actually match these criteria, we'll still end up with a new state object.
 
