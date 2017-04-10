@@ -2,9 +2,15 @@
 
 WARNING: This is experimental right now. The API could still wildly change!
 
-Immutable/functional select/update queries for plain JS.
+`qim` makes it simple to reach in and modify complex nested JS objects. This is possible with a query path that is just a simple JS array, much like you might use with `set` and `update` from `lodash`, but with a more powerful concept of "navigators" (borrowed from [Specter](https://github.com/nathanmarz/specter), a Clojure library). Instead of just string keys, `qim`'s navigators can act as predicates, wildcards, slices, and other tools. Those same navigators allow you to reach in and select parts of JS objects as well.
 
-## Say what?
+`qim`'s updates are immutable, returning new objects, but those objects share any unchanged parts with the original object.
+
+`qim`'s API is curried and data last, so it should fit well with other functional libraries like `lodash` and `ramda`.
+
+And `qim` does its best to stay performant!
+
+# A not-too-contrived example
 
 Let's start with some data like this:
 
@@ -39,7 +45,19 @@ Let's say we want to change our `state` so that for every _savings account_, we:
 
 (And I know banks should have transactions, yada, yada.)
 
-Let's try this with vanilla JS:
+Okay, drum roll... with `qim`, we can do that like this:
+
+```js
+import {update, $eachValue, $apply} from 'qim';
+
+const newState = update(['entity', 'account', $eachValue,
+  account => account.type === 'savings', 'balance',
+  [bal => bal >= 1000, $apply(bal => bal * 1.05)],
+  [bal => bal < 100, $apply(bal => bal - 10)]
+], state);
+```
+
+Even if you've never seen this before, hopefully you have a rough idea of what's going on. Instead of an only accepting an array of strings for a path, `qim`'s `update` function accepts an array of navigators. Using different types of navigators together creates a rich query path for updating a nested object. We'll look closer at this particular query in a bit, but first let's try the same thing with vanilla JS.
 
 ```js
 const newState = {
@@ -71,8 +89,7 @@ const newState = {
 };
 ```
 
-Yuck. That is ugly. Our relatively simple requirements ballooned into quite a bit of code. Lots of references to
-things we don't really care about. Okay, hopefully nobody writes code like that. Let's use lodash-fp to clean that up.
+Yuck. That is ugly. Lots of references to things we don't really care about. Okay, hopefully nobody writes code like that. Let's use lodash-fp to clean that up.
 
 ```js
 import fp from 'lodash/fp';
@@ -97,17 +114,7 @@ Okay, that's a lot more concise, but there are still some problems:
 
 `qim` boils this down to the essential declarative parts, using an expressive query path, and it avoids unnecessary mutations.
 
-```js
-import {update, $eachValue, $apply} from 'qim';
-
-const newState = update(['entity', 'account', $eachValue,
-  account => account.type === 'savings', 'balance',
-  [bal => bal >= 1000, $apply(bal => bal * 1.05)],
-  [bal => bal < 100, $apply(bal => bal - 10)]
-], state);
-```
-
-Even if you've never seen this before, hopefully you have a rough idea of what's going on. Instead of only accepting an array of strings for a path, `qim`'s `update` function accepts an array of "navigators". Using different types of navigators together creates a rich query path for selecting from and updating a nested object. Let's stretch out the previous example to take a closer look at some of the navigators used.
+Let's stretch out the previous example to take a closer look at some of the navigators used.
 
 ```js
 const newState = update([
@@ -181,64 +188,377 @@ Cool, huh?
 
 ## API
 
-### `select(query, object)`
-
-Returns an array of selected results from an object.
-
 ### `get(query, object)`
 
-Returns a single result from an object.
+Like `select`, but only returns a single result. If many results would be returned from a `select`, it will return the first result.
+
+```js
+get(
+  [$eachValue, value => value % 2 === 0],
+  [1, 2, 3, 4, 5, 6]
+)
+// 2
+```
+
+Generally, this will perform much better than taking the first item of the array returned by a `select`.
 
 ### `has(query, object)`
 
 Returns true if an object has a matching result.
 
-### `update(query, object)`
+```js
+has(
+  [$eachValue, value => value % 2 === 0],
+  [1, 2, 3]
+)
+// true
+```
 
-Returns a mutation of an object without changing the original object.
+```js
+has(
+  [$eachValue, value => value % 2 === 0],
+  [1, 3, 5]
+)
+// false
+```
+
+### `select(query, object)`
+
+Returns an array of selected results from an object.
+
+```js
+select(
+  ['numbers', $eachValue, value => value % 2 === 0],
+  {numbers: [1, 2, 3, 4, 5, 6]}
+)
+// [2, 4, 6]
+```
 
 ### `set(query, value, object)`
 
 Just a convenience method to set a query path to a constant value.
 
+```js
+set(
+  ['users', 'joe', 'name'],
+  'Joseph',
+  {users: {joe: {name: 'Joe'}}}
+)
+// {users: {joe: {name: 'Joseph'}}}
+```
+
+```js
+set(
+  ['numbers', $eachValue, value => value % 2 === 0],
+  0,
+  {numbers: [1, 2, 3, 4, 5, 6]}
+)
+// {numbers: [1, 0, 3, 0, 5, 0]}
+```
+
+### `update(query, object)`
+
+Returns a mutation of an object without changing the original object.
+
+```js
+update(
+  ['users', 'joe', 'name', $apply(name => name.toUpperCase())],
+  {users: {joe: {name: 'Joe'}}}
+)
+// {users: {joe: {name: 'JOE'}}}
+```
+
+```js
+update(
+  ['numbers', $eachValue, value => value % 2 === 0, $apply(value => value * 2)],
+  {numbers: [1, 2, 3, 4, 5, 6]}
+)
+// {'numbers': [1, 4, 3, 8, 5, 12]}
+```
+
 ## Navigators
 
-### `$eachValue`
+### Built-in, type-based navigators
 
-Navigates to each value of an array or object.
+#### Key (string/integer)
 
-### `$eachKey`
+Navigates to that key of an object/array.
+
+```js
+select(
+  ['users', 'name', 'joe'],
+  {users: {name: {joe: 'Joe'}}}
+)
+// [Joe]
+```
+
+```js
+select(
+  ['0', '0'],
+  [['a', 'b'], ['c', 'd']]
+)
+// ['a']
+```
+
+```js
+update(
+  ['users', 'name', 'joe', $set('Joseph')],
+  {users: {name: {joe: 'Joseph'}}}
+)
+// {"users": {"name": {"joe": "Joseph"}}}
+```
+
+```js
+update(
+  ['0', '0', $apply(letter => letter.toUpperCase())],
+  [['a', 'b'], ['c', 'd']]
+)
+// [['A', 'b'], ['c', 'd']]
+```
+
+#### Predicate (function)
+
+Passes the currently navigated value to the function and continues navigating if the function returns true.
+
+```js
+select(
+  [$eachValue, value => value > 0],
+  [-2, -1, 0, 1, 2, 3]
+)
+// [1, 2, 3]
+```
+
+```js
+update(
+  [$eachValue, value => value > 0, $set(0)],
+  [-2, -1, 0, 1, 2, 3]
+)
+// [-2, -1, 0, 0, 0, 0]
+```
+
+#### Nested (array)
+
+Branches and performs a sub-query. Mainly useful for `update`, since you may want to update different branches of an object in different ways. You can branch with  `select`, but this is less useful since you typically want to select homogenous value types.
+
+```js
+update(
+  [$eachValue,
+    ['x', $apply(x => x + 1)],
+    ['y', $apply(y => y * 10)]
+  ],
+  [{x: 1, y: 1}, {x: 2, y: 2}]
+)
+// [{x: 2, y: 10}, {x: 3, y: 20}]
+```
+
+### Named navigators
+
+By convention, all navigators are prefixed with a `$`. This is mainly intended to visually distinguish them in a query path. But it also is meant to distinguish them form normal functions. Navigators are declarative, meaning they represent a navigation to be performed, rather than actually doing an operation.
+
+#### `$apply(fn)`
+
+Transforms the currently navigated value using the provided function. Typically used for `update`, but can be used for `select` to transform the values selected.
+
+```js
+select(
+  ['numbers', $eachValue, $apply(value => value * 2)],
+  {numbers: [0, 1, 2, 3]}
+)
+```
+
+```js
+update(
+  [$eachValue, $apply(value => value * 2)],
+  {numbers: [0, 1, 2, 3]}
+)
+// {numbers: [0, 2, 4, 6]}
+```
+
+#### `$begin`
+
+Navigates to an empty list at the beginning of an array. Useful for adding things to the beginning of a list.
+
+```js
+update(
+  [$begin, $set([-2, -1, 0])],
+  [1, 2, 3]
+)
+// [-2, -1, 0, 1, 2, 3]
+```
+
+#### `$eachKey`
 
 Navigates to each key of an array or object.
 
-### `$eachPair`
+```js
+update(
+  [$eachKey, $apply(key => key.toUpperCase())],
+  {x: 1, y: 2, z: 3}
+)
+// {X: 1, Y: 2, Z: 3}
+```
+
+```js
+select(
+  [$eachKey],
+  {x: 1, y: 2, z: 3}
+)
+// ['x', 'y', 'x']
+```
+
+#### `$eachPair`
 
 Navigates to each key/value pair of an array or object. A key/value pair is just an array of `[key, value]`.
 
-### `$if(predicate)`
+```js
+update(
+  [$eachPair, $apply(([key, value]) => [key.toUpperCase(), value * 2])],
+  {x: 1, y: 2, z: 3}
+)
+// {X: 2, Y: 4, Z: 6}
+```
 
-Navigates if the current selection matches the predicate.
+```js
+update(
+  [$eachPair,
+    [0, $apply(key => key.toUpperCase())],
+    [1, $apply(value => value * 2)]
+  ],
+  {x: 1, y: 2, z: 3}
+)
+// {X: 2, Y: 4, Z: 6}
+```
 
-### `$set(value)`
+```js
+select(
+  [$eachPair],
+  {x: 1, y: 2, z: 3}
+)
+// [['x', 1], ['y', 2], ['z', 3]]
+```
 
-Just a convenience for setting a value, rather than using `() => value`.
+#### `$eachValue`
 
-### `$begin`
+Navigates to each value of an array or object.
 
-Selects the empty list at the beginning of an array.
+```js
+update(
+  [$eachValue, $apply(num => num * 2)],
+  [1, 2, 3]
+)
+// [2, 4, 6]
+```
 
-### `$end`
+```js
+update(
+  [$eachValue, $apply(num => num * 2)],
+  {x: 1, y: 2, z: 3}
+)
+// {x: 2, y: 4, z: 6}
+```
 
-Selects the empty list at the end of an array.
+```js
+select(
+  [$eachValue],
+  [1, 2, 3]
+)
+// [1, 2, 3]
+```
 
-### `$slice(begin, end)`
+```js
+select(
+  [$eachValue],
+  {x: 1, y: 2, z: 3}
+)
+// [1, 2, 3]
+```
 
-Selects a slice of an array from `begin` to `end` index.
+#### `$end`
 
-### `$nav(query)`
+Navigates to an empty list at the end of an array. Useful for adding things to the end of a list.
 
-Given a query path, navigates as if that query was a single selector.
+```js
+update(
+  [$end, $set([4, 5, 6])],
+  [1, 2, 3]
+)
+// [1, 2, 3, 4, 5, 6]
+```
+
+#### `$nav(query)`
+
+Given a query path, navigates as if that query was a single selector. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
+
+```js
+const eachUser = $nav(['users', $eachValue]);
+
+select(
+  [eachUser, 'name'],
+  {
+    users: {
+      joe: {
+        name: 'Joe'
+      },
+      mary: {
+        name: 'Mary'
+      }
+    }
+  }
+)
+// ['Joe', 'Mary']
+```
+
+```js
+const eachUser = $nav(['users', $eachValue]);
+
+update(
+  [eachUser, 'name', $apply(name => name.toUpperCase())],
+  {
+    users: {
+      joe: {
+        name: 'Joe'
+      },
+      mary: {
+        name: 'Mary'
+      }
+    }
+  }
+)
+// {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
+```
+
+#### `$set(value)`
+
+Just a convenience for setting a value, rather than using `$apply(() => value)`. (Also a teensy bit more performant.)
+
+```js
+update(
+  [$eachValue, $set(0)],
+  [1, 2, 3]
+)
+// [0, 0, 0]
+```
+
+#### `$slice(begin, end)`
+
+Navigates to a slice of an array from `begin` to `end` index.
+
+```js
+select(
+  [$slice(0, 3), $eachValue],
+  [1, 2, 3, 4, 5, 6]
+)
+// [1, 2, 3]
+```
+
+```js
+update(
+  [$slice(0, 3), $eachValue, $set(0)],
+  [1, 2, 3, 4, 5, 6]
+)
+// [0, 0, 0, 4, 5, 6]
+```
 
 ## Thanks
 
-The whole "navigator" idea is borrowed from https://github.com/nathanmarz/specter.
+As mentioned above, the navigator concept borrows heavily from [Specter](https://github.com/nathanmarz/specter), a Clojure library written by Nathan Marz.

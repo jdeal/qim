@@ -3,12 +3,16 @@ import none from './utils/none';
 import {curry2} from './utils/curry';
 import {$setKey} from './$set';
 import {$applyKey} from './$apply';
+import {$navKey} from './$nav';
 
 let continueSelectEach;
 let select;
 
-export const selectEach = (state, resultFn, path, object, pathIndex) => {
+export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) => {
   if (pathIndex >= path.length) {
+    if (returnFn) {
+      return returnFn(object);
+    }
     return resultFn(state, object);
   }
   const nav = path[pathIndex];
@@ -18,7 +22,7 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
       if (typeof subObject === 'undefined' && !(nav in object)) {
         return none;
       }
-      return selectEach(state, resultFn, path, subObject, pathIndex + 1);
+      return selectEach(state, resultFn, path, subObject, pathIndex + 1, returnFn);
     } else {
       return none;
       //return resultFn(state, undefined);
@@ -27,7 +31,7 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
 
   if (typeof nav === 'function') {
     if (nav(object)) {
-      return selectEach(state, resultFn, path, object, pathIndex + 1);
+      return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
     } else {
       return none;
     }
@@ -35,10 +39,15 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
   let selectFn;
   switch (nav[0]) {
     case $applyKey: {
-      return selectEach(state, resultFn, path, nav[1](object), pathIndex + 1);
+      return selectEach(state, resultFn, path, nav[1](object), pathIndex + 1, returnFn);
     }
     case $setKey:
-      return selectEach(state, resultFn, path, nav[1], pathIndex + 1);
+      return selectEach(state, resultFn, path, nav[1], pathIndex + 1, returnFn);
+    case $navKey:
+      return selectEach(
+        state, resultFn, nav[1], object, 0,
+        (_object) => selectEach(state, resultFn, path, _object, pathIndex + 1, returnFn)
+      );
   }
   if (nav[selectKey]) {
     selectFn = nav[selectKey];
@@ -49,17 +58,21 @@ export const selectEach = (state, resultFn, path, object, pathIndex) => {
         selectFn = childSelector[selectKey];
       }
     } else if (Array.isArray(nav)) {
-      return selectEach(state, resultFn, path, select(nav, object), pathIndex + 1);
+      const subResult = selectEach(state, resultFn, nav, object, 0);
+      if (pathIndex + 1 === path.length) {
+        return subResult;
+      }
+      return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
     }
   }
   if (!selectFn) {
     throw new Error(`invalid navigator at path index ${pathIndex}`);
   }
-  return continueSelectEach(state, resultFn, selectFn, nav, object, path, pathIndex);
+  return continueSelectEach(state, resultFn, selectFn, nav, object, path, pathIndex, returnFn);
 };
 
-continueSelectEach = (state, resultFn, selectFn, nav, object, path, pathIndex) =>
-  selectFn(nav, object, (subObject) => selectEach(state, resultFn, path, subObject, pathIndex + 1));
+continueSelectEach = (state, resultFn, selectFn, nav, object, path, pathIndex, returnFn) =>
+  selectFn(nav, object, (subObject) => selectEach(state, resultFn, path, subObject, pathIndex + 1, returnFn));
 
 const selectResultFn = (state, result) => {
   state.push(result);
