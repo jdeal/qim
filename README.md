@@ -367,6 +367,7 @@ select(
   ['numbers', $eachValue, $apply(value => value * 2)],
   {numbers: [0, 1, 2, 3]}
 )
+// [0, 2, 4, 6]
 ```
 
 ```js
