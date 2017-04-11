@@ -37,33 +37,28 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
     }
   }
   let selectFn;
-  switch (nav[0]) {
+  switch (nav['@@qim/nav']) {
     case $applyKey: {
-      return selectEach(state, resultFn, path, nav[1](object), pathIndex + 1, returnFn);
+      return selectEach(state, resultFn, path, nav.data(object), pathIndex + 1, returnFn);
     }
     case $setKey:
-      return selectEach(state, resultFn, path, nav[1], pathIndex + 1, returnFn);
+      return selectEach(state, resultFn, path, nav.data, pathIndex + 1, returnFn);
     case $navKey:
       return selectEach(
-        state, resultFn, nav[1], object, 0,
+        state, resultFn, nav.data, object, 0,
         (_object) => selectEach(state, resultFn, path, _object, pathIndex + 1, returnFn)
       );
   }
   if (nav[selectKey]) {
     selectFn = nav[selectKey];
-  } else {
-    if (nav[0] === navigatorRef) {
-      const childSelector = nav[1];
-      if (childSelector && childSelector[selectKey]) {
-        selectFn = childSelector[selectKey];
-      }
-    } else if (Array.isArray(nav)) {
-      const subResult = selectEach(state, resultFn, nav, object, 0);
-      if (pathIndex + 1 === path.length) {
-        return subResult;
-      }
-      return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
+  } else if (nav['@@qim/nav']) {
+    selectFn = nav['@@qim/nav'][selectKey];
+  } else if (Array.isArray(nav)) {
+    const subResult = selectEach(state, resultFn, nav, object, 0);
+    if (pathIndex + 1 === path.length) {
+      return subResult;
     }
+    return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
   }
   if (!selectFn) {
     throw new Error(`invalid navigator at path index ${pathIndex}`);

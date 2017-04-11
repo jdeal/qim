@@ -1,6 +1,6 @@
 export const selectKey = '@@im/select';
 export const updateKey = '@@im/transform';
-export const navigatorRef = {};
+export const navigatorKey = '@@qim/nav';
 
 const createNavigator = (config) => {
   const nav = {};

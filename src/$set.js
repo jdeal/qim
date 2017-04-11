@@ -1,5 +1,5 @@
 export const $setKey = '@@qim/$setKey';
 
-const $set = (value) => [$setKey, value];
+const $set = (value) => ({'@@qim/nav': $setKey, data: value});
 
 export default $set;

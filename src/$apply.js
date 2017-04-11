@@ -1,5 +1,5 @@
 export const $applyKey = '@@qim/$apply';
 
-const $apply = (predicate) => [$applyKey, predicate];
+const $apply = (predicate) => ({'@@qim/nav': $applyKey, data: predicate});
 
 export default $apply;

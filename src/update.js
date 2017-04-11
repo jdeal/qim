@@ -50,29 +50,24 @@ export const updateEach = (path, object, pathIndex, returnFn) => {
     }
   }
   let updateFn;
-  switch (nav[0]) {
+  switch (nav['@@qim/nav']) {
     case $applyKey: {
-      return updateEach(path, nav[1](object), pathIndex + 1, returnFn);
+      return updateEach(path, nav.data(object), pathIndex + 1, returnFn);
     }
     case $setKey:
-      return updateEach(path, nav[1], pathIndex + 1, returnFn);
+      return updateEach(path, nav.data, pathIndex + 1, returnFn);
     case $navKey:
       return updateEach(
-        nav[1], object, 0,
+        nav.data, object, 0,
         (_object) => updateEach(path, _object, pathIndex + 1, returnFn)
       );
   }
   if (nav[updateKey]) {
     updateFn = nav[updateKey];
-  } else {
-    if (nav[0] === navigatorRef) {
-      const childSelector = nav[1];
-      if (childSelector && childSelector[updateKey]) {
-        updateFn = childSelector[updateKey];
-      }
-    } else if (Array.isArray(nav)) {
-      return updateEach(path, update(nav, object), pathIndex + 1, returnFn);
-    }
+  } else if (nav['@@qim/nav']) {
+    updateFn = nav['@@qim/nav'][updateKey];
+  } else if (Array.isArray(nav)) {
+    return updateEach(path, update(nav, object), pathIndex + 1, returnFn);
   }
   if (!updateFn) {
     throw new Error(`invalid navigator at path index ${pathIndex}`);

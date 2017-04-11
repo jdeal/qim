@@ -1,19 +1,18 @@
 import createNavigator from './createNavigator';
-import {navigatorRef} from './createNavigator';
 
 const _$slice = createNavigator({
   select: (nav, object, next) => {
     if (Array.isArray(object)) {
-      return next(object.slice(nav[2], nav[3]));
+      return next(object.slice(nav.begin, nav.end));
     }
     throw new Error('$slice only works on array.');
   },
   update: (nav, object, next) => {
     if (Array.isArray(object)) {
-      const slice = object.slice(nav[2], nav[3]);
+      const slice = object.slice(nav.begin, nav.end);
       const newSlice = next(slice);
       const newArray = object.slice(0);
-      const spliceBegin = typeof nav[2] === 'undefined' ? 0 : nav[2];
+      const spliceBegin = typeof nav.begin === 'undefined' ? 0 : nav.begin;
       newArray.splice(spliceBegin, slice.length, ...newSlice);
       return newArray;
     }
@@ -21,6 +20,6 @@ const _$slice = createNavigator({
   }
 });
 
-const $slice = (begin, end) => [navigatorRef, _$slice, begin, end];
+const $slice = (begin, end) => ({'@@qim/nav': _$slice, begin, end});
 
 export default $slice;
