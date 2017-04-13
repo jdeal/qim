@@ -13,3 +13,4 @@ export {default as $end} from './$end';
 export {default as $set} from './$set';
 export {default as $apply} from './$apply';
 export {default as $nav} from './$nav';
+export {default as $none} from './$none';

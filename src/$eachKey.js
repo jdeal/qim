@@ -2,6 +2,8 @@ import objectAssign from 'object-assign';
 
 import createNavigator from './createNavigator';
 import reduceSequence from './utils/reduceSequence';
+import {isNone} from './$none';
+import removed, {isNotRemoved} from './utils/removed';
 
 const $eachKey = createNavigator({
   select: (nav, object, next) => {
@@ -11,9 +13,12 @@ const $eachKey = createNavigator({
   },
   update: (nav, object, next) => {
     const isArray = Array.isArray(object);
-    return reduceSequence((result, key) => {
+    let didRemoveKeys = false;
+    const newObject = reduceSequence((result, key) => {
       const newKey = next(key);
-      if (newKey !== key) {
+      const isKeyNone = isNone(newKey);
+      didRemoveKeys = didRemoveKeys || isKeyNone;
+      if (newKey !== key || isKeyNone) {
         if (object === result) {
           if (isArray) {
             result = result.slice(0);
@@ -21,13 +26,22 @@ const $eachKey = createNavigator({
             result = objectAssign({}, result);
           }
         }
-        if (newKey !== key) {
+        if (isArray) {
+          result[key] = removed;
+          didRemoveKeys = true;
+        } else {
           delete result[key];
         }
-        result[newKey] = object[key];
+        if (!isKeyNone) {
+          result[newKey] = object[key];
+        }
       }
       return result;
     }, object, object);
+    if (isArray && didRemoveKeys) {
+      return newObject.filter(isNotRemoved);
+    }
+    return newObject;
   }
 });
 

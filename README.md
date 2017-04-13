@@ -531,6 +531,34 @@ update(
 // {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
 ```
 
+#### `$none`
+
+Navigates to nothing so you can delete properties from objects and items from arrays. It would be great to use `undefined` for this, but technically `undefined` is a value in JS, so `$none` exists to allow for the edge case of being able to set a property or item to `undefined`.
+
+```js
+update(
+  ['x', $none],
+  {x: 1, y: 2}
+)
+// {y: 2}
+```
+
+```js
+update(
+  [0, $none],
+  ['a', 'b']
+)
+// ['b']
+```
+
+```js
+update(
+  [$eachValue, value => value % 2 === 0, $none],
+  [1, 2, 3, 4, 5, 6]
+)
+// [1, 3, 5]
+```
+
 #### `$set(value)`
 
 Just a convenience for setting a value, rather than using `$apply(() => value)`. (Also a teensy bit more performant.)

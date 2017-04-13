@@ -1,7 +1,7 @@
 import {selectEach} from './select';
 import reduced, {unreduced} from './utils/reduced';
 import {curry2} from './utils/curry';
-import {isNone} from './utils/none';
+import {isNone} from './$none';
 
 const selectOneResultFn = (state, result) => {
   return reduced(result);

@@ -2,6 +2,8 @@ import objectAssign from 'object-assign';
 
 import createNavigator from './createNavigator';
 import reduceSequence from './utils/reduceSequence';
+import {isNone} from './$none';
+import removed, {isNotRemoved} from './utils/removed';
 
 const $eachPair = createNavigator({
   select: (nav, object, next) => {
@@ -11,19 +13,18 @@ const $eachPair = createNavigator({
   },
   update: (nav, object, next) => {
     const isArray = Array.isArray(object);
-    return reduceSequence((result, key) => {
+    let didRemovePairs = false;
+    const newObject = reduceSequence((result, key) => {
       const value = object[key];
       const pair = [key, value];
       const newPair = next(pair);
       if (!newPair) {
         return result;
       }
-      if (newPair.length !== 2) {
-        throw new Error('pair to update does not look like a pair');
-      }
       const newKey = newPair[0];
       const newValue = newPair[1];
-      if (newKey !== key || newValue !== value) {
+      const isPairNone = isNone(newPair) || isNone(newKey) || isNone(newValue);
+      if (newKey !== key || newValue !== value || isPairNone) {
         if (object === result) {
           if (isArray) {
             result = result.slice(0);
@@ -32,12 +33,22 @@ const $eachPair = createNavigator({
           }
         }
         if (newKey !== key) {
+          if (isArray) {
+            result[key] = removed;
+            didRemovePairs = true;
+          }
           delete result[key];
         }
-        result[newKey] = newValue;
+        if (!isPairNone) {
+          result[newKey] = newValue;
+        }
       }
       return result;
     }, object, object);
+    if (isArray && didRemovePairs) {
+      return newObject.filter(isNotRemoved);
+    }
+    return newObject;
   }
 });
 

@@ -1,9 +1,10 @@
-import {selectKey, navigatorRef} from './createNavigator';
-import none from './utils/none';
+import {selectKey} from './createNavigator';
+import $none from './$none';
 import {curry2} from './utils/curry';
 import {$setKey} from './$set';
 import {$applyKey} from './$apply';
 import {$navKey} from './$nav';
+import {$noneKey} from './$none';
 
 let continueSelectEach;
 let select;
@@ -20,11 +21,11 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
     if (object && typeof object === 'object') {
       const subObject = object[nav];
       if (typeof subObject === 'undefined' && !(nav in object)) {
-        return none;
+        return $none;
       }
       return selectEach(state, resultFn, path, subObject, pathIndex + 1, returnFn);
     } else {
-      return none;
+      return $none;
       //return resultFn(state, undefined);
     }
   }
@@ -33,7 +34,7 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
     if (nav(object)) {
       return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
     } else {
-      return none;
+      return $none;
     }
   }
   let selectFn;
@@ -48,6 +49,8 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
         state, resultFn, nav.data, object, 0,
         (_object) => selectEach(state, resultFn, path, _object, pathIndex + 1, returnFn)
       );
+    case $noneKey:
+      return $none;
   }
   if (nav[selectKey]) {
     selectFn = nav[selectKey];

@@ -2,6 +2,7 @@ import {updateEach} from './update';
 import {curry3} from './utils/curry';
 import $nav from './$nav';
 import $apply from './$apply';
+import {undefinedIfNone} from './$none';
 
 const set = (path, value, obj) => {
 
@@ -25,7 +26,7 @@ const set = (path, value, obj) => {
     return obj;
   }
 
-  return updateEach([$nav(path), $apply(() => value)], obj, 0);
+  return undefinedIfNone(updateEach([$nav(path), $apply(() => value)], obj, 0));
 };
 
 export default curry3(set);

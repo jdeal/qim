@@ -9,7 +9,8 @@ import {
   $eachKey,
   $eachPair,
   $set,
-  $apply
+  $apply,
+  $none
 } from 'qim/src';
 
 const increment = value => value + 1;
@@ -130,5 +131,54 @@ test('update array', t => {
   t.deepEqual(
     update([1, $apply(fp.upperCase)], ['foo', 'bar']),
     ['foo', 'BAR']
+  );
+});
+
+test('remove key', t => {
+  t.deepEqual(
+    update(['x', $none], {x: 1, y: 2}),
+    {y: 2}
+  );
+});
+
+test('remove item', t => {
+  t.deepEqual(
+    update([0, $none], ['a', 'b']),
+    ['b']
+  );
+});
+
+test('remove all keys', t => {
+  t.deepEqual(
+    update([$eachValue, $none], {x: 1, y: 2}),
+    {}
+  );
+});
+
+test('remove all items', t => {
+  t.deepEqual(
+    update([$eachValue, $none], ['a', 'b']),
+    []
+  );
+});
+
+test('remove all keys with $none', t => {
+  t.deepEqual(
+    update([$eachKey, $none], {x: 1, y: 2}),
+    {}
+  );
+});
+
+test('remove all pairs from array with $none', t => {
+  t.deepEqual(
+    update([$eachPair, $none], ['a', 'b']),
+    []
+  );
+});
+
+test('remove all pairs from object with $none', t => {
+  t.deepEqual(
+    update([$eachPair, $none], {x: 1, y: 2}),
+    {}
   );
 });
