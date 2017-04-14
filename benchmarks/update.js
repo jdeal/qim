@@ -46,7 +46,7 @@ export default [
     name: 'qim update',
     test: () => update(['users', $eachValue, user => user.balance >= 500, 'balance', $apply(bal => bal + 10)], state),
     compare: {
-      lodashMapValues: .5
+      lodashMapValues: 2.5
     }
   }
 ];
