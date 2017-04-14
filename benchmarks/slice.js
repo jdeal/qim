@@ -30,7 +30,7 @@ export default [
       update([$slice(0, 2), $set(['x', 'y'])], input)
     ),
     compare: {
-      splice: .70
+      splice: .60
     }
   }
 ];

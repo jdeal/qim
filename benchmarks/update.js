@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import fp from 'lodash/fp';
 
 import {update, $eachValue, $apply} from '../src';
 
@@ -27,7 +27,7 @@ export default [
   {
     name: 'lodash mapValues',
     test: () => (
-      _.update(state, 'users', users => _.mapValues(users,
+      fp.update('users', users => fp.mapValues(
         user => {
           if (user.balance < 500) {
             return user;
@@ -36,14 +36,15 @@ export default [
             ...user,
             balance: user.balance + 10
           };
-        }
-      ))
+        },
+        users
+      ), state)
     ),
     key: 'lodashMapValues'
   },
   {
     name: 'qim update',
-    test: () => update(['users', $eachValue, user => user.balance >= 500, $apply(bal => bal + 10)], state),
+    test: () => update(['users', $eachValue, user => user.balance >= 500, 'balance', $apply(bal => bal + 10)], state),
     compare: {
       lodashMapValues: .5
     }
