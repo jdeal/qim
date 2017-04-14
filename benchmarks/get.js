@@ -22,7 +22,7 @@ export default [
     name: 'qim get',
     test: () => get(['users', 'joe', 'name', 'first'], state),
     compare: {
-      lodashGet: .85
+      lodashGet: .80
     }
   }
 ];
