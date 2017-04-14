@@ -10,7 +10,8 @@ import {
   $eachPair,
   $set,
   $apply,
-  $none
+  $none,
+  $slice
 } from 'qim/src';
 
 const increment = value => value + 1;
@@ -180,5 +181,12 @@ test('remove all pairs from object with $none', t => {
   t.deepEqual(
     update([$eachPair, $none], {x: 1, y: 2}),
     {}
+  );
+});
+
+test('replace slice', t => {
+  t.deepEqual(
+    update([$slice(0, 2), $set(['x', 'y'])], ['a', 'b', 'c', 'd']),
+    ['x', 'y', 'c', 'd']
   );
 });

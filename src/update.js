@@ -96,7 +96,7 @@ export const updateEach = (path, object, pathIndex, returnFn) => {
 };
 
 continueUpdateEach = (updateFn, nav, object, path, pathIndex, returnFn) =>
-  updateFn(nav, object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn));
+  updateFn(nav, object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn), path, pathIndex);
 
 update = function (path, obj) {
   if (!Array.isArray(path)) {
