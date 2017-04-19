@@ -1,5 +1,5 @@
 export {default as selectFirst} from './selectFirst';
-export {default as has} from './has';
+export {default as selectHas} from './selectHas';
 export {default as select} from './select';
 export {default as set} from './set';
 export {default as update} from './update';

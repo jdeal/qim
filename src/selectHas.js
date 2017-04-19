@@ -7,7 +7,7 @@ const selectOneResultFn = (state, result) => {
   return reduced(result);
 };
 
-const has = (path, obj) => {
+const selectHas = (path, obj) => {
 
   let pathIndex = 0;
   let key;
@@ -47,4 +47,4 @@ const has = (path, obj) => {
   return true;
 };
 
-export default curry2(has);
+export default curry2(selectHas);

@@ -175,10 +175,10 @@ const names = select(['entity', 'account', $eachValue, 'owner'], state);
 Let's get a little more fancy. Let's grab all the usernames of people that have high balances.
 
 ```js
-import {has} from 'qim';
+import {selectHas} from 'qim';
 
 // All functions are curried, so you can leave off the data to get a function.
-const hasHighBalance = has(['balance', bal => bal >= 1000]);
+const hasHighBalance = selectHas(['balance', bal => bal >= 1000]);
 
 const usernames = select(['entity', 'account', $eachValue, hasHighBalance, 'owner'], state);
 // ['mary']
@@ -190,6 +190,18 @@ is high, and we use that as a predicate to select the owners with a high balance
 Cool, huh?
 
 ## API
+
+### `select(query, object)`
+
+Returns an array of selected results from an object.
+
+```js
+select(
+  ['numbers', $eachValue, value => value % 2 === 0],
+  {numbers: [1, 2, 3, 4, 5, 6]}
+)
+// [2, 4, 6]
+```
 
 ### `selectFirst(query, object)`
 
@@ -205,12 +217,12 @@ selectFirst(
 
 Generally, this will perform much better than taking the first item of the array returned by a `select`.
 
-### `has(query, object)`
+### `selectHas(query, object)`
 
 Returns true if an object has a matching result.
 
 ```js
-has(
+selectHas(
   [$eachValue, value => value % 2 === 0],
   [1, 2, 3]
 )
@@ -218,23 +230,11 @@ has(
 ```
 
 ```js
-has(
+selectHas(
   [$eachValue, value => value % 2 === 0],
   [1, 3, 5]
 )
 // false
-```
-
-### `select(query, object)`
-
-Returns an array of selected results from an object.
-
-```js
-select(
-  ['numbers', $eachValue, value => value % 2 === 0],
-  {numbers: [1, 2, 3, 4, 5, 6]}
-)
-// [2, 4, 6]
 ```
 
 ### `set(query, value, object)`
