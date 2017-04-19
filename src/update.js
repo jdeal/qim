@@ -11,7 +11,7 @@ import $none, {$noneKey, isNone, undefinedIfNone} from './$none';
 let continueUpdateEach;
 let update;
 
-export const updateEach = (path, object, pathIndex, returnFn) => {
+export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) => {
   if (pathIndex >= path.length) {
     if (returnFn) {
       return returnFn(object);
@@ -42,6 +42,14 @@ export const updateEach = (path, object, pathIndex, returnFn) => {
       }
       if (value === newValue) {
         return object;
+      }
+      if (mutationMarker) {
+        if (mutationMarker.hasMutated) {
+          object[nav] = newValue;
+          return object;
+        } else {
+          mutationMarker.hasMutated = true;
+        }
       }
       if (Array.isArray(object)) {
         const newObject = object.slice(0);
@@ -87,8 +95,11 @@ export const updateEach = (path, object, pathIndex, returnFn) => {
   } else if (nav['@@qim/nav']) {
     updateFn = nav['@@qim/nav'][updateKey];
   } else if (Array.isArray(nav)) {
-    const nestedResult = undefinedIfNone(updateEach(nav, object, 0));
-    return updateEach(path, nestedResult, pathIndex + 1, returnFn);
+    mutationMarker = mutationMarker || {
+      hasMutated: false
+    };
+    const nestedResult = undefinedIfNone(updateEach(nav, object, 0, undefined, mutationMarker));
+    return updateEach(path, nestedResult, pathIndex + 1, returnFn, mutationMarker);
   }
   if (!updateFn) {
     throw new Error(`invalid navigator at path index ${pathIndex}`);
