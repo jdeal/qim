@@ -1,7 +1,5 @@
 import {updateEach} from './update';
 import {curry3} from './utils/curry';
-import $nav from './$nav';
-import $apply from './$apply';
 import {undefinedIfNone} from './$none';
 
 const updateTo = (path, value, obj) => {
@@ -26,7 +24,9 @@ const updateTo = (path, value, obj) => {
     return obj;
   }
 
-  return undefinedIfNone(updateEach([$nav(path), $apply(() => value)], obj, 0));
+  path = Array.isArray(path) ? path : [path];
+
+  return undefinedIfNone(updateEach(path, obj, 0, () => value));
 };
 
 export default curry3(updateTo);
