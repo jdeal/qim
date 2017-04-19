@@ -87,7 +87,8 @@ export const updateEach = (path, object, pathIndex, returnFn) => {
   } else if (nav['@@qim/nav']) {
     updateFn = nav['@@qim/nav'][updateKey];
   } else if (Array.isArray(nav)) {
-    return updateEach(path, update(nav, object), pathIndex + 1, returnFn);
+    const nestedResult = undefinedIfNone(updateEach(nav, object, 0));
+    return updateEach(path, nestedResult, pathIndex + 1, returnFn);
   }
   if (!updateFn) {
     throw new Error(`invalid navigator at path index ${pathIndex}`);
