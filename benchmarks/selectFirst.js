@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import {get} from '../src';
+import {selectFirst} from '../src';
 
 const state = {
   users: {
@@ -19,8 +19,8 @@ export default [
     key: 'lodashGet'
   },
   {
-    name: 'qim get',
-    test: () => get(['users', 'joe', 'name', 'first'], state),
+    name: 'qim selectFirst',
+    test: () => selectFirst(['users', 'joe', 'name', 'first'], state),
     compare: {
       lodashGet: .80
     }

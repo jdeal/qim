@@ -191,12 +191,12 @@ Cool, huh?
 
 ## API
 
-### `get(query, object)`
+### `selectFirst(query, object)`
 
 Like `select`, but only returns a single result. If many results would be returned from a `select`, it will return the first result.
 
 ```js
-get(
+selectFirst(
   [$eachValue, value => value % 2 === 0],
   [1, 2, 3, 4, 5, 6]
 )

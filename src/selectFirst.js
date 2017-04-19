@@ -7,7 +7,7 @@ const selectOneResultFn = (state, result) => {
   return reduced(result);
 };
 
-const get = (path, obj) => {
+const selectFirst = (path, obj) => {
 
   let pathIndex = 0;
   let key;
@@ -33,4 +33,4 @@ const get = (path, obj) => {
   return obj;
 };
 
-export default curry2(get);
+export default curry2(selectFirst);

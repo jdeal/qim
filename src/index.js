@@ -1,4 +1,4 @@
-export {default as get} from './get';
+export {default as selectFirst} from './selectFirst';
 export {default as has} from './has';
 export {default as select} from './select';
 export {default as set} from './set';
