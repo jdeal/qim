@@ -279,6 +279,28 @@ updateTo(
 // {numbers: [1, 0, 3, 0, 5, 0]}
 ```
 
+### `updateWith(query, transform, object)`
+
+Just a convenience method for updating with a single transform ($apply) function.
+
+```js
+updateWith(
+  ['users', 'joe', 'name'],
+  name => name.toUpperCase(),
+  {users: {joe: {name: 'Joe'}}}
+)
+// {users: {joe: {name: 'JOE'}}}
+```
+
+```js
+updateWith(
+  ['numbers', $eachValue, value => value % 2 === 0],
+  num => num * num,
+  {numbers: [1, 2, 3, 4, 5, 6]}
+)
+// {numbers: [1, 4, 3, 16, 5, 36]}
+```
+
 ## Navigators
 
 ### Built-in, type-based navigators
