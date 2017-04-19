@@ -58,9 +58,6 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
       }
       return objectAssign({}, object, {[nav]: newValue});
     } else {
-      // if (pathIndex === 0) {
-      //   return object;
-      // }
       object = isInteger(nav) ? [] : {};
       const value = object[nav];
       const newValue = updateEach(path, value, pathIndex + 1, returnFn);
