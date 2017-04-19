@@ -184,7 +184,7 @@ const usernames = select(['entity', 'account', $eachValue, hasHighBalance, 'owne
 // ['mary']
 ```
 
-`has` checks if a selection returns anything. We use currying to create a function for checking if an account balance
+`selectHas` checks if a selection returns anything. We use currying to create a function for checking if an account balance
 is high, and we use that as a predicate to select the owners with a high balance.
 
 Cool, huh?
