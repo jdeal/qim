@@ -237,28 +237,6 @@ selectHas(
 // false
 ```
 
-### `set(query, value, object)`
-
-Just a convenience method to set a query path to a constant value.
-
-```js
-set(
-  ['users', 'joe', 'name'],
-  'Joseph',
-  {users: {joe: {name: 'Joe'}}}
-)
-// {users: {joe: {name: 'Joseph'}}}
-```
-
-```js
-set(
-  ['numbers', $eachValue, value => value % 2 === 0],
-  0,
-  {numbers: [1, 2, 3, 4, 5, 6]}
-)
-// {numbers: [1, 0, 3, 0, 5, 0]}
-```
-
 ### `update(query, object)`
 
 Returns a mutation of an object without changing the original object.
@@ -277,6 +255,28 @@ update(
   {numbers: [1, 2, 3, 4, 5, 6]}
 )
 // {'numbers': [1, 4, 3, 8, 5, 12]}
+```
+
+### `updateTo(query, value, object)`
+
+Just a convenience method to set a query path to a constant value.
+
+```js
+updateTo(
+  ['users', 'joe', 'name'],
+  'Joseph',
+  {users: {joe: {name: 'Joe'}}}
+)
+// {users: {joe: {name: 'Joseph'}}}
+```
+
+```js
+updateTo(
+  ['numbers', $eachValue, value => value % 2 === 0],
+  0,
+  {numbers: [1, 2, 3, 4, 5, 6]}
+)
+// {numbers: [1, 0, 3, 0, 5, 0]}
 ```
 
 ## Navigators

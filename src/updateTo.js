@@ -4,7 +4,7 @@ import $nav from './$nav';
 import $apply from './$apply';
 import {undefinedIfNone} from './$none';
 
-const set = (path, value, obj) => {
+const updateTo = (path, value, obj) => {
 
   if (!path || typeof path !== 'object') {
     if (obj == null || typeof obj !== 'object') {
@@ -29,4 +29,4 @@ const set = (path, value, obj) => {
   return undefinedIfNone(updateEach([$nav(path), $apply(() => value)], obj, 0));
 };
 
-export default curry3(set);
+export default curry3(updateTo);

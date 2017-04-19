@@ -1,8 +1,8 @@
+export {default as select} from './select';
 export {default as selectFirst} from './selectFirst';
 export {default as selectHas} from './selectHas';
-export {default as select} from './select';
-export {default as set} from './set';
 export {default as update} from './update';
+export {default as updateTo} from './updateTo';
 
 export {default as $eachKey} from './$eachKey';
 export {default as $eachPair} from './$eachPair';
