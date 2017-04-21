@@ -2,6 +2,7 @@ import {selectKey} from './createNavigator';
 import $none from './$none';
 import {curry2} from './utils/curry';
 import {$setKey} from './$set';
+import {$defaultKey} from './$default';
 import {$applyKey} from './$apply';
 import {$navKey} from './$nav';
 import {$noneKey} from './$none';
@@ -17,16 +18,19 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
     return resultFn(state, object);
   }
   const nav = path[pathIndex];
+
   if (!nav || typeof nav === 'string' || typeof nav === 'number' || typeof nav === 'boolean') {
     if (object && typeof object === 'object') {
       const subObject = object[nav];
-      if (typeof subObject === 'undefined' && !(nav in object)) {
+      // Special case so `has` can differentiate between missing keys and keys
+      // pointing to undefined values. Maybe a better way? Maybe just don't
+      // worry about `has(['x'], {x: undefined}) === false`?
+      if (typeof subObject === 'undefined' && !(nav in object) && pathIndex === path.length - 1) {
         return $none;
       }
       return selectEach(state, resultFn, path, subObject, pathIndex + 1, returnFn);
     } else {
       return $none;
-      //return resultFn(state, undefined);
     }
   }
 
@@ -44,6 +48,12 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
     }
     case $setKey:
       return selectEach(state, resultFn, path, nav.data, pathIndex + 1, returnFn);
+    case $defaultKey: {
+      if (typeof object === 'undefined') {
+        return selectEach(state, resultFn, path, nav.data, pathIndex + 1, returnFn);
+      }
+      return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
+    }
     case $navKey:
       return selectEach(
         state, resultFn, nav.data, object, 0,

@@ -8,7 +8,8 @@ import {
   $eachKey,
   $eachPair,
   $none,
-  $slice
+  $slice,
+  $default
 } from 'qim/src';
 
 test('set to value', t => {
@@ -71,5 +72,22 @@ test('replace slice', t => {
   t.deepEqual(
     set([$slice(0, 2)], ['x', 'y'], ['a', 'b', 'c', 'd']),
     ['x', 'y', 'c', 'd']
+  );
+});
+
+test('stop if path is invalid', t => {
+  t.throws(() => {
+    set(['x', 'y'], 0, {});
+  });
+});
+
+test('fill in path with $default', t => {
+  t.deepEqual(
+    set(['x', $default({}), 'y'], 0, {}),
+    {x: {y: 0}}
+  );
+  t.deepEqual(
+    set(['x', $default([]), 0], 1, {}),
+    {x: [1]}
   );
 });

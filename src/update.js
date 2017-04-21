@@ -1,9 +1,9 @@
 import objectAssign from 'object-assign';
 
-import isInteger from './utils/isInteger';
 import {updateKey} from './createNavigator';
 import {curry2} from './utils/curry';
 import {$setKey} from './$set';
+import {$defaultKey} from './$default';
 import {$navKey} from './$nav';
 import {$applyKey} from './$apply';
 import $none, {$noneKey, isNone, undefinedIfNone} from './$none';
@@ -58,11 +58,7 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
       }
       return objectAssign({}, object, {[nav]: newValue});
     } else {
-      object = isInteger(nav) ? [] : {};
-      const value = object[nav];
-      const newValue = updateEach(path, value, pathIndex + 1, returnFn);
-      object[nav] = newValue;
-      return object;
+      throw new Error('cannot update property ${nav} for non-object');
     }
   }
   if (typeof nav === 'function') {
@@ -79,6 +75,12 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
     }
     case $setKey:
       return updateEach(path, nav.data, pathIndex + 1, returnFn);
+    case $defaultKey: {
+      if (typeof object === 'undefined') {
+        return updateEach(path, nav.data, pathIndex + 1, returnFn);
+      }
+      return updateEach(path, object, pathIndex + 1, returnFn);
+    }
     case $navKey:
       return updateEach(
         nav.data, object, 0,

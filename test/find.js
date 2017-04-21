@@ -6,7 +6,8 @@ import {
   find,
   $eachValue,
   $eachKey,
-  $eachPair
+  $eachPair,
+  $default
 } from 'qim/src';
 
 const isEven = value => value % 2 === 0;
@@ -83,5 +84,12 @@ test('find pairs', t => {
   t.deepEqual(
     find([$eachPair, 1], {x: 1, y: 2}),
     1
+  );
+});
+
+test('fill in path with $default', t => {
+  t.deepEqual(
+    find(['x', $default({}), 'y', $default(0)], {}),
+    0
   );
 });
