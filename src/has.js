@@ -3,11 +3,11 @@ import reduced, {unreduced} from './utils/reduced';
 import {curry2} from './utils/curry';
 import {isNone} from './$none';
 
-const selectOneResultFn = (state, result) => {
+const selectFirstResultFn = (state, result) => {
   return reduced(result);
 };
 
-const selectHas = (path, obj) => {
+const has = (path, obj) => {
 
   let pathIndex = 0;
   let key;
@@ -20,7 +20,7 @@ const selectHas = (path, obj) => {
   while (pathIndex < path.length) {
     key = path[pathIndex];
     if (key && typeof key !== 'string' && typeof key !== 'number' && typeof key !== 'boolean') {
-      let selectResult = selectEach(null, selectOneResultFn, path, obj, pathIndex);
+      let selectResult = selectEach(null, selectFirstResultFn, path, obj, pathIndex);
       if (typeof selectResult === 'undefined') {
         return false;
       }
@@ -47,4 +47,4 @@ const selectHas = (path, obj) => {
   return true;
 };
 
-export default curry2(selectHas);
+export default curry2(has);

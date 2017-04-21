@@ -2,7 +2,7 @@ import {updateEach} from './update';
 import {curry3} from './utils/curry';
 import {undefinedIfNone} from './$none';
 
-const updateTo = (path, value, obj) => {
+const set = (path, value, obj) => {
 
   if (!path || typeof path !== 'object') {
     if (obj == null || typeof obj !== 'object') {
@@ -29,4 +29,4 @@ const updateTo = (path, value, obj) => {
   return undefinedIfNone(updateEach(path, obj, 0, () => value));
 };
 
-export default curry3(updateTo);
+export default curry3(set);

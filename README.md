@@ -175,21 +175,77 @@ const names = select(['entity', 'account', $eachValue, 'owner'], state);
 Let's get a little more fancy. Let's grab all the usernames of people that have high balances.
 
 ```js
-import {selectHas} from 'qim';
+import {has} from 'qim';
 
 // All functions are curried, so you can leave off the data to get a function.
-const hasHighBalance = selectHas(['balance', bal => bal >= 1000]);
+const hasHighBalance = has(['balance', bal => bal >= 1000]);
 
 const usernames = select(['entity', 'account', $eachValue, hasHighBalance, 'owner'], state);
 // ['mary']
 ```
 
-`selectHas` checks if a selection returns anything. We use currying to create a function for checking if an account balance
+`has` checks if a selection returns anything. We use currying to create a function for checking if an account balance
 is high, and we use that as a predicate to select the owners with a high balance.
 
 Cool, huh?
 
 ## API
+
+### `apply(query, transform, object)`
+
+Just a convenience method for updating with a single transform ($apply) function.
+
+```js
+apply(
+  ['users', 'joe', 'name'],
+  name => name.toUpperCase(),
+  {users: {joe: {name: 'Joe'}}}
+)
+// {users: {joe: {name: 'JOE'}}}
+```
+
+```js
+apply(
+  ['numbers', $eachValue, value => value % 2 === 0],
+  num => num * num,
+  {numbers: [1, 2, 3, 4, 5, 6]}
+)
+// {numbers: [1, 4, 3, 16, 5, 36]}
+```
+
+### `find(query, object)`
+
+Like `select`, but only returns a single result. If many results would be returned from a `select`, it will return the first result.
+
+```js
+find(
+  [$eachValue, value => value % 2 === 0],
+  [1, 2, 3, 4, 5, 6]
+)
+// 2
+```
+
+Generally, this will perform much better than taking the first item of the array returned by a `select`.
+
+### `has(query, object)`
+
+Returns true if an object has a matching result.
+
+```js
+has(
+  [$eachValue, value => value % 2 === 0],
+  [1, 2, 3]
+)
+// true
+```
+
+```js
+has(
+  [$eachValue, value => value % 2 === 0],
+  [1, 3, 5]
+)
+// false
+```
 
 ### `select(query, object)`
 
@@ -203,38 +259,26 @@ select(
 // [2, 4, 6]
 ```
 
-### `selectFirst(query, object)`
+### `set(query, value, object)`
 
-Like `select`, but only returns a single result. If many results would be returned from a `select`, it will return the first result.
-
-```js
-selectFirst(
-  [$eachValue, value => value % 2 === 0],
-  [1, 2, 3, 4, 5, 6]
-)
-// 2
-```
-
-Generally, this will perform much better than taking the first item of the array returned by a `select`.
-
-### `selectHas(query, object)`
-
-Returns true if an object has a matching result.
+Just a convenience method to set a query path to a constant value.
 
 ```js
-selectHas(
-  [$eachValue, value => value % 2 === 0],
-  [1, 2, 3]
+set(
+  ['users', 'joe', 'name'],
+  'Joseph',
+  {users: {joe: {name: 'Joe'}}}
 )
-// true
+// {users: {joe: {name: 'Joseph'}}}
 ```
 
 ```js
-selectHas(
-  [$eachValue, value => value % 2 === 0],
-  [1, 3, 5]
+set(
+  ['numbers', $eachValue, value => value % 2 === 0],
+  0,
+  {numbers: [1, 2, 3, 4, 5, 6]}
 )
-// false
+// {numbers: [1, 0, 3, 0, 5, 0]}
 ```
 
 ### `update(query, object)`
@@ -255,50 +299,6 @@ update(
   {numbers: [1, 2, 3, 4, 5, 6]}
 )
 // {'numbers': [1, 4, 3, 8, 5, 12]}
-```
-
-### `updateTo(query, value, object)`
-
-Just a convenience method to set a query path to a constant value.
-
-```js
-updateTo(
-  ['users', 'joe', 'name'],
-  'Joseph',
-  {users: {joe: {name: 'Joe'}}}
-)
-// {users: {joe: {name: 'Joseph'}}}
-```
-
-```js
-updateTo(
-  ['numbers', $eachValue, value => value % 2 === 0],
-  0,
-  {numbers: [1, 2, 3, 4, 5, 6]}
-)
-// {numbers: [1, 0, 3, 0, 5, 0]}
-```
-
-### `updateWith(query, transform, object)`
-
-Just a convenience method for updating with a single transform ($apply) function.
-
-```js
-updateWith(
-  ['users', 'joe', 'name'],
-  name => name.toUpperCase(),
-  {users: {joe: {name: 'Joe'}}}
-)
-// {users: {joe: {name: 'JOE'}}}
-```
-
-```js
-updateWith(
-  ['numbers', $eachValue, value => value % 2 === 0],
-  num => num * num,
-  {numbers: [1, 2, 3, 4, 5, 6]}
-)
-// {numbers: [1, 4, 3, 16, 5, 36]}
 ```
 
 ## Navigators

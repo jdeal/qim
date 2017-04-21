@@ -3,7 +3,7 @@ import test from 'ava';
 import 'babel-core/register';
 
 import {
-  updateTo,
+  set,
   $eachValue,
   $eachKey,
   $eachPair,
@@ -13,63 +13,63 @@ import {
 
 test('set to value', t => {
   t.deepEqual(
-    updateTo(['x'], 2, {x: 1}),
+    set(['x'], 2, {x: 1}),
     {x: 2}
   );
 });
 
 test('remove key', t => {
   t.deepEqual(
-    updateTo(['x'], $none, {x: 1, y: 2}),
+    set(['x'], $none, {x: 1, y: 2}),
     {y: 2}
   );
 });
 
 test('remove item', t => {
   t.deepEqual(
-    updateTo([0], $none, ['a', 'b']),
+    set([0], $none, ['a', 'b']),
     ['b']
   );
 });
 
 test('remove all keys', t => {
   t.deepEqual(
-    updateTo([$eachValue], $none, {x: 1, y: 2}),
+    set([$eachValue], $none, {x: 1, y: 2}),
     {}
   );
 });
 
 test('remove all items', t => {
   t.deepEqual(
-    updateTo([$eachValue], $none, ['a', 'b']),
+    set([$eachValue], $none, ['a', 'b']),
     []
   );
 });
 
 test('remove all keys with $none', t => {
   t.deepEqual(
-    updateTo([$eachKey], $none, {x: 1, y: 2}),
+    set([$eachKey], $none, {x: 1, y: 2}),
     {}
   );
 });
 
 test('remove all pairs from array with $none', t => {
   t.deepEqual(
-    updateTo([$eachPair], $none, ['a', 'b']),
+    set([$eachPair], $none, ['a', 'b']),
     []
   );
 });
 
 test('remove all pairs from object with $none', t => {
   t.deepEqual(
-    updateTo([$eachPair], $none, {x: 1, y: 2}),
+    set([$eachPair], $none, {x: 1, y: 2}),
     {}
   );
 });
 
 test('replace slice', t => {
   t.deepEqual(
-    updateTo([$slice(0, 2)], ['x', 'y'], ['a', 'b', 'c', 'd']),
+    set([$slice(0, 2)], ['x', 'y'], ['a', 'b', 'c', 'd']),
     ['x', 'y', 'c', 'd']
   );
 });
