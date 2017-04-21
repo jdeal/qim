@@ -412,6 +412,20 @@ update(
 // [-2, -1, 0, 1, 2, 3]
 ```
 
+#### `$default(value)`
+
+By default, `qim` will not try to create missing objects/arrays and will instead throw an error. You can use `$default` to change this behavior.
+
+```js
+set(['x', $default({}), 'y'], 0, {})
+// {x: {y: 0}}
+```
+
+```js
+set(['names', $default([]), 0], 'joe', {})
+// {names: ['joe']}
+```
+
 #### `$eachKey`
 
 Navigates to each key of an array or object.
