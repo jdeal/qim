@@ -621,6 +621,87 @@ update(
 // ['a', 'b', 'e', 'f']
 ```
 
+### Custom navigators
+
+#### `createNavigator({select, update})`
+
+Creates an unparameterized navigator.
+
+```js
+// Create a navigator that selects or modifies the length of an array.
+const $length = createNavigator({
+  select: (nav, object, next) => {
+    if (Array.isArray(object)) {
+      return next(object.length);
+    }
+    throw new Error('$length only works on arrays');
+  },
+  update: (nav, object, next) => {
+    if (Array.isArray(object)) {
+      const newLength = next(object.length);
+      if (newLength < object.length) {
+        return object.slice(0, newLength);
+      }
+      if (newLength > object.length) {
+        object = object.slice(0);
+        for (let i = 0; i < newLength - object.length; i++) {
+          object.push(undefined);
+        }
+        return object;
+      }
+      return object;
+    }
+    throw new Error('$length only works on arrays');
+  }
+});
+
+select([$length], [1, 1, 1])
+// [3]
+
+set([$length], 3, [1, 1, 1])
+// [1, 1, 1]
+
+set([$length], 2, [1, 1, 1])
+// [1, 1]
+
+set([$length], 4, [1, 1, 1])
+// [1, 1, 1, undefined]
+```
+
+#### `createNavigator({select, update}, navigator => navigatorCallFn)`
+
+Create a parameterized navigator.
+
+```js
+// Create a navigator that selects or updates the first n items of an array.
+const $take = createNavigator({
+  select: (nav, object, next) => {
+    if (Array.isArray(object)) {
+      return next(object.slice(0, nav.count));
+    }
+    throw new Error('$length only works on arrays');
+  },
+  update: (nav, object, next) => {
+    if (Array.isArray(object)) {
+      const result = next(object.slice(0, nav.count));
+      const newArray = object.slice(0);
+      newArray.splice(0, nav.count, ...result);
+      return newArray;
+    }
+    throw new Error('$length only works on arrays');
+  }
+},
+  // Given the navigator, create the dynamic navigator call.
+  navigator => (count) => createNavigatorCall(navigator, {count})
+);
+
+select([$take(2)], ['a', 'b', 'c'])
+// [['a', 'b']]
+
+set([$take(2)], ['x'], ['a', 'b', 'c'])
+// ['x', 'c']
+```
+
 ## Thanks
 
 As mentioned above, the navigator concept borrows heavily from [Specter](https://github.com/nathanmarz/specter), a Clojure library written by Nathan Marz.
