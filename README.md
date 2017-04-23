@@ -757,11 +757,32 @@ set([$take(2)], ['x'], ['a', 'b', 'c'])
 // ['x', 'c']
 ```
 
+## Performance
+
+`qim` aims to be _performant enough_.
+
+For `lodash` operations that are immutable (like `get` and `set`), `qim` should have similar performance. Many `lodash` functions mutate (like `update`), and in most cases, `qim` will be faster than `lodash-fp`'s immutable functions. Likewise, `qim` will typically be faster than React's immutability helper (now an [external package](https://github.com/kolodny/immutability-helper)).
+
+In some cases, a custom native helper function using `Object.assign` or `slice` along with a mutation may be faster for simple operations, but `qim` aims to be as close as possible, while still allowing for a flexible querying API.
+
+Comparing to Immutable.js is difficult in that it heavily depends on your particular use case. The sweet spot for Immutable.js is lots of transformations of _large_ objects or arrays (thousands of items). And even then, you need to avoid marshalling data back and forth between Immutable and plain JS. If you marshal the data back and forth, you'll lose most of the benefit, and if you work with smaller objects and arrays, you're unlikely to see much benefit.
+
+If you want flexible select and update of plain JS objects, `qim` is likely to be a good fit. You can check out the [current benchmarks](docs/benchmark-results.md) to get an idea how `qim` stacks up. As with all benchmarks, be careful reading into them too much. Also, `qim` is new and performance tradeoffs could change in favor of simplifying the code or API.
+
+## TODO
+
+- More tests.
+- Better error messages.
+- Maybe merge the internal implementations of `select` and `update` to reduce copy-pasta. If performance is worse, or if the code is too confusing, it will stay separate.
+- Expose ES6 modules.
+- Static typing? `qim` might be diametrically opposed to static types, but worth seeing how good/bad they would fit.
+
 ## Contributing
 
 - Do the usual fork and PR thing.
 - Make sure tests pass with `npm test` and preferaby add additional tests.
 - Make sure to run `npm run benchmark` to make sure the benchmarks pass. Currently, the benchmarks are running against Node 6.2.2 on a late 2013 MacBook Pro. The benchmarks are by no means perfect, and small regressions may be allowed in exchange for significant improvements, but for the most part, performance needs to remain consistent or improve.
+- Thanks!
 
 ## Thanks
 

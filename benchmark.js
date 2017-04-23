@@ -3,7 +3,9 @@
 
 import Benchmark from 'benchmark';
 import requireDir from 'require-dir';
+import fs from 'fs';
 import fp from 'lodash/fp';
+import markdownTable from 'markdown-table';
 
 const benchmarks = requireDir('./benchmarks');
 
@@ -46,9 +48,15 @@ const testBenchmark = (name, tests) => {
         result[testsByName[bench.name].key] = bench;
         return result;
       }, {});
-      output.push(this.map(bench => {
-        return bench.name + '\n' + Number(Math.round(bench.hz)).toLocaleString();
-      }).join('\n\n'));
+      const table = markdownTable([
+        ['Test', 'Ops/Sec'],
+        ...this.map(bench =>
+          [bench.name, Number(Math.round(bench.hz)).toLocaleString()]
+        )
+      ], {
+        align: ['l', 'r']
+      });
+      output.push(table + '\n');
       const comparisons = fp.flatten(Object.keys(benchesByKey)
         .map(key => {
           const test = testsByKey[key];
@@ -83,7 +91,10 @@ const testBenchmark = (name, tests) => {
       }
       output.push('\n');
       console.log(output.join('\n'));
-      return resolve();
+      return resolve({
+        name,
+        output: output.join('\n')
+      });
     }).run({async: true});
   });
 };
@@ -96,7 +107,9 @@ const matchingBenchmarks = Object.keys(benchmarks)
 matchingBenchmarks.forEach(key => {
   const tests = benchmarks[key];
   if (tests.length > 1) {
-    const results = tests.map(test => test.test());
+    const results = tests.map(test =>
+      test.coerce ? test.coerce(test.test()) : test.test()
+    );
     const hasAllSameResults = results.every(result => fp.isEqual(result, results[0]));
     if (!hasAllSameResults) {
       console.log(`Benchmark invalid: ${key}`);
@@ -111,11 +124,36 @@ matchingBenchmarks.forEach(key => {
   }
 });
 
+const restCpu = () => new Promise(resolve =>
+  setTimeout(resolve, 1000)
+);
+
 matchingBenchmarks.reduce((promise, key) => {
   return promise
-    .then(() => testBenchmark(key, benchmarks[key]));
-}, Promise.resolve())
-  .then(() => {
+    .then((results) => (
+      results.length > 0 ? (
+        restCpu().then(() => results)
+      ) : results
+    ))
+    .then((results) =>
+      testBenchmark(key, benchmarks[key])
+        .then((result) => results.concat(result))
+    );
+}, Promise.resolve([]))
+  .then((results) => {
+    if (!benchmarkName) {
+      fs.writeFileSync('./docs/benchmark-results.md',
+        results.map(result =>
+          [
+            `## ${result.name}`,
+            '',
+            '[source](benchmarks/${result.name}.js)',
+            '',
+            result.output
+          ].join('\n')
+        ).join('\n')
+      );
+    }
     console.log('\nAll benchmark tests passed.');
   })
   .catch((err) => {

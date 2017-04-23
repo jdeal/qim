@@ -1,5 +1,6 @@
 import fp from 'lodash/fp';
 import updateHelper from 'immutability-helper';
+import Immutable from 'immutable';
 
 import {set} from '../src';
 
@@ -24,6 +25,8 @@ const state = {
   }
 };
 
+const immutableState = Immutable.fromJS(state);
+
 export default [
   {
     name: 'lodash fp set',
@@ -31,6 +34,13 @@ export default [
       fp.set(['users', 'joe', 'name', 'first'], 'Joseph', state)
     ),
     key: 'lodashFpSet'
+  },
+  {
+    name: 'Immutable set',
+    test: () => (
+      immutableState.setIn(['users', 'joe', 'name', 'first'], 'Joseph')
+    ),
+    coerce: value => value.toJS()
   },
   {
     name: 'immutability-helper',

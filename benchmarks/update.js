@@ -1,4 +1,5 @@
 import fp from 'lodash/fp';
+import Immutable from 'immutable';
 
 import {update, $eachValue, $apply} from '../src';
 
@@ -23,6 +24,8 @@ const state = {
   }
 };
 
+const immutableState = Immutable.fromJS(state);
+
 export default [
   {
     name: 'lodash mapValues',
@@ -41,6 +44,20 @@ export default [
       ), state)
     ),
     key: 'lodashMapValues'
+  },
+  {
+    name: 'Immutable',
+    test: () => (
+      immutableState.update('users', users => users.map(
+        user => {
+          if (user.get('balance') < 500) {
+            return user;
+          }
+          return user.update('balance', bal => bal + 10);
+        }
+      ))
+    ),
+    coerce: value => value.toJS()
   },
   {
     name: 'qim update',
