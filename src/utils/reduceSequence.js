@@ -1,4 +1,5 @@
 import {isReduced} from './reduced';
+import getTypeErrorMessage from './getTypeErrorMessage';
 
 const reduceSequence = (eachFn, initialValue, seq) => {
   let result = initialValue;
@@ -19,7 +20,7 @@ const reduceSequence = (eachFn, initialValue, seq) => {
       }
     }
   } else {
-    throw new Error('iteration not supported for ' + seq);
+    throw new Error(getTypeErrorMessage('reduceSequence', ['object', 'array'], seq));
   }
   return result;
 };

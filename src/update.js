@@ -58,7 +58,7 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
       }
       return objectAssign({}, object, {[nav]: newValue});
     } else {
-      throw new Error(`cannot update property ${nav} for non-object`);
+      throw new Error(`Cannot update property ${nav} (at path index ${pathIndex}) for non-object.`);
     }
   }
   if (typeof nav === 'function') {
@@ -108,7 +108,7 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
     return updateEach(path, nestedResult, pathIndex + 1, returnFn, mutationMarker);
   }
   if (!updateFn) {
-    throw new Error(`invalid navigator at path index ${pathIndex}`);
+    throw new Error(`Invalid navigator ${nav} at path index ${pathIndex}.`);
   }
   return continueUpdateEach(updateFn, nav, object, path, pathIndex, returnFn);
 };

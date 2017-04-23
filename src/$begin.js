@@ -1,11 +1,12 @@
 import createNavigator from './createNavigator';
+import getTypeErrorMessage from './utils/getTypeErrorMessage';
 
 const $begin = createNavigator({
   select: (nav, object, next) => {
     if (Array.isArray(object)) {
       return next([]);
     }
-    throw new Error('$begin only works on array.');
+    throw new Error(getTypeErrorMessage('$begin', 'array', object));
   },
   update: (nav, object, next) => {
     if (Array.isArray(object)) {
@@ -18,7 +19,7 @@ const $begin = createNavigator({
       }
       return beginArray.concat(object);
     }
-    throw new Error('$begin only works on array.');
+    throw new Error(getTypeErrorMessage('$begin', 'array', object));
   }
 });
 

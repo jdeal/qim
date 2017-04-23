@@ -1,12 +1,13 @@
 import createNavigator from './createNavigator';
 import isNextNavigatorConstant from './utils/isNextNavigatorConstant';
+import getTypeErrorMessage from './utils/getTypeErrorMessage';
 
 const $slice = createNavigator({
   select: (nav, object, next) => {
     if (object && typeof object.slice === 'function') {
       return next(object.slice(nav.begin, nav.end));
     }
-    throw new Error('$slice only works on array.');
+    throw new Error(getTypeErrorMessage('$slice', 'array', object));
   },
   update: (nav, object, next, path, index) => {
     if (object && typeof object.slice === 'function') {
@@ -22,7 +23,7 @@ const $slice = createNavigator({
       }
       return newArray;
     }
-    throw new Error('$slice only works on array.');
+    throw new Error(getTypeErrorMessage('$slice', 'array', object));
   }
 },
   (nav) => (begin, end) => ({'@@qim/nav': nav, begin, end})

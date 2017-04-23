@@ -81,7 +81,7 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
     return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
   }
   if (!selectFn) {
-    throw new Error(`invalid navigator at path index ${pathIndex}`);
+    throw new Error(`Invalid navigator ${nav} at path index ${pathIndex}.`);
   }
   return continueSelectEach(state, resultFn, selectFn, nav, object, path, pathIndex, returnFn);
 };
