@@ -2,7 +2,7 @@
 
 [![travis](https://travis-ci.org/jdeal/qim.svg?branch=master)](https://travis-ci.org/jdeal/qim)
 
-WARNING: This is experimental right now. The API could still wildly change!
+WARNING: `qim` is already useful, but it's still considered experimental, and the API might change!
 
 `qim` makes it simple to reach in and modify complex nested JS objects. This is possible with a query path that is just a simple JS array, much like you might use with `set` and `update` from `lodash`, but with a more powerful concept of "navigators" (borrowed from [Specter](https://github.com/nathanmarz/specter), a Clojure library). Instead of just string keys, `qim`'s navigators can act as predicates, wildcards, slices, and other tools. Those same navigators allow you to reach in and select parts of JS objects as well.
 
@@ -756,6 +756,12 @@ select([$take(2)], ['a', 'b', 'c'])
 set([$take(2)], ['x'], ['a', 'b', 'c'])
 // ['x', 'c']
 ```
+
+## Contributing
+
+- Do the usual fork and PR thing.
+- Make sure tests pass with `npm test` and preferaby add additional tests.
+- Make sure to run `npm run benchmark` to make sure the benchmarks pass. Currently, the benchmarks are running against Node 6.2.2 on a late 2013 MacBook Pro. The benchmarks are by no means perfect, and small regressions may be allowed in exchange for significant improvements, but for the most part, performance needs to remain consistent or improve.
 
 ## Thanks
 
