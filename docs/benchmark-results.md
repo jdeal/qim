@@ -1,55 +1,55 @@
 ## find
 
-[source](benchmarks/${result.name}.js)
+[source](../benchmarks/find.js)
 
-| Test          |   Ops/Sec |
-| :------------ | --------: |
-| lodash get    | 8,560,728 |
-| lodash-fp get | 1,998,573 |
-| Immutable get | 2,583,604 |
-| qim find      | 9,117,674 |
+| Test          |    Ops/Sec |
+| :------------ | ---------: |
+| lodash get    | 10,315,965 |
+| lodash-fp get |  1,893,324 |
+| Immutable get |  2,747,905 |
+| qim find      |  8,716,580 |
 
 
-qim find / lodash get = 107% (PASS)
+qim find / lodash get = 84% (PASS)
 
 
 ## set
 
-[source](benchmarks/${result.name}.js)
+[source](../benchmarks/set.js)
 
 | Test                | Ops/Sec |
 | :------------------ | ------: |
-| lodash fp set       |  82,881 |
-| Immutable set       | 639,480 |
-| immutability-helper |  79,893 |
-| qim set             | 272,270 |
+| lodash fp set       |  82,235 |
+| Immutable set       | 607,501 |
+| immutability-helper |  78,437 |
+| qim set             | 272,614 |
 
 
-qim set / lodash fp set = 329% (PASS)
+qim set / lodash fp set = 332% (PASS)
 
 
 ## slice
 
-[source](benchmarks/${result.name}.js)
+[source](../benchmarks/slice.js)
 
 | Test                | Ops/Sec |
 | :------------------ | ------: |
-| simple splice       | 832,591 |
-| immutability-helper | 322,886 |
-| qim slice           | 630,629 |
+| simple splice       | 823,640 |
+| immutability-helper | 363,862 |
+| qim slice           | 515,991 |
 
 
-qim slice / simple splice = 76% (PASS)
+qim slice / simple splice = 63% (PASS)
 
 
 ## update-multi-key
 
-[source](benchmarks/${result.name}.js)
+[source](../benchmarks/update-multi-key.js)
 
 | Test          | Ops/Sec |
 | :------------ | ------: |
-| Object.assign |  61,484 |
-| qim update    |  53,790 |
+| Object.assign |  59,394 |
+| qim update    |  51,536 |
 
 
 qim update / Object.assign = 87% (PASS)
@@ -57,14 +57,14 @@ qim update / Object.assign = 87% (PASS)
 
 ## update
 
-[source](benchmarks/${result.name}.js)
+[source](../benchmarks/update.js)
 
 | Test             | Ops/Sec |
 | :--------------- | ------: |
-| lodash mapValues | 100,894 |
-| Immutable        | 255,605 |
-| qim update       | 281,052 |
+| lodash mapValues |  90,977 |
+| Immutable        | 244,423 |
+| qim update       | 275,839 |
 
 
-qim update / lodash mapValues = 279% (PASS)
+qim update / lodash mapValues = 303% (PASS)
 

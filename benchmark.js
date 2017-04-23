@@ -147,7 +147,7 @@ matchingBenchmarks.reduce((promise, key) => {
           [
             `## ${result.name}`,
             '',
-            '[source](benchmarks/${result.name}.js)',
+            `[source](../benchmarks/${result.name}.js)`,
             '',
             result.output
           ].join('\n')
