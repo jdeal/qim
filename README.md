@@ -569,6 +569,28 @@ update(
 // {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
 ```
 
+In some cases, you can use `$nav` to build custom navigators:
+
+```js
+const $eachValueWhereKeyStartsWith = (prefix) => $nav([
+  $eachPair,
+  has([0, key => key.substring(0, prefix.length) === prefix]),
+  1
+]);
+
+select(
+  [$eachValueWhereKeyStartsWith('a')],
+  {a: 1, aa: 2, b: 3, bb: 4}
+)
+// {a: 1, aa: 2}
+
+update(
+  [$eachValueWhereKeyStartsWith('a'), $apply(value => value * 10)],
+  {a: 1, aa: 2, b: 3, bb: 4}
+)
+// {a: 10, aa: 20, b: 3, bb: 4}
+```
+
 If `query` is a function, it will be passed the current object, and it can return a dynamic query.
 
 ```js
