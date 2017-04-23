@@ -58,7 +58,7 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
       }
       return objectAssign({}, object, {[nav]: newValue});
     } else {
-      throw new Error('cannot update property ${nav} for non-object');
+      throw new Error(`cannot update property ${nav} for non-object`);
     }
   }
   if (typeof nav === 'function') {
