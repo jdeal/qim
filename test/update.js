@@ -11,7 +11,9 @@ import {
   $set,
   $apply,
   $none,
-  $slice
+  $slice,
+  $nav,
+  $end
 } from 'qim/src';
 
 const increment = value => value + 1;
@@ -188,5 +190,28 @@ test('replace slice', t => {
   t.deepEqual(
     update([$slice(0, 2), $set(['x', 'y'])], ['a', 'b', 'c', 'd']),
     ['x', 'y', 'c', 'd']
+  );
+});
+
+test('dynamic nav', t => {
+  t.deepEqual(
+    update(
+      [
+        $nav(
+          obj => [
+            'messages',
+            fp.range(0, obj.n).map(() => [$end, $set(['foo'])])
+          ]
+        )
+      ],
+      {
+        n: 3,
+        messages: []
+      }
+    ),
+    {
+      n: 3,
+      messages: ['foo', 'foo', 'foo']
+    }
   );
 });

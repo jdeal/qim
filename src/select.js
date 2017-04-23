@@ -54,11 +54,18 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
       }
       return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
     }
-    case $navKey:
+    case $navKey: {
+      const navPath = typeof nav.data === 'function' ?
+        nav.data(object) :
+        nav.data;
+      if (navPath == null) {
+        return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
+      }
       return selectEach(
-        state, resultFn, nav.data, object, 0,
+        state, resultFn, navPath, object, 0,
         (_object) => selectEach(state, resultFn, path, _object, pathIndex + 1, returnFn)
       );
+    }
     case $noneKey:
       return $none;
   }

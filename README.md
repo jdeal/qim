@@ -567,6 +567,23 @@ update(
 // {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
 ```
 
+If `query` is a function, it will be passed the current object, and it can return a dynamic query.
+
+```js
+update(
+  [
+    $eachValue, $nav(
+      obj => ['isEqual', $set(obj.x === obj.y)]
+    )
+  ],
+  [{x: 1, y: 1}, {x: 1, y: 2}]
+)
+// [
+//   {x: 1, y: 1, isEqual: true},
+//   {x: 1, y: 2, isEqual: false}
+// ]
+```
+
 #### `$none`
 
 Navigates to nothing so you can delete properties from objects and items from arrays. It would be great to use `undefined` for this, but technically `undefined` is a value in JS, so `$none` exists to allow for the edge case of being able to set a property or item to `undefined`.

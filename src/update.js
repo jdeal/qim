@@ -81,11 +81,18 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
       }
       return updateEach(path, object, pathIndex + 1, returnFn);
     }
-    case $navKey:
+    case $navKey: {
+      const navPath = typeof nav.data === 'function' ?
+        nav.data(object) :
+        nav.data;
+      if (navPath == null) {
+        return updateEach(path, object, pathIndex + 1, returnFn);
+      }
       return updateEach(
-        nav.data, object, 0,
+        navPath, object, 0,
         (_object) => updateEach(path, _object, pathIndex + 1, returnFn)
       );
+    }
     case $noneKey:
       return $none;
   }
