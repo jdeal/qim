@@ -2,7 +2,7 @@
 
 [![travis](https://travis-ci.org/jdeal/qim.svg?branch=master)](https://travis-ci.org/jdeal/qim)
 
-WARNING: `qim` is already useful, but it's still considered experimental, and the API might change!
+WARNING: `qim` is already useful, but it's still considered experimental. It might have some rough edges, and the API might change!
 
 `qim` makes it simple to reach in and modify complex nested JS objects. This is possible with a query path that is just a simple JS array, much like you might use with `set` and `update` from `lodash`, but with a more powerful concept of "navigators" (borrowed from [Specter](https://github.com/nathanmarz/specter), a Clojure library). Instead of just string keys, `qim`'s navigators can act as predicates, wildcards, slices, and other tools. Those same navigators allow you to reach in and select parts of JS objects as well.
 
