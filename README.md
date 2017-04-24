@@ -8,7 +8,7 @@ WARNING: `qim` is already useful, but it's still considered experimental. It mig
 
 `qim`'s updates are immutable, returning new objects, but those objects share any unchanged parts with the original object.
 
-`qim`'s API is curried and data last, so it should fit well with other functional libraries like `lodash` and `ramda`.
+`qim`'s API is curried and data last, so it should fit well with other functional libraries like `lodash/fp` and `ramda`.
 
 And `qim` does its best to stay performant!
 
@@ -91,7 +91,7 @@ const newState = {
 };
 ```
 
-Yuck. That is ugly. Lots of references to things we don't really care about. Okay, hopefully nobody writes code like that. Let's use lodash-fp to clean that up.
+Yuck. That is ugly. Lots of references to things we don't really care about. Okay, hopefully nobody writes code like that. Let's use `lodash/fp` to clean that up.
 
 ```js
 import fp from 'lodash/fp';
@@ -761,7 +761,7 @@ set([$take(2)], ['x'], ['a', 'b', 'c'])
 
 `qim` aims to be _performant enough_.
 
-For `lodash` operations that are immutable (like `get` and `set`), `qim` should have similar performance. Many `lodash` functions mutate (like `update`), and in most cases, `qim` will be faster than `lodash-fp`'s immutable functions. Likewise, `qim` will typically be faster than React's immutability helper (now an [external package](https://github.com/kolodny/immutability-helper)).
+For `lodash` operations that are immutable (like `get` and `set`), `qim` should have similar performance. Many `lodash` functions mutate (like `update`), and in most cases, `qim` will be faster than `lodash/fp`'s immutable functions. Likewise, `qim` will typically be faster than React's immutability helper (now an [external package](https://github.com/kolodny/immutability-helper)).
 
 In some cases, a custom native helper function using `Object.assign` or `slice` along with a mutation may be faster for simple operations, but `qim` aims to be as close as possible, while still allowing for a flexible querying API.
 
