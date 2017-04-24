@@ -59,7 +59,7 @@ const newState = update(['entity', 'account', $eachValue,
 ], state);
 ```
 
-Even if you've never seen this before, hopefully you have a rough idea of what's going on. Instead of an only accepting an array of strings for a path, `qim`'s `update` function accepts an array of navigators. Using different types of navigators together creates a rich query path for updating a nested object. We'll look closer at this particular query in a bit, but first let's try the same thing with vanilla JS.
+Even if you've never seen this before, hopefully you have a rough idea of what's going on. Instead of only accepting an array of strings for a path, `qim`'s `update` function accepts an array of navigators. Using different types of navigators together creates a rich query path for updating a nested object. We'll look closer at this particular query in a bit, but first let's try the same thing with vanilla JS.
 
 ```js
 const newState = {
