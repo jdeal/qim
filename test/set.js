@@ -75,19 +75,27 @@ test('replace slice', t => {
   );
 });
 
-test('stop if path is invalid', t => {
-  t.throws(() => {
-    set(['x', 'y'], 0, {});
-  });
+test('auto-create objects', t => {
+  t.deepEqual(
+    set(['x', 'y'], 0, {}),
+    {x: {y: 0}}
+  );
+});
+
+test('auto-create arrays', t => {
+  t.deepEqual(
+    set(['x', 0], 'a', {}),
+    {x: ['a']}
+  );
 });
 
 test('fill in path with $default', t => {
   t.deepEqual(
-    set(['x', $default({}), 'y'], 0, {}),
-    {x: {y: 0}}
+    set(['x', $default({a: 0}), 'y'], 0, {}),
+    {x: {a: 0, y: 0}}
   );
   t.deepEqual(
-    set(['x', $default([]), 0], 1, {}),
-    {x: [1]}
+    set(['x', $default([0, 0]), 0], 1, {}),
+    {x: [1, 0]}
   );
 });

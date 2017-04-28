@@ -8,6 +8,15 @@ import {$navKey} from './$nav';
 import {$applyKey} from './$apply';
 import $none, {$noneKey, isNone, undefinedIfNone} from './$none';
 
+const isInteger = (value) => {
+  var x;
+  /*eslint-disable no-return-assign */
+  return isNaN(value) ?
+    !1 :
+    (x = parseFloat(value), (0 | x) === x);
+  /*eslint-enable no-return-assign */
+};
+
 let continueUpdateEach;
 let update;
 
@@ -57,6 +66,17 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
         return newObject;
       }
       return objectAssign({}, object, {[nav]: newValue});
+    } else if (object == null) {
+      const newValue = updateEach(path, undefined, pathIndex + 1, returnFn);
+      if (isInteger(nav)) {
+        const newArray = [];
+        newArray[nav] = newValue;
+        return newArray;
+      } else {
+        const newObject = {};
+        newObject[nav] = newValue;
+        return newObject;
+      }
     } else {
       throw new Error(`Cannot update property ${nav} (at path index ${pathIndex}) for non-object.`);
     }

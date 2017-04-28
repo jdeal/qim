@@ -416,16 +416,16 @@ update(
 
 #### `$default(value)`
 
-By default, `qim` will not try to create missing objects/arrays and will instead throw an error. You can use `$default` to change this behavior.
+By default, `qim` will do its best to create missing objects or arrays. Ordinarily, it creates empty arrays for integer keys and empty objects for other keys. You can use `$default` to change this behavior and provide your own default value.
 
 ```js
-set(['x', $default({}), 'y'], 0, {})
-// {x: {y: 0}}
+set(['x', $default({a: 0}), 'y'], 0, {})
+// {x: {a: 0, y: 0}}
 ```
 
 ```js
-set(['names', $default([]), 0], 'joe', {})
-// {names: ['joe']}
+set(['names', $default(['a', 'b']), 0], 'joe', {})
+// {names: ['joe', 'b']}
 ```
 
 #### `$eachKey`
