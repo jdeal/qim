@@ -527,6 +527,23 @@ update(
 // [1, 2, 3, 4, 5, 6]
 ```
 
+#### `$merge(spec)`
+
+Similar to `$apply(object => {...object, ...spec})` except:
+
+- Does not create a new object if `object` already has the same keys/values as `spec`.
+- Will create a new array if `object` is an array so can be used to merge arrays.
+
+```js
+update([$merge({y: 2})], {x: 1})
+// {x: 1, y: 2}
+```
+
+```js
+update([$merge(['a'])], ['x', 'y', 'z'])
+// ['a', 'y', 'z']
+```
+
 #### `$nav(query)`
 
 Given a query path, navigates as if that query was a single selector. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
