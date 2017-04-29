@@ -53,7 +53,7 @@ test('unparameterized navigator', t => {
   );
 });
 
-test('unparameterized navigator', t => {
+test('parameterized navigator', t => {
   const $take = createNavigator({
     select: (nav, object, next) => {
       if (Array.isArray(object)) {
