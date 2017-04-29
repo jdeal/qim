@@ -4,7 +4,7 @@ import 'babel-core/register';
 
 import {
   select,
-  $eachValue,
+  $each,
   $eachKey,
   $eachPair
 } from 'qim/src';
@@ -54,15 +54,15 @@ test('select predicate', t => {
 
 test('select values', t => {
   t.deepEqual(
-    select([$eachValue], [1, 2, 3]),
+    select([$each], [1, 2, 3]),
     [1, 2, 3]
   );
   t.deepEqual(
-    select([$eachValue, isEven], [1, 2, 3, 4]),
+    select([$each, isEven], [1, 2, 3, 4]),
     [2, 4]
   );
   t.deepEqual(
-    select([$eachValue, 'x'], [{x: 1}, {x: 2}]),
+    select([$each, 'x'], [{x: 1}, {x: 2}]),
     [1, 2]
   );
 });

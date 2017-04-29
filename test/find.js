@@ -4,7 +4,7 @@ import 'babel-core/register';
 
 import {
   find,
-  $eachValue,
+  $each,
   $eachKey,
   $eachPair,
   $default
@@ -55,15 +55,15 @@ test('find predicate', t => {
 
 test('find values', t => {
   t.deepEqual(
-    find([$eachValue], [1, 2, 3]),
+    find([$each], [1, 2, 3]),
     1
   );
   t.deepEqual(
-    find([$eachValue, isEven], [1, 2, 3, 4]),
+    find([$each, isEven], [1, 2, 3, 4]),
     2
   );
   t.deepEqual(
-    find([$eachValue, 'x'], [{x: 1}, {x: 2}]),
+    find([$each, 'x'], [{x: 1}, {x: 2}]),
     1
   );
 });

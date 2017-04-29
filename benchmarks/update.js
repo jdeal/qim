@@ -1,7 +1,7 @@
 import fp from 'lodash/fp';
 import Immutable from 'immutable';
 
-import {update, $eachValue, $apply} from '../src';
+import {update, $each, $apply} from '../src';
 
 const state = {
   users: {
@@ -61,7 +61,7 @@ export default [
   },
   {
     name: 'qim update',
-    test: () => update(['users', $eachValue, user => user.balance >= 500, 'balance', $apply(bal => bal + 10)], state),
+    test: () => update(['users', $each, user => user.balance >= 500, 'balance', $apply(bal => bal + 10)], state),
     compare: {
       lodashMapValues: 2.5
     }

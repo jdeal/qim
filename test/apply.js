@@ -5,7 +5,7 @@ import fp from 'lodash/fp';
 
 import {
   apply,
-  $eachValue,
+  $each,
   $eachKey,
   $eachPair,
   $none,
@@ -56,19 +56,19 @@ test('apply predicate', t => {
 
 test('apply values', t => {
   t.deepEqual(
-    apply([$eachValue], increment, [1, 2, 3]),
+    apply([$each], increment, [1, 2, 3]),
     [2, 3, 4]
   );
   t.deepEqual(
-    apply([$eachValue, isEven], increment, [1, 2, 3]),
+    apply([$each, isEven], increment, [1, 2, 3]),
     [1, 3, 3]
   );
   t.deepEqual(
-    apply([$eachValue, 'x'], increment, [{x: 1, y: 2}, {x: 2, y: 3}]),
+    apply([$each, 'x'], increment, [{x: 1, y: 2}, {x: 2, y: 3}]),
     [{x: 2, y: 2}, {x: 3, y: 3}]
   );
   t.deepEqual(
-    apply([$eachValue, 'x', isEven], increment, [{x: 1}, {x: 2}]),
+    apply([$each, 'x', isEven], increment, [{x: 1}, {x: 2}]),
     [{x: 1}, {x: 3}]
   );
 });
@@ -114,14 +114,14 @@ test('remove item', t => {
 
 test('remove all keys', t => {
   t.deepEqual(
-    apply([$eachValue], () => $none, {x: 1, y: 2}),
+    apply([$each], () => $none, {x: 1, y: 2}),
     {}
   );
 });
 
 test('remove all items', t => {
   t.deepEqual(
-    apply([$eachValue], () => $none, ['a', 'b']),
+    apply([$each], () => $none, ['a', 'b']),
     []
   );
 });

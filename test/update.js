@@ -5,7 +5,7 @@ import fp from 'lodash/fp';
 
 import {
   update,
-  $eachValue,
+  $each,
   $eachKey,
   $eachPair,
   $set,
@@ -60,19 +60,19 @@ test('update predicate', t => {
 
 test('update values', t => {
   t.deepEqual(
-    update([$eachValue, $apply(increment)], [1, 2, 3]),
+    update([$each, $apply(increment)], [1, 2, 3]),
     [2, 3, 4]
   );
   t.deepEqual(
-    update([$eachValue, isEven, $apply(increment)], [1, 2, 3]),
+    update([$each, isEven, $apply(increment)], [1, 2, 3]),
     [1, 3, 3]
   );
   t.deepEqual(
-    update([$eachValue, 'x', $apply(increment)], [{x: 1, y: 2}, {x: 2, y: 3}]),
+    update([$each, 'x', $apply(increment)], [{x: 1, y: 2}, {x: 2, y: 3}]),
     [{x: 2, y: 2}, {x: 3, y: 3}]
   );
   t.deepEqual(
-    update([$eachValue, 'x', isEven, $apply(increment)], [{x: 1}, {x: 2}]),
+    update([$each, 'x', isEven, $apply(increment)], [{x: 1}, {x: 2}]),
     [{x: 1}, {x: 3}]
   );
 });
@@ -114,7 +114,7 @@ test('update pairs', t => {
 
 test('update multi', t => {
   t.deepEqual(
-    update([$eachValue,
+    update([$each,
       $apply(increment),
       $apply(increment)
     ], [1, 2, 3]),
@@ -122,7 +122,7 @@ test('update multi', t => {
   );
 
   t.deepEqual(
-    update([$eachValue,
+    update([$each,
       ['x', $apply(increment)],
       ['y', $apply(increment)]
     ], [{x: 1, y: 2}, {x: 2, y: 3}]),
@@ -153,14 +153,14 @@ test('remove item', t => {
 
 test('remove all keys', t => {
   t.deepEqual(
-    update([$eachValue, $none], {x: 1, y: 2}),
+    update([$each, $none], {x: 1, y: 2}),
     {}
   );
 });
 
 test('remove all items', t => {
   t.deepEqual(
-    update([$eachValue, $none], ['a', 'b']),
+    update([$each, $none], ['a', 'b']),
     []
   );
 });

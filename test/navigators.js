@@ -3,9 +3,35 @@ import test from 'ava';
 import 'babel-core/register';
 
 import {
+  select,
   update,
+  $first,
+  $last,
   $merge
 } from 'qim/src';
+
+
+test('$first', t => {
+  t.deepEqual(
+    select([$first], [0, 1, 2]),
+    [0]
+  );
+  t.deepEqual(
+    select([$first], {x: 0, y: 1, z: 2}),
+    [0]
+  );
+});
+
+test('$last', t => {
+  t.deepEqual(
+    select([$last], [0, 1, 2]),
+    [2]
+  );
+  t.deepEqual(
+    select([$last], {x: 0, y: 1, z: 2}),
+    [2]
+  );
+});
 
 test('$merge', t => {
   t.deepEqual(

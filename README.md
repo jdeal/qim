@@ -50,9 +50,9 @@ Let's say we want to change our `state` so that for every _savings account_, we:
 Okay, drum roll... with `qim`, we can do that like this:
 
 ```js
-import {update, $eachValue, $apply} from 'qim';
+import {update, $each, $apply} from 'qim';
 
-const newState = update(['entity', 'account', $eachValue,
+const newState = update(['entity', 'account', $each,
   account => account.type === 'savings', 'balance',
   [bal => bal >= 1000, $apply(bal => bal * 1.05)],
   [bal => bal < 100, $apply(bal => bal - 10)]
@@ -122,8 +122,8 @@ Let's stretch out the previous example to take a closer look at some of the navi
 const newState = update([
   // A string navigates to that key in the object.
   'entity', 'account',
-  // $eachValue is like a wildcard that matches each value of an object or array.
-  $eachValue,
+  // $each is like a wildcard that matches each value of an object or array.
+  $each,
   // Functions act like predicates and navigate only if it matches.
   account => account.type === 'savings',
   // Another key navigator.
@@ -170,7 +170,7 @@ These navigators are useful for selecting data too. Instead of modifying an obje
 ```js
 import {select} from 'qim';
 
-const names = select(['entity', 'account', $eachValue, 'owner'], state);
+const names = select(['entity', 'account', $each, 'owner'], state);
 // ['joe', 'mary', 'bob']
 ```
 
@@ -182,7 +182,7 @@ import {has} from 'qim';
 // All functions are curried, so you can leave off the data to get a function.
 const hasHighBalance = has(['balance', bal => bal >= 1000]);
 
-const usernames = select(['entity', 'account', $eachValue, hasHighBalance, 'owner'], state);
+const usernames = select(['entity', 'account', $each, hasHighBalance, 'owner'], state);
 // ['mary']
 ```
 
@@ -208,7 +208,7 @@ apply(
 
 ```js
 apply(
-  ['numbers', $eachValue, value => value % 2 === 0],
+  ['numbers', $each, value => value % 2 === 0],
   num => num * num,
   {numbers: [1, 2, 3, 4, 5, 6]}
 )
@@ -221,7 +221,7 @@ Like `select`, but only returns a single result. If many results would be return
 
 ```js
 find(
-  [$eachValue, value => value % 2 === 0],
+  [$each, value => value % 2 === 0],
   [1, 2, 3, 4, 5, 6]
 )
 // 2
@@ -235,7 +235,7 @@ Returns true if an object has a matching result.
 
 ```js
 has(
-  [$eachValue, value => value % 2 === 0],
+  [$each, value => value % 2 === 0],
   [1, 2, 3]
 )
 // true
@@ -243,7 +243,7 @@ has(
 
 ```js
 has(
-  [$eachValue, value => value % 2 === 0],
+  [$each, value => value % 2 === 0],
   [1, 3, 5]
 )
 // false
@@ -255,7 +255,7 @@ Returns an array of selected results from an object.
 
 ```js
 select(
-  ['numbers', $eachValue, value => value % 2 === 0],
+  ['numbers', $each, value => value % 2 === 0],
   {numbers: [1, 2, 3, 4, 5, 6]}
 )
 // [2, 4, 6]
@@ -276,7 +276,7 @@ set(
 
 ```js
 set(
-  ['numbers', $eachValue, value => value % 2 === 0],
+  ['numbers', $each, value => value % 2 === 0],
   0,
   {numbers: [1, 2, 3, 4, 5, 6]}
 )
@@ -297,7 +297,7 @@ update(
 
 ```js
 update(
-  ['numbers', $eachValue, value => value % 2 === 0, $apply(value => value * 2)],
+  ['numbers', $each, value => value % 2 === 0, $apply(value => value * 2)],
   {numbers: [1, 2, 3, 4, 5, 6]}
 )
 // {'numbers': [1, 4, 3, 8, 5, 12]}
@@ -349,7 +349,7 @@ Passes the currently navigated value to the function and continues navigating if
 
 ```js
 select(
-  [$eachValue, value => value > 0],
+  [$each, value => value > 0],
   [-2, -1, 0, 1, 2, 3]
 )
 // [1, 2, 3]
@@ -357,7 +357,7 @@ select(
 
 ```js
 update(
-  [$eachValue, value => value > 0, $set(0)],
+  [$each, value => value > 0, $set(0)],
   [-2, -1, 0, 1, 2, 3]
 )
 // [-2, -1, 0, 0, 0, 0]
@@ -369,7 +369,7 @@ Branches and performs a sub-query. Mainly useful for `update`, since you may wan
 
 ```js
 update(
-  [$eachValue,
+  [$each,
     ['x', $apply(x => x + 1)],
     ['y', $apply(y => y * 10)]
   ],
@@ -388,7 +388,7 @@ Transforms the currently navigated value using the provided function. Typically 
 
 ```js
 select(
-  ['numbers', $eachValue, $apply(value => value * 2)],
+  ['numbers', $each, $apply(value => value * 2)],
   {numbers: [0, 1, 2, 3]}
 )
 // [0, 2, 4, 6]
@@ -396,7 +396,7 @@ select(
 
 ```js
 update(
-  [$eachValue, $apply(value => value * 2)],
+  [$each, $apply(value => value * 2)],
   {numbers: [0, 1, 2, 3]}
 )
 // {numbers: [0, 2, 4, 6]}
@@ -426,6 +426,42 @@ set(['x', $default({a: 0}), 'y'], 0, {})
 ```js
 set(['names', $default(['a', 'b']), 0], 'joe', {})
 // {names: ['joe', 'b']}
+```
+
+#### `$each`
+
+Navigates to each value of an array or object.
+
+```js
+update(
+  [$each, $apply(num => num * 2)],
+  [1, 2, 3]
+)
+// [2, 4, 6]
+```
+
+```js
+update(
+  [$each, $apply(num => num * 2)],
+  {x: 1, y: 2, z: 3}
+)
+// {x: 2, y: 4, z: 6}
+```
+
+```js
+select(
+  [$each],
+  [1, 2, 3]
+)
+// [1, 2, 3]
+```
+
+```js
+select(
+  [$each],
+  {x: 1, y: 2, z: 3}
+)
+// [1, 2, 3]
 ```
 
 #### `$eachKey`
@@ -479,42 +515,6 @@ select(
 // [['x', 1], ['y', 2], ['z', 3]]
 ```
 
-#### `$eachValue`
-
-Navigates to each value of an array or object.
-
-```js
-update(
-  [$eachValue, $apply(num => num * 2)],
-  [1, 2, 3]
-)
-// [2, 4, 6]
-```
-
-```js
-update(
-  [$eachValue, $apply(num => num * 2)],
-  {x: 1, y: 2, z: 3}
-)
-// {x: 2, y: 4, z: 6}
-```
-
-```js
-select(
-  [$eachValue],
-  [1, 2, 3]
-)
-// [1, 2, 3]
-```
-
-```js
-select(
-  [$eachValue],
-  {x: 1, y: 2, z: 3}
-)
-// [1, 2, 3]
-```
-
 #### `$end`
 
 Navigates to an empty list at the end of an array. Useful for adding things to the end of a list.
@@ -549,7 +549,7 @@ update([$merge(['a'])], ['x', 'y', 'z'])
 Given a query path, navigates as if that query was a single selector. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
 
 ```js
-const eachUser = $nav(['users', $eachValue]);
+const eachUser = $nav(['users', $each]);
 
 select(
   [eachUser, 'name'],
@@ -568,7 +568,7 @@ select(
 ```
 
 ```js
-const eachUser = $nav(['users', $eachValue]);
+const eachUser = $nav(['users', $each]);
 
 update(
   [eachUser, 'name', $apply(name => name.toUpperCase())],
@@ -589,20 +589,20 @@ update(
 In some cases, you can use `$nav` to build custom navigators:
 
 ```js
-const $eachValueWhereKeyStartsWith = (prefix) => $nav([
+const $eachWhereKeyStartsWith = (prefix) => $nav([
   $eachPair,
   has([0, key => key.substring(0, prefix.length) === prefix]),
   1
 ]);
 
 select(
-  [$eachValueWhereKeyStartsWith('a')],
+  [$eachWhereKeyStartsWith('a')],
   {a: 1, aa: 2, b: 3, bb: 4}
 )
 // {a: 1, aa: 2}
 
 update(
-  [$eachValueWhereKeyStartsWith('a'), $apply(value => value * 10)],
+  [$eachWhereKeyStartsWith('a'), $apply(value => value * 10)],
   {a: 1, aa: 2, b: 3, bb: 4}
 )
 // {a: 10, aa: 20, b: 3, bb: 4}
@@ -613,7 +613,7 @@ If `query` is a function, it will be passed the current object, and it can retur
 ```js
 update(
   [
-    $eachValue, $nav(
+    $each, $nav(
       obj => ['isEqual', $set(obj.x === obj.y)]
     )
   ],
@@ -647,7 +647,7 @@ update(
 
 ```js
 update(
-  [$eachValue, value => value % 2 === 0, $none],
+  [$each, value => value % 2 === 0, $none],
   [1, 2, 3, 4, 5, 6]
 )
 // [1, 3, 5]
@@ -659,7 +659,7 @@ Just a convenience for setting a value, rather than using `$apply(() => value)`.
 
 ```js
 update(
-  [$eachValue, $set(0)],
+  [$each, $set(0)],
   [1, 2, 3]
 )
 // [0, 0, 0]
@@ -671,7 +671,7 @@ Navigates to a slice of an array from `begin` to `end` index.
 
 ```js
 select(
-  [$slice(0, 3), $eachValue],
+  [$slice(0, 3), $each],
   [1, 2, 3, 4, 5, 6]
 )
 // [1, 2, 3]
@@ -679,7 +679,7 @@ select(
 
 ```js
 update(
-  [$slice(0, 3), $eachValue, $set(0)],
+  [$slice(0, 3), $each, $set(0)],
   [1, 2, 3, 4, 5, 6]
 )
 // [0, 0, 0, 4, 5, 6]

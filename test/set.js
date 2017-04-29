@@ -4,7 +4,7 @@ import 'babel-core/register';
 
 import {
   set,
-  $eachValue,
+  $each,
   $eachKey,
   $eachPair,
   $none,
@@ -35,14 +35,14 @@ test('remove item', t => {
 
 test('remove all keys', t => {
   t.deepEqual(
-    set([$eachValue], $none, {x: 1, y: 2}),
+    set([$each], $none, {x: 1, y: 2}),
     {}
   );
 });
 
 test('remove all items', t => {
   t.deepEqual(
-    set([$eachValue], $none, ['a', 'b']),
+    set([$each], $none, ['a', 'b']),
     []
   );
 });

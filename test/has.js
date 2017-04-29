@@ -4,7 +4,7 @@ import 'babel-core/register';
 
 import {
   has,
-  $eachValue,
+  $each,
   $eachKey,
   $eachPair
 } from 'qim/src';
@@ -30,11 +30,11 @@ test('has predicate', t => {
 });
 
 test('has values', t => {
-  t.true(has([$eachValue], [1, 2, 3]));
-  t.true(has([$eachValue, isEven], [1, 2, 3, 4]));
-  t.false(has([$eachValue, isEven], [1, 3]));
-  t.true(has([$eachValue, 'x'], [{x: 1}, {x: 2}]));
-  t.false(has([$eachValue, 'y'], [{x: 1}, {x: 2}]));
+  t.true(has([$each], [1, 2, 3]));
+  t.true(has([$each, isEven], [1, 2, 3, 4]));
+  t.false(has([$each, isEven], [1, 3]));
+  t.true(has([$each, 'x'], [{x: 1}, {x: 2}]));
+  t.false(has([$each, 'y'], [{x: 1}, {x: 2}]));
 });
 
 test('has keys', t => {
