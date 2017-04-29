@@ -133,8 +133,12 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
   return continueUpdateEach(updateFn, nav, object, path, pathIndex, returnFn);
 };
 
-continueUpdateEach = (updateFn, nav, object, path, pathIndex, returnFn) =>
-  updateFn(nav, object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn), path, pathIndex);
+continueUpdateEach = (updateFn, nav, object, path, pathIndex, returnFn) => {
+  if (nav.hasParams) {
+    return updateFn(nav.params, object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn), path, pathIndex);
+  }
+  return updateFn(object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn), path, pathIndex);
+};
 
 update = function (path, obj) {
   if (!Array.isArray(path)) {

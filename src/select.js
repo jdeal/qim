@@ -86,8 +86,12 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
   return continueSelectEach(state, resultFn, selectFn, nav, object, path, pathIndex, returnFn);
 };
 
-continueSelectEach = (state, resultFn, selectFn, nav, object, path, pathIndex, returnFn) =>
-  selectFn(nav, object, (subObject) => selectEach(state, resultFn, path, subObject, pathIndex + 1, returnFn));
+continueSelectEach = (state, resultFn, selectFn, nav, object, path, pathIndex, returnFn) => {
+  if (nav.hasParams) {
+    return selectFn(nav.params, object, (subObject) => selectEach(state, resultFn, path, subObject, pathIndex + 1, returnFn));
+  }
+  return selectFn(object, (subObject) => selectEach(state, resultFn, path, subObject, pathIndex + 1, returnFn));
+};
 
 const selectResultFn = (state, result) => {
   state.push(result);

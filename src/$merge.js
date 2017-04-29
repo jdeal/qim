@@ -1,8 +1,8 @@
 import createNavigator from './createNavigator';
 import getTypeErrorMessage from './utils/getTypeErrorMessage';
 
-const merge = (nav, object, next) => {
-  const {spec} = nav;
+const merge = (params, object, next) => {
+  const [spec] = params;
   if (spec && typeof spec === 'object') {
     let newObject = object;
     for (let key in spec) {
@@ -24,11 +24,9 @@ const merge = (nav, object, next) => {
   throw new Error(getTypeErrorMessage('$merge', 'object', object));
 };
 
-const $merge = createNavigator({
+const $merge = createNavigator(true, {
   select: merge,
   update: merge
-},
-  (nav) => (spec) => ({'@@qim/nav': nav, spec})
-);
+});
 
 export default $merge;

@@ -2,19 +2,36 @@ export const selectKey = '@@qim/select';
 export const updateKey = '@@qim/update';
 export const navigatorKey = '@@qim/nav';
 
-const createNavigator = (config, createNavigatorCall) => {
+const createNavigator = (createParams, spec) => {
+  if (!spec) {
+    spec = createParams;
+    createParams = undefined;
+  }
+
   const nav = {};
 
-  if (typeof config.select === 'function') {
-    nav[selectKey] = config.select;
+  if (typeof spec.select === 'function') {
+    nav[selectKey] = spec.select;
   }
 
-  if (typeof config.update === 'function') {
-    nav[updateKey] = config.update;
+  if (typeof spec.update === 'function') {
+    nav[updateKey] = spec.update;
   }
 
-  if (createNavigatorCall) {
-    return createNavigatorCall(nav);
+  if (createParams) {
+    if (typeof createParams === 'function') {
+      return (...params) => ({
+        '@@qim/nav': nav,
+        params: createParams(...params),
+        hasParams: true
+      });
+    } else {
+      return (...params) => ({
+        '@@qim/nav': nav,
+        params,
+        hasParams: true
+      });
+    }
   }
 
   return nav;

@@ -6,12 +6,12 @@ import {isNone} from './$none';
 import removed, {isNotRemoved} from './utils/removed';
 
 const $eachKey = createNavigator({
-  select: (nav, object, next) => {
+  select: (object, next) => {
     return reduceSequence((result, key) => {
       return next(key);
     }, undefined, object);
   },
-  update: (nav, object, next) => {
+  update: (object, next) => {
     const isArray = Array.isArray(object);
     let didRemoveKeys = false;
     const newObject = reduceSequence((result, key) => {

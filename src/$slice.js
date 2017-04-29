@@ -2,22 +2,22 @@ import createNavigator from './createNavigator';
 import isNextNavigatorConstant from './utils/isNextNavigatorConstant';
 import getTypeErrorMessage from './utils/getTypeErrorMessage';
 
-const $slice = createNavigator({
-  select: (nav, object, next) => {
+const $slice = createNavigator(true, {
+  select: (params, object, next) => {
     if (object && typeof object.slice === 'function') {
-      return next(object.slice(nav.begin, nav.end));
+      return next(object.slice(params[0], params[1]));
     }
     throw new Error(getTypeErrorMessage('$slice', 'array', object));
   },
-  update: (nav, object, next, path, index) => {
+  update: (params, object, next, path, index) => {
     if (object && typeof object.slice === 'function') {
       const newArray = object.slice(0);
-      const spliceBegin = typeof nav.begin === 'undefined' ? 0 : nav.begin;
+      const spliceBegin = typeof params[0] === 'undefined' ? 0 : params[0];
       if (isNextNavigatorConstant(path, index)) {
         const newSlice = next();
-        newArray.splice(spliceBegin, nav.end - nav.begin, ...newSlice);
+        newArray.splice(spliceBegin, params[1] - params[0], ...newSlice);
       } else {
-        const slice = object.slice(nav.begin, nav.end);
+        const slice = object.slice(params[0], params[1]);
         const newSlice = next(slice);
         newArray.splice(spliceBegin, slice.length, ...newSlice);
       }

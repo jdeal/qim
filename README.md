@@ -527,6 +527,13 @@ update(
 // [1, 2, 3, 4, 5, 6]
 ```
 
+#### `$first`
+
+Navigates to the first value of an array or object.
+
+```js
+```
+
 #### `$merge(spec)`
 
 Similar to `$apply(object => {...object, ...spec})` except:
@@ -695,6 +702,8 @@ update(
 
 ### Custom navigators
 
+In general, `$nav` is going to be an easier way to create custom navigators, so try that first. `createNavigator` is lower level, so it may be necessary if you're trying to make efficient "core" navigators.
+
 #### `createNavigator({select, update})`
 
 Creates an unparameterized navigator.
@@ -740,32 +749,41 @@ set([$length], 4, [1, 1, 1])
 // [1, 1, 1, undefined]
 ```
 
-#### `createNavigator({select, update}, navigator => navigatorCallFn)`
+#### `createNavigator(createParamsFunction, {select, update}`
+#### `createNavigator(true, {select, update}`
 
 Create a parameterized navigator.
 
+If you pass two arguments to `createNavigator`, the first is assumed to be a function that intercepts the parameters to the navigator and returns the parameters that are passed to the navigator. If you pass `true`, it's the same as calling `createNavigator` like this:
+
+```js
+const $myNavigator = createNavigator((...params) => params, {
+  select,
+  update
+})
+```
+
+Your `select` and `update` functions will get that `params` array as the first parameter. You can destructure the array to pull out the individual parameters.
+
 ```js
 // Create a navigator that selects or updates the first n items of an array.
-const $take = createNavigator({
-  select: (nav, object, next) => {
+const $take = createNavigator(true, {
+  select: ([count], object, next) => {
     if (Array.isArray(object)) {
-      return next(object.slice(0, nav.count));
+      return next(object.slice(0, count));
     }
     throw new Error('$length only works on arrays');
   },
-  update: (nav, object, next) => {
+  update: ([count], object, next) => {
     if (Array.isArray(object)) {
-      const result = next(object.slice(0, nav.count));
+      const result = next(object.slice(0, count));
       const newArray = object.slice(0);
-      newArray.splice(0, nav.count, ...result);
+      newArray.splice(0, count, ...result);
       return newArray;
     }
     throw new Error('$length only works on arrays');
   }
-},
-  // Given the navigator, create the dynamic navigator call.
-  navigator => (count) => createNavigatorCall(navigator, {count})
-);
+});
 
 select([$take(2)], ['a', 'b', 'c'])
 // [['a', 'b']]

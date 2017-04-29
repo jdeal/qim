@@ -5,19 +5,18 @@ import 'babel-core/register';
 import {
   select,
   set,
-  createNavigator,
-  createNavigatorCall
+  createNavigator
 } from 'qim/src';
 
 test('unparameterized navigator', t => {
   const $length = createNavigator({
-    select: (nav, object, next) => {
+    select: (object, next) => {
       if (Array.isArray(object)) {
         return next(object.length);
       }
       throw new Error('$length only works on arrays');
     },
-    update: (nav, object, next) => {
+    update: (object, next) => {
       if (Array.isArray(object)) {
         const newLength = next(object.length);
         if (newLength < object.length) {
@@ -54,23 +53,23 @@ test('unparameterized navigator', t => {
 });
 
 test('parameterized navigator', t => {
-  const $take = createNavigator({
-    select: (nav, object, next) => {
+  const $take = createNavigator(true, {
+    select: ([count], object, next) => {
       if (Array.isArray(object)) {
-        return next(object.slice(0, nav.count));
+        return next(object.slice(0, count));
       }
       throw new Error('$length only works on arrays');
     },
-    update: (nav, object, next) => {
+    update: ([count], object, next) => {
       if (Array.isArray(object)) {
-        const result = next(object.slice(0, nav.count));
+        const result = next(object.slice(0, count));
         const newArray = object.slice(0);
-        newArray.splice(0, nav.count, ...result);
+        newArray.splice(0, count, ...result);
         return newArray;
       }
       throw new Error('$length only works on arrays');
     }
-  }, navigator => (count) => createNavigatorCall(navigator, {count}));
+  });
   t.deepEqual(
     select([$take(2)], ['a', 'b', 'c']),
     [['a', 'b']]
