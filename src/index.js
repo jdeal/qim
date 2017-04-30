@@ -8,6 +8,7 @@ export {default as apply} from './apply';
 export {default as $eachKey} from './$eachKey';
 export {default as $eachPair} from './$eachPair';
 export {default as $each} from './$each';
+export {default as $eachValue} from './$eachValue';
 export {default as $slice} from './$slice';
 export {default as $begin} from './$begin';
 export {default as $end} from './$end';

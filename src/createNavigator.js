@@ -3,9 +3,9 @@ export const updateKey = '@@qim/update';
 export const navigatorKey = '@@qim/nav';
 
 const createNavigator = (createParams, spec) => {
-  if (!spec) {
+  if (typeof spec === 'undefined') {
     spec = createParams;
-    createParams = undefined;
+    createParams = false;
   }
 
   const nav = {};

@@ -754,7 +754,7 @@ set([$length], 4, [1, 1, 1])
 
 Create a parameterized navigator.
 
-If you pass two arguments to `createNavigator`, the first is assumed to be a function that intercepts the parameters to the navigator and returns the parameters that are passed to the navigator. If you pass `true`, it's the same as calling `createNavigator` like this:
+If you pass two arguments to `createNavigator`, the first is assumed to be a function that intercepts the parameters to the navigator and returns the parameters that are passed to the navigator. If you pass a truthy value that isn't a function, it's the same as calling `createNavigator` like this:
 
 ```js
 const $myNavigator = createNavigator((...params) => params, {

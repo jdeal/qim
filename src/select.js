@@ -1,6 +1,7 @@
 import {selectKey} from './createNavigator';
 import $none from './$none';
 import {curry2} from './utils/curry';
+import arrayify from './utils/arrayify';
 import {$setKey} from './$set';
 import {$defaultKey} from './$default';
 import {$applyKey} from './$apply';
@@ -8,7 +9,6 @@ import {$navKey} from './$nav';
 import {$noneKey} from './$none';
 
 let continueSelectEach;
-let select;
 
 export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) => {
   if (pathIndex >= path.length) {
@@ -55,10 +55,18 @@ export const selectEach = (state, resultFn, path, object, pathIndex, returnFn) =
       return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
     }
     case $navKey: {
-      const navPath = typeof nav.data === 'function' ?
-        nav.data(object) :
-        nav.data;
-      if (navPath == null) {
+      let navPath;
+      if (typeof nav.data === 'function') {
+        navPath = nav.hasParams ? nav.data(nav.params, object, nav.self) : nav.data(object, nav);
+        if (navPath == null) {
+          return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
+        }
+        navPath = arrayify(navPath);
+      } else {
+        // $nav makes sure this is an array.
+        navPath = nav.data;
+      }
+      if (navPath.length === 0) {
         return selectEach(state, resultFn, path, object, pathIndex + 1, returnFn);
       }
       return selectEach(
@@ -98,10 +106,8 @@ const selectResultFn = (state, result) => {
   return state;
 };
 
-select = (path, object) => {
-  if (!path || typeof path !== 'object' || typeof path.length !== 'number') {
-    path = [path];
-  }
+const select = (path, object) => {
+  path = arrayify(path);
   const result = [];
   selectEach(result, selectResultFn, path, object, 0);
   return result;
