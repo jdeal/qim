@@ -378,6 +378,38 @@ update(
 // [{x: 2, y: 10}, {x: 3, y: 20}]
 ```
 
+#### Stop (undefined/null)
+
+Stops navigation. This is most useful inside `$nav` or custom path navigators to stop navigation for certain values.
+
+```js
+select(['x', undefined, 'y'], {x: {y: 1}})
+// []
+```
+
+```js
+update(['x', undefined, 'y', $apply(value => value + 1)], {x: {y: 1}})
+// {x: {y: 1}}
+```
+
+For nested queries, `$stop` only stops the current nested query, not the whole query.
+
+```js
+select([
+  ['a', undefined, 'x'],
+  ['b', 'x']
+], {a: {x: 'ax'}, b: {x: 'bx'}})
+// ['bx']
+```
+
+```js
+update([
+  ['a', undefined, 'x', $apply(s => s.toUpperCase())],
+  ['b', 'x', $apply(s => s.toUpperCase())]
+], {a: {x: 'ax'}, b: {x: 'bx'}})
+// {a: {x: 'ax'}, b: {x: 'BX'}}
+```
+
 ### Named navigators
 
 By convention, all navigators are prefixed with a `$`. This is mainly intended to visually distinguish them in a query path. But it also is meant to distinguish them from normal functions. Navigators are declarative, meaning they represent a navigation to be performed, rather than actually doing an operation.
@@ -551,15 +583,17 @@ update([$merge(['a'])], ['x', 'y', 'z'])
 // ['a', 'y', 'z']
 ```
 
-#### `$nav(query)`
+#### `$nav(path)`
 
-Given a query path, navigates as if that query was a single selector. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
+Effectively, this is the same as `createNavigator({path})`.
+
+Given a query path, `$nav` navigates as if that query was a single selector. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
 
 ```js
-const eachUser = $nav(['users', $each]);
+const $eachUser = $nav(['users', $each]);
 
 select(
-  [eachUser, 'name'],
+  [$eachUser, 'name'],
   {
     users: {
       joe: {
@@ -575,10 +609,10 @@ select(
 ```
 
 ```js
-const eachUser = $nav(['users', $each]);
+const $eachUser = $nav(['users', $each]);
 
 update(
-  [eachUser, 'name', $apply(name => name.toUpperCase())],
+  [$eachUser, 'name', $apply(name => name.toUpperCase())],
   {
     users: {
       joe: {
@@ -593,29 +627,7 @@ update(
 // {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
 ```
 
-In some cases, you can use `$nav` to build custom navigators:
-
-```js
-const $eachWhereKeyStartsWith = (prefix) => $nav([
-  $eachPair,
-  has([0, key => key.substring(0, prefix.length) === prefix]),
-  1
-]);
-
-select(
-  [$eachWhereKeyStartsWith('a')],
-  {a: 1, aa: 2, b: 3, bb: 4}
-)
-// {a: 1, aa: 2}
-
-update(
-  [$eachWhereKeyStartsWith('a'), $apply(value => value * 10)],
-  {a: 1, aa: 2, b: 3, bb: 4}
-)
-// {a: 10, aa: 20, b: 3, bb: 4}
-```
-
-If `query` is a function, it will be passed the current object, and it can return a dynamic query.
+If `query` is a function, it will be passed the current object, and it can return a dynamic query. This can be used to inline a custom navigator or just to get the current value in scope.
 
 ```js
 update(
@@ -702,11 +714,124 @@ update(
 
 ### Custom navigators
 
-In general, `$nav` is going to be an easier way to create custom navigators, so try that first. `createNavigator` is lower level, so it may be necessary if you're trying to make efficient "core" navigators.
+There are effectively two types of navigators: path navigators and, for lack of a better distinction, core navigators. Path navigators are higher level and work by simply returning other query paths. Core navigators are lower level and do the actual data selections and updates. Generally, core navigators are going to let you squeeze out more performance for a low-level operation, but path navigators are going to be more straightforward and make it easy to do recursive queries.
+
+#### `createNavigator({path})`
+
+Creates an unparameterized path navigator.
+
+The simplest path navigator just points to a query path. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
+
+```js
+const $eachUser = createNavigator(['users', $each]);
+
+select(
+  [$eachUser, 'name'],
+  {
+    users: {
+      joe: {
+        name: 'Joe'
+      },
+      mary: {
+        name: 'Mary'
+      }
+    }
+  }
+)
+// ['Joe', 'Mary']
+
+update(
+  [$eachUser, 'name', $apply(name => name.toUpperCase())],
+  {
+    users: {
+      joe: {
+        name: 'Joe'
+      },
+      mary: {
+        name: 'Mary'
+      }
+    }
+  }
+)
+// {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
+```
+
+`path` can also be a function, which allows it to provide a different path based on the current value.
+
+```js
+const $fileNames = createNavigator({
+  path: (obj) => {
+    if (obj.type === 'folder') {
+      return ['files', $each, 'name'];
+    }
+    if (obj.type === 'file') {
+      return ['name'];
+    }
+    // Returns `undefined` which stops navigation.
+  }
+});
+
+select(
+  [$each, $fileNames],
+  [{type: 'file', name: 'foo'}, {type: 'folder', files: [{name: 'bar'}]}, {type: 'other', name: 'thing'}]
+)
+['foo', 'bar']
+```
+
+You can also create recursive queries using the `$self` parameter. You can also just refer to your own navigator by its variable name, but `$self` allows you to create recursive anonymous navigators.
+
+```js
+const $walk = createNavigator({
+  path: (item, $self) =>
+    Array.isArray(item) ? [$each, $self] : []
+});
+
+select(
+  [$walk, val => val % 2 === 0],
+  [0, 1, 2, [3, 4, 5, [6, 7, 8]]]
+)
+// [0, 2, 4, 6, 8]
+
+update(
+  [$walk, val => val % 2 === 0, $apply(val => val * 10)],
+  [0, 1, 2, [3, 4, 5, [6, 7, 8]]]
+)
+// [0, 1, 20, [3, 40, 5, [60, 7, 80]]]
+```
+
+#### `createNavigator({hasParams: true, path})`
+
+Creates a parameterized path navigator.
+
+Your `path` function will get a `params` array as the first parameter. You can destructure the array to pull out the individual parameters.
+
+```js
+const $take = createNavigator({
+  hasParams: true,
+  path: ([count], obj) => {
+    if (!Array.isArray(obj)) {
+      throw new Error('$take only works on arrays');
+    }
+    return [$slice(0, count)];
+  }
+});
+
+select(
+  [$take(3), $each],
+  [0, 1, 2, 3, 4, 5]
+)
+// [0, 1, 2]
+
+update(
+  [$take(3), $each, $apply(val => val * 10)],
+  [0, 1, 2, 3, 4, 5]
+)
+// [0, 10, 20, 3, 4]
+```
 
 #### `createNavigator({select, update})`
 
-Creates an unparameterized navigator.
+Creates an unparameterized core navigator.
 
 ```js
 // Create a navigator that selects or modifies the length of an array.
@@ -749,21 +874,11 @@ set([$length], 4, [1, 1, 1])
 // [1, 1, 1, undefined]
 ```
 
-#### `createNavigator(createParamsFunction, {select, update}`
-#### `createNavigator(true, {select, update}`
+#### `createNavigator({hasParams: true, select, update}`
 
-Create a parameterized navigator.
+Create a parameterized core navigator.
 
-If you pass two arguments to `createNavigator`, the first is assumed to be a function that intercepts the parameters to the navigator and returns the parameters that are passed to the navigator. If you pass a truthy value that isn't a function, it's the same as calling `createNavigator` like this:
-
-```js
-const $myNavigator = createNavigator((...params) => params, {
-  select,
-  update
-})
-```
-
-Your `select` and `update` functions will get that `params` array as the first parameter. You can destructure the array to pull out the individual parameters.
+Your `select` and `update` functions will get a `params` array as the first parameter. You can destructure the array to pull out the individual parameters.
 
 ```js
 // Create a navigator that selects or updates the first n items of an array.
@@ -772,7 +887,7 @@ const $take = createNavigator(true, {
     if (Array.isArray(object)) {
       return next(object.slice(0, count));
     }
-    throw new Error('$length only works on arrays');
+    throw new Error('$take only works on arrays');
   },
   update: ([count], object, next) => {
     if (Array.isArray(object)) {
@@ -781,7 +896,7 @@ const $take = createNavigator(true, {
       newArray.splice(0, count, ...result);
       return newArray;
     }
-    throw new Error('$length only works on arrays');
+    throw new Error('$take only works on arrays');
   }
 });
 

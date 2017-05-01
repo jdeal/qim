@@ -7,10 +7,7 @@ import fs from 'fs';
 import fp from 'lodash/fp';
 import markdownTable from 'markdown-table';
 
-//const benchmarks = requireDir('./benchmarks');
-const benchmarks = {
-  arrayify: require('./benchmarks/arrayify')
-};
+const benchmarks = requireDir('./benchmarks');
 
 Object.keys(benchmarks).forEach((key) => {
   if (benchmarks[key].default) {

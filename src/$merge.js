@@ -24,7 +24,8 @@ const merge = (params, object, next) => {
   throw new Error(getTypeErrorMessage('$merge', 'object', object));
 };
 
-const $merge = createNavigator(true, {
+const $merge = createNavigator({
+  hasParams: true,
   select: merge,
   update: merge
 });

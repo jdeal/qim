@@ -29,7 +29,7 @@ export default [
       ], state)
     ),
     compare: {
-      assign: .85
+      assign: .80
     }
   }
 ];

@@ -2,7 +2,8 @@ import createNavigator from './createNavigator';
 import isNextNavigatorConstant from './utils/isNextNavigatorConstant';
 import getTypeErrorMessage from './utils/getTypeErrorMessage';
 
-const $slice = createNavigator(true, {
+const $slice = createNavigator({
+  hasParams: true,
   select: (params, object, next) => {
     if (object && typeof object.slice === 'function') {
       return next(object.slice(params[0], params[1]));
@@ -25,8 +26,6 @@ const $slice = createNavigator(true, {
     }
     throw new Error(getTypeErrorMessage('$slice', 'array', object));
   }
-},
-  (nav) => (begin, end) => ({'@@qim/nav': nav, begin, end})
-);
+});
 
 export default $slice;

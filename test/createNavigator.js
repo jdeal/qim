@@ -3,8 +3,13 @@ import test from 'ava';
 import 'babel-core/register';
 
 import {
+  $each,
+  $eachPair,
+  $apply,
   select,
+  update,
   set,
+  has,
   createNavigator
 } from 'qim/src';
 
@@ -53,7 +58,8 @@ test('unparameterized navigator', t => {
 });
 
 test('parameterized navigator', t => {
-  const $take = createNavigator(true, {
+  const $take = createNavigator({
+    hasParams: true,
     select: ([count], object, next) => {
       if (Array.isArray(object)) {
         return next(object.slice(0, count));
@@ -77,5 +83,36 @@ test('parameterized navigator', t => {
   t.deepEqual(
     set([$take(2)], ['x'], ['a', 'b', 'c']),
     ['x', 'c']
+  );
+});
+
+test('recursive path navigator', t => {
+  const $walk = createNavigator({
+    path: (item, $self) =>
+      Array.isArray(item) ? [$each, $self] : []
+  });
+
+  t.deepEqual(
+    select([$walk, val => val % 2 === 0], [0, 1, 2, [4, 5, 6, [7, 8, 9]]]),
+    [0, 2, 4, 6, 8]
+  );
+});
+
+test('parameterized path navigator', t => {
+  const $eachIfKeyStartsWith = createNavigator({
+    hasParams: true,
+    path: ([prefix]) => [
+      $eachPair,
+      has([0, key => key.substring(0, prefix.length) === prefix]),
+      1
+    ]
+  });
+
+  t.deepEqual(
+    update(
+      [$eachIfKeyStartsWith('a'), $apply(value => value * 10)],
+      {a: 1, aa: 2, b: 3, bb: 4}
+    ),
+    {a: 10, aa: 20, b: 3, bb: 4}
   );
 });
