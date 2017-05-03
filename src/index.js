@@ -20,5 +20,7 @@ export {default as $nav} from './$nav';
 export {default as $none} from './$none';
 export {default as $default} from './$default';
 export {default as $merge} from './$merge';
+export {default as $setContext} from './$setContext';
+export {default as $pushContext} from './$pushContext';
 
 export {default as createNavigator} from './createNavigator';

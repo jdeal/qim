@@ -672,6 +672,27 @@ update(
 // [1, 3, 5]
 ```
 
+#### `$pushContext(key, (obj, context) => contextValue)`
+
+This is a convenient form of `$setContext` where the current value for the key is assumed to be an array and the new value is pushed onto that array. This is especially useful for recursive queries where you want to retain parent context values.
+
+```js
+select(
+  [
+    $eachPair, $pushContext('path', find(0)), 1,
+    $eachPair, $pushContext('path', find(0)), 1,
+    $apply((message, ctx) => ({path: ctx.path, message}))
+  ],
+  {error: {foo: 'a', bar: 'b'}, warning: {baz: 'c', qux: 'd'}}
+)
+// [
+//   {path: ['error', 'foo'], message: 'a'},
+//   {path: ['error', 'bar'], message: 'b'},
+//   {path: ['warning', 'baz'], message: 'c'},
+//   {path: ['warning', 'qux'], message: 'd'}
+// ]
+```
+
 #### `$set(value)`
 
 Just a convenience for setting a value, rather than using `$apply(() => value)`. (Also a teensy bit more performant.)
@@ -682,6 +703,39 @@ update(
   [1, 2, 3]
 )
 // [0, 0, 0]
+```
+
+#### `$setContext(key, (value, context) => contextValue)`
+
+Sets a context value for later retrieval in an `$apply`.
+
+Context is a way to grab a piece of data at one point in a query and use it at a later point in a query. A good example is grabbing a key from a key/value pair and retrieving that key along with a descendant value so that it can be returned in a selection or used in an update. You could use a `$nav` function to pull that key into scope, but for multiple levels of nesting, this can get unwieldy. And for recursive queries, this is impossible without creating some kind of complex enveloping mechanism.
+
+`$setContext` takes a key and a function as arguments. The key is just a way of keeping that piece of context separate from other pieces of context. The function takes the current value and context and returns a value to store for that piece of context. Note that context is never mutated, so the new context only applies to the rest of the query.
+
+```js
+select(
+  [$setContext('first', find($first)), $each, $apply((letter, ctx) => `${ctx.first}${letter}`)],
+  ['a', 'b', 'c']
+)
+// ['aa', 'ab', 'ac']
+```
+
+```js
+select(
+  [
+    $eachPair, $setContext('level', find(0)), 1,
+    $eachPair, $setContext('key', find(0)), 1,
+    $apply((message, ctx) => ({level: ctx.level, key: ctx.key, message}))
+  ],
+  {error: {foo: 'a', bar: 'b'}, warning: {baz: 'c', qux: 'd'}}
+)
+// [
+//   {level: 'error', key: 'foo', message: 'a'},
+//   {level: 'error', key: 'bar', message: 'b'},
+//   {level: 'warning', key: 'baz', message: 'c'},
+//   {level: 'warning', key: 'qux', message: 'd'}
+// ]
 ```
 
 #### `$slice(begin, end)`

@@ -5,14 +5,17 @@ import 'babel-core/register';
 import {
   select,
   update,
+  find,
   $first,
   $last,
   $merge,
   $set,
   $nav,
   $each,
-  $stop,
-  $apply
+  $eachPair,
+  $apply,
+  $setContext,
+  $pushContext
 } from 'qim/src';
 
 test('$first', t => {
@@ -117,20 +120,20 @@ test('$nav recursive', t => {
   );
 });
 
-test('$stop', t => {
+test('stop with undefined', t => {
   t.deepEqual(
-    select(['x', $stop, 'y'], {x: {y: 1}}),
+    select(['x', undefined, 'y'], {x: {y: 1}}),
     []
   );
 
   t.deepEqual(
-    update(['x', $stop, 'y', $apply(value => value + 1)], {x: {y: 1}}),
+    update(['x', undefined, 'y', $apply(value => value + 1)], {x: {y: 1}}),
     {x: {y: 1}}
   );
 
   t.deepEqual(
     select([
-      ['a', $stop, 'x'],
+      ['a', undefined, 'x'],
       ['b', 'x']
     ], {a: {x: 'ax'}, b: {x: 'bx'}}),
     ['bx']
@@ -138,9 +141,71 @@ test('$stop', t => {
 
   t.deepEqual(
     update([
-      ['a', $stop, 'x', $apply(s => s.toUpperCase())],
+      ['a', undefined, 'x', $apply(s => s.toUpperCase())],
       ['b', 'x', $apply(s => s.toUpperCase())]
     ], {a: {x: 'ax'}, b: {x: 'bx'}}),
     {a: {x: 'ax'}, b: {x: 'BX'}}
+  );
+});
+
+test('$setContext', t => {
+  t.deepEqual(
+    select(
+      [$setContext('first', find($first)), $each, $apply((letter, ctx) => `${ctx.first}${letter}`)],
+      ['a', 'b', 'c']
+    ),
+    ['aa', 'ab', 'ac']
+  );
+
+  t.deepEqual(
+    update(
+      ['stuff', $setContext('first', find($first)), $each, $apply((letter, ctx) => `${ctx.first}${letter}`)],
+      {stuff: ['a', 'b', 'c']}
+    ),
+    {stuff: ['aa', 'ab', 'ac']}
+  );
+
+  t.deepEqual(
+    select(
+      [
+        $eachPair, $setContext('level', find(0)), 1,
+        $eachPair, $setContext('key', find(0)), 1,
+        $apply((message, ctx) => ({level: ctx.level, key: ctx.key, message}))
+      ],
+      {error: {foo: 'a', bar: 'b'}, warning: {baz: 'c', qux: 'd'}}
+    ),
+    [
+      {level: 'error', key: 'foo', message: 'a'},
+      {level: 'error', key: 'bar', message: 'b'},
+      {level: 'warning', key: 'baz', message: 'c'},
+      {level: 'warning', key: 'qux', message: 'd'}
+    ]
+  );
+});
+
+test('$pushContext', t => {
+  t.deepEqual(
+    select(
+      [$pushContext('first', find($first)), $each, $apply((letter, ctx) => `${ctx.first[0]}${letter}`)],
+      ['a', 'b', 'c']
+    ),
+    ['aa', 'ab', 'ac']
+  );
+
+  const data = {a: {b: {c: 1, d: 2}}};
+
+  const $walk = $nav((value, $self) => {
+    if (value && typeof value === 'object') {
+      return [$eachPair, $pushContext('path', find($first)), $last, $self];
+    }
+    return [];
+  });
+
+  t.deepEqual(
+    select(
+      [$walk, $apply((value, ctx) => [...ctx.path, value])],
+      data
+    ),
+    [['a', 'b', 'c', 1], ['a', 'b', 'd', 2]]
   );
 });

@@ -7,6 +7,7 @@ import arrayify from './utils/arrayify';
 import {$setKey} from './$set';
 import {$defaultKey} from './$default';
 import {$applyKey} from './$apply';
+import {$setContextKey} from './$setContext';
 import $none, {$noneKey, isNone, undefinedIfNone} from './$none';
 
 const isInteger = (value) => {
@@ -20,10 +21,10 @@ const isInteger = (value) => {
 
 let continueUpdateEach;
 
-export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) => {
+export const updateEach = (path, object, pathIndex, returnFn, context, mutationMarker) => {
   if (pathIndex >= path.length) {
     if (returnFn) {
-      return returnFn(object);
+      return returnFn(object, context);
     }
     return object;
   }
@@ -34,7 +35,7 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
   if (typeof nav === 'string' || typeof nav === 'number' || typeof nav === 'boolean') {
     if (object && typeof object === 'object') {
       const value = object[nav];
-      const newValue = updateEach(path, value, pathIndex + 1, returnFn);
+      const newValue = updateEach(path, value, pathIndex + 1, returnFn, context);
       if (isNone(newValue)) {
         if (!(nav in object)) {
           return object;
@@ -70,7 +71,7 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
       }
       return objectAssign({}, object, {[nav]: newValue});
     } else if (object == null) {
-      const newValue = updateEach(path, undefined, pathIndex + 1, returnFn);
+      const newValue = updateEach(path, undefined, pathIndex + 1, returnFn, context);
       if (isInteger(nav)) {
         const newArray = [];
         newArray[nav] = newValue;
@@ -86,25 +87,29 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
   }
   if (typeof nav === 'function') {
     if (nav(object)) {
-      return updateEach(path, object, pathIndex + 1, returnFn);
+      return updateEach(path, object, pathIndex + 1, returnFn, context);
     } else {
       return object;
     }
   }
   switch (nav['@@qim/nav']) {
     case $applyKey: {
-      return updateEach(path, nav.data(object), pathIndex + 1, returnFn);
+      return updateEach(path, nav.data(object, context), pathIndex + 1, returnFn, context);
     }
     case $setKey:
-      return updateEach(path, nav.data, pathIndex + 1, returnFn);
+      return updateEach(path, nav.data, pathIndex + 1, returnFn, context);
     case $defaultKey: {
       if (typeof object === 'undefined') {
-        return updateEach(path, nav.data, pathIndex + 1, returnFn);
+        return updateEach(path, nav.data, pathIndex + 1, returnFn, context);
       }
-      return updateEach(path, object, pathIndex + 1, returnFn);
+      return updateEach(path, object, pathIndex + 1, returnFn, context);
     }
     case $noneKey:
       return $none;
+    case $setContextKey: {
+      context = nav.setContext(nav, nav.fn(object, context || {}), context);
+      return updateEach(path, object, pathIndex + 1, returnFn, context);
+    }
   }
   let navPath = nav[pathKey];
   if (navPath) {
@@ -113,31 +118,31 @@ export const updateEach = (path, object, pathIndex, returnFn, mutationMarker) =>
       navPath = arrayify(navPath);
     }
     if (navPath.length === 0) {
-      return updateEach(path, object, pathIndex + 1, returnFn);
+      return updateEach(path, object, pathIndex + 1, returnFn, context);
     }
     return updateEach(
       navPath, object, 0,
-      (_object) => updateEach(path, _object, pathIndex + 1, returnFn)
+      (_object) => updateEach(path, _object, pathIndex + 1, returnFn, context)
     );
   }
   if (nav[updateKey]) {
-    return continueUpdateEach(nav[updateKey], nav, object, path, pathIndex, returnFn);
+    return continueUpdateEach(nav[updateKey], nav, object, path, pathIndex, returnFn, context);
   }
   if (Array.isArray(nav)) {
     mutationMarker = mutationMarker || {
       hasMutated: false
     };
     const nestedResult = undefinedIfNone(updateEach(nav, object, 0, undefined, mutationMarker));
-    return updateEach(path, nestedResult, pathIndex + 1, returnFn, mutationMarker);
+    return updateEach(path, nestedResult, pathIndex + 1, returnFn, context, mutationMarker);
   }
   throw new Error(`Invalid navigator ${nav} at path index ${pathIndex}.`);
 };
 
-continueUpdateEach = (updateFn, nav, object, path, pathIndex, returnFn) => {
+continueUpdateEach = (updateFn, nav, object, path, pathIndex, returnFn, context) => {
   if (nav.hasParams) {
-    return updateFn(nav.params, object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn), path, pathIndex);
+    return updateFn(nav.params, object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn, context), path, pathIndex);
   }
-  return updateFn(object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn), path, pathIndex);
+  return updateFn(object, (subObject) => updateEach(path, subObject, pathIndex + 1, returnFn, context), path, pathIndex);
 };
 
 const update = (path, obj) => path == null ?
