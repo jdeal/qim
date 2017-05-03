@@ -392,7 +392,7 @@ update(['x', undefined, 'y', $apply(value => value + 1)], {x: {y: 1}})
 // {x: {y: 1}}
 ```
 
-For nested queries, `$stop` only stops the current nested query, not the whole query.
+For nested queries, `undefined`/`null` only stops the current nested query, not the whole query.
 
 ```js
 select([
