@@ -12,7 +12,55 @@ WARNING: `qim` is already useful, but it's still considered experimental. It mig
 
 And `qim` does its best to stay performant!
 
-# A not-too-contrived example
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Contents**
+
+- [A not-too-contrived example](#a-not-too-contrived-example)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API](#api)
+  - [`apply(query, transform, object)`](#applyquery-transform-object)
+  - [`find(query, object)`](#findquery-object)
+  - [`has(query, object)`](#hasquery-object)
+  - [`select(query, object)`](#selectquery-object)
+  - [`set(query, value, object)`](#setquery-value-object)
+  - [`update(query, object)`](#updatequery-object)
+- [Navigators](#navigators)
+  - [Built-in, type-based navigators](#built-in-type-based-navigators)
+    - [Key (string/integer)](#key-stringinteger)
+    - [Predicate (function)](#predicate-function)
+    - [Nested (array)](#nested-array)
+    - [Stop (undefined/null)](#stop-undefinednull)
+  - [Named navigators](#named-navigators)
+    - [`$apply(fn)`](#applyfn)
+    - [`$begin`](#begin)
+    - [`$default(value)`](#defaultvalue)
+    - [`$each`](#each)
+    - [`$eachKey`](#eachkey)
+    - [`$eachPair`](#eachpair)
+    - [`$end`](#end)
+    - [`$first`](#first)
+    - [`$merge(spec)`](#mergespec)
+    - [`$nav(path)`](#navpath)
+    - [`$none`](#none)
+    - [`$pushContext(key, (obj, context) => contextValue)`](#pushcontextkey-obj-context--contextvalue)
+    - [`$set(value)`](#setvalue)
+    - [`$setContext(key, (value, context) => contextValue)`](#setcontextkey-value-context--contextvalue)
+    - [`$slice(begin, end)`](#slicebegin-end)
+- [Custom navigators](#custom-navigators)
+  - [`createNavigator({path})`](#createnavigatorpath)
+  - [`createNavigator({hasParams: true, path})`](#createnavigatorhasparams-true-path)
+  - [`createNavigator({select, update})`](#createnavigatorselect-update)
+  - [`createNavigator({hasParams: true, select, update}`](#createnavigatorhasparams-true-select-update)
+- [Performance](#performance)
+- [TODO](#todo)
+- [Contributing](#contributing)
+- [Thanks](#thanks)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## A not-too-contrived example
 
 Let's start with some data like this:
 
@@ -190,6 +238,35 @@ const usernames = select(['entity', 'account', $each, hasHighBalance, 'owner'], 
 is high, and we use that as a predicate to select the owners with a high balance.
 
 Cool, huh?
+
+## Installation
+
+```bash
+npm install qim --save
+```
+
+## Usage
+
+All functions and navigators are available as named exports:
+
+```js
+import {select, update, $each, $apply} from 'qim';
+```
+
+Or of course you can just import everything:
+
+```js
+import * as qim from 'qim';
+```
+
+You can also import individual functions.
+
+```js
+import select from 'qim/select';
+import update from 'qim/select';
+import $each from 'qim/$each';
+import $apply from 'qim/$apply';
+```
 
 ## API
 
@@ -766,11 +843,11 @@ update(
 // ['a', 'b', 'e', 'f']
 ```
 
-### Custom navigators
+## Custom navigators
 
 There are effectively two types of navigators: path navigators and, for lack of a better distinction, core navigators. Path navigators are higher level and work by simply returning other query paths. Core navigators are lower level and do the actual data selections and updates. Generally, core navigators are going to let you squeeze out more performance for a low-level operation, but path navigators are going to be more straightforward and make it easy to do recursive queries.
 
-#### `createNavigator({path})`
+### `createNavigator({path})`
 
 Creates an unparameterized path navigator.
 
@@ -853,7 +930,7 @@ update(
 // [0, 1, 20, [3, 40, 5, [60, 7, 80]]]
 ```
 
-#### `createNavigator({hasParams: true, path})`
+### `createNavigator({hasParams: true, path})`
 
 Creates a parameterized path navigator.
 
@@ -883,7 +960,7 @@ update(
 // [0, 10, 20, 3, 4]
 ```
 
-#### `createNavigator({select, update})`
+### `createNavigator({select, update})`
 
 Creates an unparameterized core navigator.
 
@@ -928,7 +1005,7 @@ set([$length], 4, [1, 1, 1])
 // [1, 1, 1, undefined]
 ```
 
-#### `createNavigator({hasParams: true, select, update}`
+### `createNavigator({hasParams: true, select, update}`
 
 Create a parameterized core navigator.
 
