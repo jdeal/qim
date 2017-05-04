@@ -16,8 +16,6 @@ const state = {
 
 const immutableState = Immutable.fromJS(state);
 
-const context = {array:[]};
-
 export default [
   {
     name: 'lodash get',
