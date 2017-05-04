@@ -29,8 +29,7 @@ export default [
     test: () => fp.flow(
       fp.get('users'),
       fp.map(fp.get(['name', 'first']))
-    )(state),
-    key: 'lodashFpFlow'
+    )(state)
   },
   {
     name: 'qim select',
