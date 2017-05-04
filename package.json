@@ -12,7 +12,8 @@
     "prepublish-package": "npm run build && npm run build-package",
     "publish-package": "babel-node publish-package.js",
     "patch-release": "npm run benchmark && npm run patch-release-no-benchmark",
-    "patch-release-no-benchmark": "npm version patch && npm run publish-package && git push --follow-tags"
+    "patch-release-no-benchmark": "npm version patch && npm run publish-package && git push --follow-tags",
+    "doc": "doctoc README.md"
   },
   "keywords": [
     "immutable",
