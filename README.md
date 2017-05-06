@@ -347,7 +347,7 @@ const newState = update([
 ], state);
 ```
 
-Because navigators are only ever working on the part of the object that you've navigated to, you don't ever have to worry the parts of the object that you don't touch. Those parts remain intact.
+Because navigators are only ever working on the part of the object that you've navigated to, you don't ever have to worry about the parts of the object that you don't touch. Those parts remain intact.
 
 These modifications are immutable, and they share unmodified branches:
 
