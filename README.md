@@ -116,7 +116,9 @@ import {update} form 'qim';
 And now we can upper-case all our first names.
 
 ```js
-const newState = update(['users', $each, 'name', 'first', $apply(firstName => firstName.toUpperCase())], state);
+const newState = update(['users', $each, 'name', 'first',
+  $apply(firstName => firstName.toUpperCase())
+], state);
 ```
 
 Notice we used the same path from our `select` but added an `$apply` to do a transformation. (Again, we'll explain `$apply` better in the next section.)
