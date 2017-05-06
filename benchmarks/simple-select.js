@@ -6,15 +6,20 @@ const state = {
   users: {
     joe: {
       name: {
-        first: 'Joe'
-      }
+        first: 'Joe',
+        last: 'Foo'
+      },
+      other: 'stuff'
     },
     mary: {
       name: {
-        first: 'Mary'
-      }
+        first: 'Mary',
+        last: 'Bar'
+      },
+      other: 'stuff'
     }
-  }
+  },
+  other: 'stuff'
 };
 
 export default [
@@ -22,20 +27,20 @@ export default [
     name: 'native',
     test: () => Object.keys(state.users)
       .map(username => state.users[username].name.first),
-    key: 'native'
+    key: 'native',
   },
   {
-    name: 'lodash-fp flow',
+    name: 'lodash/fp flow',
     test: () => fp.flow(
       fp.get('users'),
       fp.map(fp.get(['name', 'first']))
-    )(state)
+    )(state),
   },
   {
     name: 'qim select',
     test: () => select(['users', $each, 'name', 'first'], state),
     compare: {
-      native: .4
-    }
-  }
+      native: .4,
+    },
+  },
 ];

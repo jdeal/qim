@@ -16,7 +16,8 @@ And `qim` does its best to stay performant!
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Contents**
 
-- [A not-too-contrived example](#a-not-too-contrived-example)
+- [A simple (kind-of-contrived) example](#a-simple-kind-of-contrived-example)
+- [A more complex (not-too-contrived) example](#a-more-complex-not-too-contrived-example)
 - [Installation](#installation)
 - [Usage](#usage)
 - [API](#api)
@@ -60,7 +61,157 @@ And `qim` does its best to stay performant!
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-## A not-too-contrived example
+## A simple (kind-of-contrived) example
+
+Let's start with some data like this:
+
+```js
+const state = {
+  users: {
+    joe: {
+      name: {
+        first: 'Joe',
+        last: 'Foo'
+      },
+      other: 'stuff'
+    },
+    mary: {
+      name: {
+        first: 'Mary',
+        last: 'Bar'
+      },
+      other: 'stuff'
+    }
+  },
+  other: 'stuff'
+};
+```
+
+Let's import a couple things from `qim`:
+
+```js
+import {select, $each} from 'qim';
+```
+
+Now let's grab all the first names:
+
+```js
+const firstNames = select(['users', $each, 'name', 'first'], state);
+```
+
+(We'll explain `$each` a little more later, but you can probably guess: it's like a wildcard.)
+
+`firstNames` now looks like:
+
+```js
+['Joe', 'Mary']
+```
+
+Let's import an `update` function:
+
+```js
+import {update} form 'qim';
+```
+
+And now we can upper-case all our first names.
+
+```js
+const newState = update(['users', $each, 'name', 'first', $apply(firstName => firstName.toUpperCase())], state);
+```
+
+Notice we used the same path from our `select` but added an `$apply` to do a transformation. (Again, we'll explain `$apply` better in the next section.)
+
+After that, `newState` looks like:
+
+```js
+const state = {
+  users: {
+    joe: {
+      name: {
+        first: 'Joe',
+        last: 'Foo'
+      },
+      other: 'stuff'
+    },
+    mary: {
+      name: {
+        first: 'Mary',
+        last: 'Bar'
+      },
+      other: 'stuff'
+    }
+  },
+  other: 'stuff'
+};
+```
+
+Just for comparison, let's grab the first names with plain JS:
+
+```js
+const firstNames = Object.keys(state.users)
+  .map(username => state.users[username].name.first);
+```
+
+That's not too bad, but this is a very simple example. The `$each` from `qim` makes things a lot more expressive. Let's look at `lodash/fp` too:
+
+```js
+const {map, get} from 'lodash/fp';
+
+const firstName = flow(
+  get('users'),
+  map(get(['name', 'first']))
+)(state);
+```
+
+Okay, that's nice and expressive, but it costs a lot in terms of performance.
+
+| Test           |   Ops/Sec |
+| :------------- | --------: |
+| native         | 2,111,043 |
+| lodash/fp flow |    16,484 |
+| qim select     | 1,197,764 |
+
+`qim` is slower than native, but it's doing more than the native equivalent, because it's accounting for things like missing keys. And as you'll see later, it has a _lot_ more expressive power. The `lodash/fp` version is two orders of magnitude slower and arguably less readable than the `qim` version.
+
+That update in plain JS is a _lot_ more verbose, even for this really simple example:
+
+```js
+const newState = {
+  ...state,
+  users: Object.keys(state.users)
+    .reduce((users, username) => {
+      const user = state.users[username];
+      users[username] = {
+        ...user,
+        name: {
+          ...user.name,
+          first: user.name.first.toUpperCase()
+        }
+      };
+      return users;
+    }, {})
+};
+```
+
+So we go with something like `lodash/fp`:
+
+```js
+const newState = fp.update('users', fp.mapValues(
+  fp.update(['name', 'first'], firstName => firstName.toUpperCase())
+), state)
+```
+
+But again, performance is going to take a hit:
+
+| Test       | Ops/Sec |
+| :--------- | ------: |
+| native     | 283,439 |
+| lodash/fp  |  16,844 |
+| qim update | 161,499 |
+
+Again, native is the fastest, but at a cost of being awfully unreadable. `lodash/fp` lags behind, but `qim`'s main goal isn't to be performant but rather to be expressive. `lodash/fp` looks pretty nice, but remember how closely the `update` resembled the `select` with `qim`? With `lodash/fp`, an update is a different animal. And as we'll see with a more complex example, `qim` will retain its simple, expressive query power for updates while lodash is going to get more complicated.
+
+## A more complex (not-too-contrived) example
 
 Let's start with some data like this:
 
@@ -107,7 +258,7 @@ const newState = update(['entity', 'account', $each,
 ], state);
 ```
 
-Even if you've never seen this before, hopefully you have a rough idea of what's going on. Instead of only accepting an array of strings for a path, `qim`'s `update` function accepts an array of navigators. Using different types of navigators together creates a rich query path for updating a nested object. We'll look closer at this particular query in a bit, but first let's try the same thing with vanilla JS.
+Even without any explanation, hopefully you have a rough idea of what's going on. Like we saw in the simple example with `$each` and `$apply`, instead of only accepting an array of strings for a path, `qim`'s `update` function accepts an array of navigators. Using different types of navigators together creates a rich query path for updating a nested object. We'll look closer at this particular query in a bit, but first let's try the same thing with vanilla JS.
 
 ```js
 const newState = {
@@ -213,7 +364,7 @@ console.log(newState === state);
 // true
 ```
 
-These navigators are useful for selecting data too. Instead of modifying an object, the `select` method navigates to each matching part of the query and returns all the matching parts in an array.
+And of course these navigators are useful for selecting data too. Instead of modifying an object, the `select` method navigates to each matching part of the query and returns all the matching parts in an array.
 
 ```js
 import {select} from 'qim';
