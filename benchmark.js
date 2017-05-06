@@ -86,7 +86,11 @@ const testBenchmark = (name, tests) => {
         }).join('\n'));
         if (!isPass) {
           console.log(output.join('\n'));
-          return reject(new Error(`Benchmark ${name} failed.`));
+          return reject({
+            isFailure: true,
+            name,
+            output: output.join('\n')
+          });
         }
       }
       output.push('\n');
@@ -124,8 +128,11 @@ matchingBenchmarks.forEach(key => {
   }
 });
 
+// Voodoo, no idea if this actually does anything. But it seems like a test run
+// alone works better than when run after other tests. So letting the CPU
+// rest here. Seems to help a little. ¯\_(ツ)_/¯
 const restCpu = () => new Promise(resolve =>
-  setTimeout(resolve, 1000)
+  setTimeout(resolve, 2000)
 );
 
 matchingBenchmarks.reduce((promise, key) => {
@@ -138,9 +145,13 @@ matchingBenchmarks.reduce((promise, key) => {
     .then((results) =>
       testBenchmark(key, benchmarks[key])
         .then((result) => results.concat(result))
+        .catch((result) => results.concat(result))
     );
 }, Promise.resolve([]))
   .then((results) => {
+    if (results.find(result => result.isFailure)) {
+      throw results;
+    }
     if (!benchmarkName) {
       fs.writeFileSync('./docs/benchmark-results.md',
         results.map(result =>
@@ -156,7 +167,12 @@ matchingBenchmarks.reduce((promise, key) => {
     }
     console.log('\nAll benchmark tests passed.');
   })
-  .catch((err) => {
-    console.error(err);
+  .catch((results) => {
+    console.log('Test failures:');
+    console.log(results
+      .filter(result => result.isFailure)
+      .map(result => result.name)
+      .join('\n')
+    );
     process.exit(1);
   });

@@ -132,7 +132,7 @@ export const updateEach = (path, object, pathIndex, returnFn, context, mutationM
     mutationMarker = mutationMarker || {
       hasMutated: false
     };
-    const nestedResult = undefinedIfNone(updateEach(nav, object, 0, undefined, mutationMarker));
+    const nestedResult = undefinedIfNone(updateEach(nav, object, 0, undefined, context, mutationMarker));
     return updateEach(path, nestedResult, pathIndex + 1, returnFn, context, mutationMarker);
   }
   throw new Error(`Invalid navigator ${nav} at path index ${pathIndex}.`);
