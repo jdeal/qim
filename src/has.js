@@ -1,4 +1,5 @@
-import {selectEach} from './select';
+import {traverseEach} from './traverse';
+import {selectKey} from './createNavigator';
 import reduced, {unreduced} from './utils/reduced';
 import {curry2} from './utils/curry';
 import {isNone} from './$none';
@@ -20,7 +21,7 @@ const has = (path, obj) => {
   while (pathIndex < path.length) {
     key = path[pathIndex];
     if (key && typeof key !== 'string' && typeof key !== 'number' && typeof key !== 'boolean') {
-      let selectResult = selectEach(null, selectFirstResultFn, path, obj, pathIndex);
+      let selectResult = traverseEach(selectKey, null, selectFirstResultFn, path, obj, pathIndex);
       if (typeof selectResult === 'undefined') {
         return false;
       }

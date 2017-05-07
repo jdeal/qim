@@ -1,4 +1,5 @@
-import {updateEach} from './update';
+import {updateKey} from './createNavigator';
+import {traverseEach} from './traverse';
 import {curry3} from './utils/curry';
 import {undefinedIfNone} from './$none';
 
@@ -26,7 +27,7 @@ const set = (path, value, obj) => {
 
   path = Array.isArray(path) ? path : [path];
 
-  return undefinedIfNone(updateEach(path, obj, 0, () => value));
+  return undefinedIfNone(traverseEach(updateKey, undefined, undefined, path, obj, 0, () => value));
 };
 
 export default curry3(set);

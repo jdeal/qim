@@ -2,15 +2,15 @@
 
 [source](../benchmarks/find.js)
 
-| Test          |    Ops/Sec |
-| :------------ | ---------: |
-| lodash get    | 10,315,965 |
-| lodash-fp get |  1,893,324 |
-| Immutable get |  2,747,905 |
-| qim find      |  8,716,580 |
+| Test          |   Ops/Sec |
+| :------------ | --------: |
+| lodash get    | 9,916,354 |
+| lodash-fp get | 1,858,462 |
+| Immutable get | 2,530,441 |
+| qim find      | 8,858,319 |
 
 
-qim find / lodash get = 84% (PASS)
+qim find / lodash get = 89% (PASS)
 
 
 ## set
@@ -19,13 +19,41 @@ qim find / lodash get = 84% (PASS)
 
 | Test                | Ops/Sec |
 | :------------------ | ------: |
-| lodash fp set       |  82,235 |
-| Immutable set       | 607,501 |
-| immutability-helper |  78,437 |
-| qim set             | 272,614 |
+| lodash fp set       |  79,293 |
+| Immutable set       | 616,366 |
+| immutability-helper |  78,941 |
+| qim set             | 261,553 |
 
 
-qim set / lodash fp set = 332% (PASS)
+qim set / lodash fp set = 330% (PASS)
+
+
+## simple-select
+
+[source](../benchmarks/simple-select.js)
+
+| Test           |   Ops/Sec |
+| :------------- | --------: |
+| native         | 2,144,935 |
+| lodash/fp flow |    17,896 |
+| qim select     |   992,198 |
+
+
+qim select / native = 46% (PASS)
+
+
+## simple-update
+
+[source](../benchmarks/simple-update.js)
+
+| Test       | Ops/Sec |
+| :--------- | ------: |
+| native     | 267,339 |
+| lodash/fp  |  16,785 |
+| qim update | 155,783 |
+
+
+qim update / native = 58% (PASS)
 
 
 ## slice
@@ -34,12 +62,12 @@ qim set / lodash fp set = 332% (PASS)
 
 | Test                | Ops/Sec |
 | :------------------ | ------: |
-| simple splice       | 823,640 |
-| immutability-helper | 363,862 |
-| qim slice           | 515,991 |
+| simple splice       | 857,694 |
+| immutability-helper | 360,391 |
+| qim slice           | 429,481 |
 
 
-qim slice / simple splice = 63% (PASS)
+qim slice / simple splice = 50% (PASS)
 
 
 ## update-multi-key
@@ -48,11 +76,11 @@ qim slice / simple splice = 63% (PASS)
 
 | Test          | Ops/Sec |
 | :------------ | ------: |
-| Object.assign |  59,394 |
-| qim update    |  51,536 |
+| Object.assign |  61,471 |
+| qim update    |  51,499 |
 
 
-qim update / Object.assign = 87% (PASS)
+qim update / Object.assign = 84% (PASS)
 
 
 ## update
@@ -61,10 +89,10 @@ qim update / Object.assign = 87% (PASS)
 
 | Test             | Ops/Sec |
 | :--------------- | ------: |
-| lodash mapValues |  90,977 |
-| Immutable        | 244,423 |
-| qim update       | 275,839 |
+| lodash mapValues | 102,841 |
+| Immutable        | 261,614 |
+| qim update       | 261,061 |
 
 
-qim update / lodash mapValues = 303% (PASS)
+qim update / lodash mapValues = 254% (PASS)
 
