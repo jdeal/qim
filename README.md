@@ -1207,7 +1207,6 @@ If you want flexible select and update of plain JS objects, `qim` is likely to b
 
 - More tests.
 - Better error messages.
-- Maybe merge the internal implementations of `select` and `update` to reduce copy-pasta. If performance is worse, or if the code is too confusing, it will stay separate.
 - Expose ES6 modules.
 - Static typing? `qim` might be diametrically opposed to static types, but worth seeing how good/bad they would fit.
 
