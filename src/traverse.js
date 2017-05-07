@@ -146,7 +146,10 @@ export const traverseEach = (navKey, state, resultFn, path, object, pathIndex, r
   }
 
   if (nav[navKey]) {
-    return continueTraverseEach(navKey, state, resultFn, nav[navKey], nav, object, path, pathIndex, returnFn, context);
+    if (nav.hasParams) {
+      return nav[navKey](nav.params, object, (subObject) => traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context), path, pathIndex);
+    }
+    return nav[navKey](object, (subObject) => traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context));
   }
 
   if (Array.isArray(nav)) {
@@ -166,11 +169,4 @@ export const traverseEach = (navKey, state, resultFn, path, object, pathIndex, r
   }
 
   throw new Error(`Invalid navigator ${nav} at path index ${pathIndex}.`);
-};
-
-continueTraverseEach = (navKey, state, resultFn, selectFn, nav, object, path, pathIndex, returnFn, context) => {
-  if (nav.hasParams) {
-    return selectFn(nav.params, object, (subObject) => traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context), path, pathIndex);
-  }
-  return selectFn(object, (subObject) => traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context));
 };
