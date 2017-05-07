@@ -16,8 +16,6 @@ const isInteger = (value) => {
   return (x | 0) === x;
 };
 
-let continueTraverseEach;
-
 export const traverseEach = (navKey, state, resultFn, path, object, pathIndex, returnFn, context, mutationMarker) => {
 
   if (pathIndex >= path.length) {
