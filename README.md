@@ -813,6 +813,15 @@ update([$merge(['a'])], ['x', 'y', 'z'])
 // ['a', 'y', 'z']
 ```
 
+#### `$mergeDeep(spec)`
+
+Deep merging version of `$merge`. Typically, deep merging is better handled with nested queries. But if you must...
+
+```js
+update([$mergeDeep({a: {ab: 2}})], {a: {aa: 1}, b: 2})
+// {a: {aa: 1, ab: 2}, b: 2}
+```
+
 #### `$nav(path)`
 
 Effectively, this is the same as `createNavigator({path})`.

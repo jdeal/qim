@@ -22,6 +22,7 @@ export {default as $set} from './$set';
 export {default as $none} from './$none';
 export {default as $default} from './$default';
 export {default as $merge} from './$merge';
+export {default as $mergeDeep} from './$mergeDeep';
 
 // Array subset navigators
 export {default as $begin} from './$begin';

@@ -1,34 +1,17 @@
 import createNavigator from './createNavigator';
-import getTypeErrorMessage from './utils/getTypeErrorMessage';
+import createMerge from './utils/createMerge';
 
-const merge = (args, object, next) => {
+const merge = createMerge();
+
+const applyMerge = (args, object, next) => {
   const [spec] = args;
-  if (spec && typeof spec === 'object') {
-    let newObject = object;
-    for (let key in spec) {
-      if (spec.hasOwnProperty(key)) {
-        if (newObject[key] !== spec[key]) {
-          // Create a new object if we haven't done that yet.
-          if (newObject === object) {
-            if (Array.isArray(object)) {
-              newObject = object.slice(0);
-            } else {
-              newObject = Object.assign({}, object);
-            }
-          }
-          newObject[key] = spec[key];
-        }
-      }
-    }
-    return next(newObject);
-  }
-  throw new Error(getTypeErrorMessage('$merge', 'object', object));
+  return next(merge(spec, object));
 };
 
 const $merge = createNavigator({
   hasParams: true,
-  select: merge,
-  update: merge
+  select: applyMerge,
+  update: applyMerge
 });
 
 export default $merge;
