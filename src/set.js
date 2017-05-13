@@ -5,6 +5,7 @@ import {undefinedIfNone} from './$none';
 
 const set = (path, value, obj) => {
 
+  // Optimized case for a single primitive key.
   if (!path || typeof path !== 'object') {
     if (obj == null || typeof obj !== 'object') {
       return obj;

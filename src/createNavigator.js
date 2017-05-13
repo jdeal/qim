@@ -11,6 +11,8 @@ const createNavigator = (spec) => {
     if (typeof path !== 'function' && !Array.isArray(path)) {
       throw new Error('Function or array is required to create a path navigator.');
     }
+    // If this navigator is unparameterized, just return an envelope with the
+    // path array or function.
     if (!hasParams) {
       return {
         [pathKey]: path
@@ -19,22 +21,24 @@ const createNavigator = (spec) => {
     if (typeof path !== 'function') {
       throw new Error('Function or array is required to create a path navigator.');
     }
-    // If our path functoin only accepts one parameter, we know it only depends
-    // on `params`. In that case, it's not going to dynamically receive data, so
-    // we can call the function as soon as we have parameters, rather than
+    // If our path function only accepts one parameter, we know it only depends
+    // on `args`. In that case, it's not going to dynamically receive data, so
+    // we can call the function as soon as we have arguments, rather than
     // calling every time we navigate.
     if (path.length === 1) {
-      return (...params) => {
-        const navPath = path(params);
+      return (...args) => {
+        const navPath = path(args);
         return {
           [pathKey]: navPath == null ? [] : arrayify(navPath)
         };
       };
     }
-    const navFn = (...params) => ({
+    // Create our parameterized navigator function, which will return an
+    // envelope that points to our path function and arguments.
+    const navFn = (...args) => ({
       [pathKey]: path,
-      hasParams: true,
-      params,
+      hasArgs: true,
+      args,
       self: navFn
     });
     return navFn;
@@ -45,17 +49,21 @@ const createNavigator = (spec) => {
     if (spec.update && typeof spec.update !== 'function') {
       throw new Error('Update method for a navigator must be a function.');
     }
+    // If there are no parameters, just return an envelop with select/update
+    // functions.
     if (!hasParams) {
       return {
         [selectKey]: spec.select,
         [updateKey]: spec.update
       };
     }
-    return (...params) => ({
+    // Create our parameterized navigator function, which will return an
+    // envelope with select/update functions and arguments.
+    return (...args) => ({
       [selectKey]: spec.select,
       [updateKey]: spec.update,
-      hasParams: true,
-      params
+      hasArgs: true,
+      args
     });
   }
 };

@@ -1,13 +1,14 @@
 import createNavigator from './createNavigator';
 import getTypeErrorMessage from './utils/getTypeErrorMessage';
 
-const merge = (params, object, next) => {
-  const [spec] = params;
+const merge = (args, object, next) => {
+  const [spec] = args;
   if (spec && typeof spec === 'object') {
     let newObject = object;
     for (let key in spec) {
       if (spec.hasOwnProperty(key)) {
         if (newObject[key] !== spec[key]) {
+          // Create a new object if we haven't done that yet.
           if (newObject === object) {
             if (Array.isArray(object)) {
               newObject = object.slice(0);

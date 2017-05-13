@@ -3,6 +3,7 @@ import {curry2} from './utils/curry';
 import arrayify from './utils/arrayify';
 import {traverseEach} from './traverse';
 
+// select is just a traverse that pushes each result onto an array.
 const selectResultFn = (state, result) => {
   state.push(result);
   return state;

@@ -4,6 +4,7 @@ import reduced, {unreduced} from './utils/reduced';
 import {curry2} from './utils/curry';
 import {isNone} from './$none';
 
+// has uses the same reduced envelope as find.
 const selectFirstResultFn = (state, result) => {
   return reduced(result);
 };
@@ -18,8 +19,12 @@ const has = (path, obj) => {
     throw new TypeError('hasIn requires array-like object for path');
   }
 
+  // We'll just use an optimized while loop as long as we have simple primitive
+  // navigators.
   while (pathIndex < path.length) {
     key = path[pathIndex];
+    // If we have a non-primitive navigator, we'll switch over to a generic
+    // traverse.
     if (key && typeof key !== 'string' && typeof key !== 'number' && typeof key !== 'boolean') {
       let selectResult = traverseEach(selectKey, null, selectFirstResultFn, path, obj, pathIndex);
       if (typeof selectResult === 'undefined') {

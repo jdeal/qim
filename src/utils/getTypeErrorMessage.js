@@ -1,4 +1,5 @@
 const pluralize = type => `${type}s`;
+
 const typeName = object => {
   if (object === null) {
     return 'null';
@@ -8,8 +9,11 @@ const typeName = object => {
   }
   return typeof object;
 };
+
+// Prepend word with "a" or "an".
 const articleize = type => `${'aeiou'.indexOf(type[0]) >= 0 ? 'an' : 'a'} ${type}`;
 
+// Concatenate types together into a phrase.
 const getSupportedTypesPhrase = (supportedTypes) => {
   supportedTypes = Array.isArray(supportedTypes) ? supportedTypes : [supportedTypes];
   const pluralTypes = supportedTypes.map(type => pluralize(type));
@@ -27,6 +31,7 @@ const getSupportedTypesPhrase = (supportedTypes) => {
     .concat(`, and ${pluralTypes[pluralTypes.length - 1]}`);
 };
 
+// Get error message saying what types a function supports.
 const getTypeErrorMessage = (name, supportedTypes, object) => [
   name,
   ' only supports ',

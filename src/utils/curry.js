@@ -1,3 +1,6 @@
+// Yes, we could make a smple universal curry with `.reduce`, but this is
+// faster.
+
 export const curry2 = fn => function (a, b, sourceObj) {
   switch (arguments.length) {
     case 2:
