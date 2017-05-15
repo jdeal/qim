@@ -133,6 +133,22 @@ test('$mergeDeep', t => {
 test('$nav', t => {
   t.deepEqual(
     update(
+      [$nav('x'), 'y', $set(2)],
+      {x: {y: 1}}
+    ),
+    {x: {y: 2}}
+  );
+
+  t.deepEqual(
+    update(
+      [$nav(['x', 'y']), 'z', $set(2)],
+      {x: {y: {z: 1}}}
+    ),
+    {x: {y: {z: 2}}}
+  );
+
+  t.deepEqual(
+    update(
       [
         $each, $nav(
           obj => ['isEqual', $set(obj.x === obj.y)]

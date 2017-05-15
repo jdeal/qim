@@ -5,11 +5,15 @@ export const updateKey = '@@qim/navUpdate';
 export const pathKey = '@@qim/navPath';
 
 const createNavigator = (spec) => {
-  const {path, hasParams} = spec;
+  let {path} = spec;
+  const {hasParams} = spec;
 
   if (path) {
     if (typeof path !== 'function' && !Array.isArray(path)) {
-      throw new Error('Function or array is required to create a path navigator.');
+      if (typeof path === 'object') {
+        throw new Error('Function or array or primitive is required to create a path navigator.');
+      }
+      path = [path];
     }
     // If this navigator is unparameterized, just return an envelope with the
     // path array or function.
