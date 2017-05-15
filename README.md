@@ -678,7 +678,12 @@ update(
 
 #### `$default(value)`
 
-By default, `qim` will do its best to create missing objects or arrays. Ordinarily, it creates empty arrays for integer keys and empty objects for other keys. You can use `$default` to change this behavior and provide your own default value.
+By default, `qim` will create missing objects when you try to update a path that doesn't exist. You can use `$default` to change this behavior and provide your own default value.
+
+```js
+set(['x', $default([]), 0], 'a', {})
+// {x: ['a']}
+```
 
 ```js
 set(['x', $default({a: 0}), 'y'], 0, {})

@@ -82,10 +82,10 @@ test('auto-create objects', t => {
   );
 });
 
-test('auto-create arrays', t => {
+test('do not auto-create arrays', t => {
   t.deepEqual(
     set(['x', 0], 'a', {}),
-    {x: ['a']}
+    {x: {0: 'a'}}
   );
 });
 

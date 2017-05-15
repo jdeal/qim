@@ -8,14 +8,6 @@ import {$applyKey} from './$apply';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 
-const isInteger = (value) => {
-  if (isNaN(value)) {
-    return false;
-  }
-  const x = parseFloat(value);
-  return (x | 0) === x;
-};
-
 // `traverseEach` is the heart of `qim`. It's a little ugly because it needs to
 // be performant, and it's generic across select and update.
 export const traverseEach = (
@@ -112,18 +104,19 @@ export const traverseEach = (
       }
       return objectAssign({}, object, {[nav]: newValue});
     // If we got back null/undefined, then intelligently create a new object.
-    // It's debatable on whether or not this is a good idea.
+    // It's debatable on whether or not this is a good idea. Integers used to
+    // auto-create arrays, but that's probably wrong more than right. An
+    // integer like 123456 is probably an id and not an array index, so it's
+    // probably a mistake to create an array of that size. If an array is
+    // actually wanted, `default([])` can be added. We could do nothing, which
+    // would keep you from making typos, but then you have to add a lot of
+    // `default({})`, and then you're right back to being able to make typos.
+    // So defaulting to create an object seems like a sane balance.
     } else if (object == null) {
       const newValue = traverseEach(navKey, state, resultFn, path, undefined, pathIndex + 1, returnFn, context);
-      if (isInteger(nav)) {
-        const newArray = [];
-        newArray[nav] = newValue;
-        return newArray;
-      } else {
-        const newObject = {};
-        newObject[nav] = newValue;
-        return newObject;
-      }
+      const newObject = {};
+      newObject[nav] = newValue;
+      return newObject;
     } else {
       throw new Error(`Cannot update property ${nav} (at path index ${pathIndex}) for non-object.`);
     }
