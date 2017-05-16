@@ -414,7 +414,7 @@ Or of course you can just import everything:
 import * as qim from 'qim';
 ```
 
-You can also import individual functions.
+You can also import individual functions. If you import from `qim`, then don't do this! `qim` points to a bundle that includes all the individual modules, so importing individual modules will import them again.
 
 ```js
 import select from 'qim/select';
