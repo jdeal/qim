@@ -7,7 +7,7 @@
     "benchmark": "babel-node benchmark.js",
     "test": "ava test",
     "prebuild": "rm -rf build && mkdir -p build",
-    "build": "babel src --out-dir build",
+    "build": "babel src --out-dir build && rollup -c",
     "build-package": "babel-node build-package.js",
     "prepublish-package": "npm run build && npm run build-package",
     "publish-package": "babel-node publish-package.js",
