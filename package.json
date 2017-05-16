@@ -7,7 +7,7 @@
     "benchmark": "babel-node benchmark.js",
     "test": "ava test",
     "prebuild": "rm -rf build && mkdir -p build",
-    "build": "babel src --out-dir build",
+    "build": "babel src --out-dir build && rollup -c",
     "build-package": "babel-node build-package.js",
     "prepublish-package": "npm run build && npm run build-package",
     "publish-package": "babel-node publish-package.js",
@@ -37,11 +37,13 @@
     "lodash": "^4.17.2",
     "markdown-table": "^1.1.0",
     "require-dir": "^0.3.1",
+    "rollup": "^0.41.6",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
     "shelljs": "^0.7.7",
     "sinon": "^1.17.6"
   },
   "dependencies": {
-    "object-assign": "^4.1.0",
-    "objectpath": "^1.2.1"
+    "object-assign": "^4.1.0"
   }
 }
