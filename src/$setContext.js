@@ -1,9 +1,12 @@
+import objectAssign from 'object-assign';
+
 export const $setContextKey = '@@qim/$setContext';
 
-const setContext = (nav, value, context) => ({
-  ...context,
-  [nav.key]: value
-});
+const setContext = (nav, value, context) => {
+  context = objectAssign({}, context);
+  context[nav.key] = value;
+  return context;
+};
 
 const identity = v => v;
 

@@ -916,6 +916,34 @@ update(
 // [1, 3, 5]
 ```
 
+#### `$pick(keys, ...keys)`
+
+Navigates to a subset of an object, using the provided keys (or arrays of keys).
+
+```js
+select(
+  [$pick('joe', 'mary'), $each, 'name'],
+  {joe: {name: 'Joe'}, mary: {name: 'Mary'}, bob: {name: 'Bob'}}
+)
+// ['Joe', 'Mary']
+```
+
+```js
+update(
+  [$pick('x', 'y'), $set({a: 1})],
+  {x: 1, y: 1, z: 1}
+)
+// {a: 1, z: 1}
+```
+
+```js
+update(
+  [$pick('x', 'y'), $each, $apply(val => val + 1)],
+  {x: 1, y: 1, z: 1}
+)
+{x: 2, y: 2, z: 1}
+```
+
 #### `$pushContext(key, (obj, context) => contextValue)`
 
 This is a convenient form of `$setContext` where the current value for the key is assumed to be an array and the new value is pushed onto that array. This is especially useful for recursive queries where you want to retain parent context values.

@@ -1,5 +1,6 @@
 import objectAssign from 'object-assign';
 
+import copy from './utils/copy';
 import {selectKey, pathKey} from './createNavigator';
 import arrayify from './utils/arrayify';
 import {$setKey} from './$set';
@@ -97,12 +98,9 @@ export const traverseEach = (
         }
       }
       // Clone our object and set the property to the new value.
-      if (Array.isArray(object)) {
-        const newObject = object.slice(0);
-        newObject[nav] = newValue;
-        return newObject;
-      }
-      return objectAssign({}, object, {[nav]: newValue});
+      const newObject = copy(object);
+      newObject[nav] = newValue;
+      return newObject;
     // If we got back null/undefined, then intelligently create a new object.
     // It's debatable on whether or not this is a good idea. Integers used to
     // auto-create arrays, but that's probably wrong more than right. An

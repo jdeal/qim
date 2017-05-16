@@ -1,3 +1,5 @@
+import copy from './copy';
+
 const createMerge = ({isDeep = false} = {}) => {
   const isShallow = !isDeep;
   const merge = (spec, object) => {
@@ -9,11 +11,7 @@ const createMerge = ({isDeep = false} = {}) => {
           if (newObject[key] !== mergeValue) {
             // Create a new object if we haven't done that yet.
             if (newObject === object) {
-              if (Array.isArray(object)) {
-                newObject = object.slice(0);
-              } else {
-                newObject = Object.assign({}, object);
-              }
+              newObject = copy(object);
             }
             newObject[key] = mergeValue;
           }

@@ -11,6 +11,7 @@ const $slice = createNavigator({
     throw new Error(getTypeErrorMessage('$slice', 'array', object));
   },
   update: (args, object, next, path, index) => {
+    // Is it worth avoiding cloning if nothing changes?
     if (object && typeof object.slice === 'function') {
       const newArray = object.slice(0);
       const spliceBegin = typeof args[0] === 'undefined' ? 0 : args[0];

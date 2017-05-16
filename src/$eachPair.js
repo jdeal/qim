@@ -1,5 +1,4 @@
-import objectAssign from 'object-assign';
-
+import copy from './utils/copy';
 import createNavigator from './createNavigator';
 import reduceSequence from './utils/reduceSequence';
 import {isNone} from './$none';
@@ -44,11 +43,7 @@ const $eachPair = createNavigator({
       if (newKey !== key || newValue !== value || isPairNone) {
         // Create a new object if we haven't done that yet.
         if (object === result) {
-          if (isArray) {
-            result = result.slice(0);
-          } else {
-            result = objectAssign({}, result);
-          }
+          result = copy(result);
         }
         if (newKey !== key) {
           // For arrays, we'll store a removed value so indexes don't get wonky.

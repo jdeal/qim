@@ -24,9 +24,10 @@ export {default as $default} from './$default';
 export {default as $merge} from './$merge';
 export {default as $mergeDeep} from './$mergeDeep';
 
-// Array subset navigators
+// Array/object subset navigators
 export {default as $begin} from './$begin';
 export {default as $end} from './$end';
+export {default as $pick} from './$pick';
 export {default as $slice} from './$slice';
 
 // Array item navigators

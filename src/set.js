@@ -1,3 +1,4 @@
+import copy from './utils/copy';
 import {updateKey} from './createNavigator';
 import {traverseEach} from './traverse';
 import {curry3} from './utils/curry';
@@ -15,11 +16,7 @@ const set = (path, value, obj) => {
       return obj;
     }
 
-    if (Array.isArray(obj)) {
-      obj = obj.slice(0);
-    } else {
-      obj = {...obj};
-    }
+    obj = copy(obj);
 
     obj[path] = value;
 
