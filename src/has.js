@@ -15,8 +15,8 @@ const has = (path, obj) => {
   let key;
   let parentObj;
 
-  if (path == null || typeof path !== 'object' || typeof path.length !== 'number') {
-    throw new TypeError('hasIn requires array-like object for path');
+  if (!Array.isArray(path)) {
+    path = [path];
   }
 
   // We'll just use an optimized while loop as long as we have simple primitive
