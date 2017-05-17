@@ -35,6 +35,7 @@ const $pick = createNavigator({
     // We cheat a little and look ahead to see if `next` is going to return
     // a constant. If it is, then there's no reason to get a proper pick of
     // the object, because we know it won't be used anyway.
+    // CONSIDER THIS AN EXPERIMENT. DON'T USE IT IN YOUR NAVIGATORS.
     if (isNextNavigatorConstant(path, index)) {
       // Call `next` with no args, because it's a constant.
       const newPicked = next();
