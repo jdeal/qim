@@ -4,7 +4,7 @@
   "description": "Immutable/functional select/update queries for plain JS.",
   "main": "index.js",
   "scripts": {
-    "benchmark": "babel-node benchmark.js",
+    "benchmark": "babel-node --expose-gc benchmark.js",
     "test": "ava test",
     "prebuild": "rm -rf build && mkdir -p build",
     "build": "babel src --out-dir build && rollup -c",

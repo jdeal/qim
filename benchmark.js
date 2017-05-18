@@ -9,6 +9,12 @@ import markdownTable from 'markdown-table';
 
 const benchmarks = requireDir('./benchmarks');
 
+const collectGarbage = global.gc ? () => {
+  global.gc();
+} : () => {
+  console.warn('No gc hook. Benchmarking should be started with --expose-gc flag.');
+};
+
 Object.keys(benchmarks).forEach((key) => {
   if (benchmarks[key].default) {
     benchmarks[key] = benchmarks[key].default;
@@ -85,7 +91,7 @@ const testBenchmark = (name, tests) => {
           return `${comparison.name} / ${comparison.compareName} = ${percent}% (${passFail})`;
         }).join('\n'));
         if (!isPass) {
-          console.log(output.join('\n'));
+          console.log(`## ${name}\n\n${output.join('\n')}`);
           return reject({
             isFailure: true,
             name,
@@ -94,7 +100,7 @@ const testBenchmark = (name, tests) => {
         }
       }
       output.push('\n');
-      console.log(output.join('\n'));
+      console.log(`## ${name}\n\n${output.join('\n')}`);
       return resolve({
         name,
         output: output.join('\n')
@@ -128,18 +134,18 @@ matchingBenchmarks.forEach(key => {
   }
 });
 
-// Voodoo, no idea if this actually does anything. But it seems like a test run
-// alone works better than when run after other tests. So letting the CPU
-// rest here. Seems to help a little. ¯\_(ツ)_/¯
-const restCpu = () => new Promise(resolve =>
-  setTimeout(resolve, 2000)
-);
+const cleanup = () => new Promise(resolve => {
+  // Hopefully make each test more independent.
+  collectGarbage();
+  // Some voodoo, no idea if this actually helps.
+  setTimeout(resolve, 2000);
+});
 
 matchingBenchmarks.reduce((promise, key) => {
   return promise
     .then((results) => (
       results.length > 0 ? (
-        restCpu().then(() => results)
+        cleanup().then(() => results)
       ) : results
     ))
     .then((results) =>
