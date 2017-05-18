@@ -831,8 +831,6 @@ update([$mergeDeep({a: {ab: 2}})], {a: {aa: 1}, b: 2})
 
 #### `$nav(path)`
 
-Effectively, this is the same as `createNavigator({path})`.
-
 Given a query path, `$nav` navigates as if that query was a single selector. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
 
 ```js
@@ -1042,16 +1040,14 @@ update(
 
 ## Custom navigators
 
-There are effectively two types of navigators: path navigators and, for lack of a better distinction, core navigators. Path navigators are higher level and work by simply returning other query paths. Core navigators are lower level and do the actual data selections and updates. Generally, core navigators are going to let you squeeze out more performance for a low-level operation, but path navigators are going to be more straightforward and make it easy to do recursive queries.
+Custom navigators are simply composed of other navigators, particularly `$nav` and `$traverse`. `$nav` is used to create path navigators, and `$traverse` is used to create, for lack of a better distinction, core navigators. Path navigators are higher level and work by simply returning other query paths. Core navigators are lower level and do the actual data selections and updates. Generally, core navigators are going to let you squeeze out more performance for a low-level operation, but path navigators are going to be more straightforward and make it easy to do recursive queries.
 
-### `createNavigator({path})`
-
-Creates an unparameterized path navigator.
+### Path navigators
 
 The simplest path navigator just points to a query path. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
 
 ```js
-const $eachUser = createNavigator(['users', $each]);
+const $eachUser = $nav(['users', $each]);
 
 select(
   [$eachUser, 'name'],
@@ -1084,10 +1080,10 @@ update(
 // {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
 ```
 
-`path` can also be a function, which allows it to provide a different path based on the current value.
+The `path` passed to `$nav` can also be a function, which allows it to provide a different path based on the current value.
 
 ```js
-const $fileNames = createNavigator({
+const $fileNames = $nav(
   path: (obj) => {
     if (obj.type === 'folder') {
       return ['files', $each, 'name'];
@@ -1097,7 +1093,7 @@ const $fileNames = createNavigator({
     }
     // Returns `undefined` which stops navigation.
   }
-});
+);
 
 select(
   [$each, $fileNames],
@@ -1106,13 +1102,13 @@ select(
 ['foo', 'bar']
 ```
 
-You can also create recursive queries using the `$self` parameter. You can also just refer to your own navigator by its variable name, but `$self` allows you to create recursive anonymous navigators.
+You can also create recursive queries using the `$self` parameter. You can also just refer to your own navigator by its variable name, but `$self` allows you to create recursive anonymous/inline navigators.
 
 ```js
-const $walk = createNavigator({
-  path: (item, $self) =>
+const $walk = $nav(
+  (item, $self) =>
     Array.isArray(item) ? [$each, $self] : []
-});
+);
 
 select(
   [$walk, val => val % 2 === 0],
@@ -1127,22 +1123,19 @@ update(
 // [0, 1, 20, [3, 40, 5, [60, 7, 80]]]
 ```
 
-### `createNavigator({hasParams: true, path})`
+### Parameterized path navigators
 
-Creates a parameterized path navigator.
-
-Your `path` function will get a `params` array as the first parameter. You can destructure the array to pull out the individual parameters.
+To parameterize a path navigator, just create a function that returns a path navigator.
 
 ```js
-const $take = createNavigator({
-  hasParams: true,
-  path: ([count], obj) => {
+const $take = (count) => $nav(
+  (obj) => {
     if (!Array.isArray(obj)) {
       throw new Error('$take only works on arrays');
     }
     return [$slice(0, count)];
   }
-});
+);
 
 select(
   [$take(3), $each],
@@ -1157,13 +1150,13 @@ update(
 // [0, 10, 20, 3, 4]
 ```
 
-### `createNavigator({select, update})`
+### Core navigators
 
-Creates an unparameterized core navigator.
+Core navigators are built by using `$traverse`, which takes an object with a `select` and `update` function.
 
 ```js
 // Create a navigator that selects or modifies the length of an array.
-const $length = createNavigator({
+const $length = $traverse({
   select: (nav, object, next) => {
     if (Array.isArray(object)) {
       return next(object.length);
@@ -1202,22 +1195,20 @@ set([$length], 4, [1, 1, 1])
 // [1, 1, 1, undefined]
 ```
 
-### `createNavigator({hasParams: true, select, update}`
+### Parameterized core navigators
 
-Create a parameterized core navigator.
-
-Your `select` and `update` functions will get a `params` array as the first parameter. You can destructure the array to pull out the individual parameters.
+To parameterize a core navigator, just create a function that returns a core navigator.
 
 ```js
 // Create a navigator that selects or updates the first n items of an array.
-const $take = createNavigator(true, {
-  select: ([count], object, next) => {
+const $take = (count) => $traverse({
+  select: (object, next) => {
     if (Array.isArray(object)) {
       return next(object.slice(0, count));
     }
     throw new Error('$take only works on arrays');
   },
-  update: ([count], object, next) => {
+  update: (object, next) => {
     if (Array.isArray(object)) {
       const result = next(object.slice(0, count));
       const newArray = object.slice(0);

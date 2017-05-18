@@ -1,17 +1,10 @@
-import createNavigator from './createNavigator';
+import $traverse from './$traverse';
 import createMerge from './utils/createMerge';
 
 const merge = createMerge();
 
-const applyMerge = (args, object, next) => {
-  const [spec] = args;
-  return next(merge(spec, object));
-};
-
-const $merge = createNavigator({
-  hasParams: true,
-  select: applyMerge,
-  update: applyMerge
-});
+const $merge = (spec) => $traverse(
+  (type, object, next) => next(merge(spec, object))
+);
 
 export default $merge;

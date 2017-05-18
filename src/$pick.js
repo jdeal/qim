@@ -1,6 +1,6 @@
 import objectAssign from 'object-assign';
 import copy from './utils/copy';
-import createNavigator from './createNavigator';
+import $traverse from './$traverse';
 import isNextNavigatorConstant from './utils/isNextNavigatorConstant';
 import {isNone} from './$none';
 
@@ -20,16 +20,15 @@ const eachArg = (fn, args, object) => {
   }
 };
 
-const $pick = createNavigator({
-  hasParams: true,
-  select: (args, object, next) => {
+const $pick = (...args) => $traverse({
+  select: (object, next) => {
     const picked = {};
     eachArg((key) => {
       picked[key] = object[key];
     }, args, object);
     return next(picked);
   },
-  update: (args, object, next, path, index) => {
+  update: (object, next, path, index) => {
     // Is it worth avoiding cloning if nothing changes?
     const newObject = copy(object);
     // We cheat a little and look ahead to see if `next` is going to return

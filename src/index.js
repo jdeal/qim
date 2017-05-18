@@ -6,9 +6,6 @@ export {default as update} from './update';
 export {default as set} from './set';
 export {default as apply} from './apply';
 
-// Custom navigator API
-export {default as createNavigator} from './createNavigator';
-
 // Iterator navigators
 export {default as $each} from './$each';
 // 99% sure I'm removing this.
@@ -38,5 +35,6 @@ export {default as $last} from './$last';
 export {default as $setContext} from './$setContext';
 export {default as $pushContext} from './$pushContext';
 
-// Navigator navigator :-)
+// Custom navigators
 export {default as $nav} from './$nav';
+export {default as $traverse} from './$traverse';

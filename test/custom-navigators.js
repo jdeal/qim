@@ -6,15 +6,16 @@ import {
   $each,
   $eachPair,
   $apply,
+  $traverse,
+  $nav,
   select,
   update,
   set,
-  has,
-  createNavigator
+  has
 } from 'qim/src';
 
 test('unparameterized navigator', t => {
-  const $length = createNavigator({
+  const $length = $traverse({
     select: (object, next) => {
       if (Array.isArray(object)) {
         return next(object.length);
@@ -58,15 +59,15 @@ test('unparameterized navigator', t => {
 });
 
 test('parameterized navigator', t => {
-  const $take = createNavigator({
+  const $take = (count) => $traverse({
     hasParams: true,
-    select: ([count], object, next) => {
+    select: (object, next) => {
       if (Array.isArray(object)) {
         return next(object.slice(0, count));
       }
       throw new Error('$length only works on arrays');
     },
-    update: ([count], object, next) => {
+    update: (object, next) => {
       if (Array.isArray(object)) {
         const result = next(object.slice(0, count));
         const newArray = object.slice(0);
@@ -87,10 +88,9 @@ test('parameterized navigator', t => {
 });
 
 test('recursive path navigator', t => {
-  const $walk = createNavigator({
-    path: (item, $self) =>
-      Array.isArray(item) ? [$each, $self] : []
-  });
+  const $walk = $nav((item, $self) =>
+    Array.isArray(item) ? [$each, $self] : []
+  );
 
   t.deepEqual(
     select([$walk, val => val % 2 === 0], [0, 1, 2, [4, 5, 6, [7, 8, 9]]]),
@@ -99,14 +99,13 @@ test('recursive path navigator', t => {
 });
 
 test('parameterized path navigator', t => {
-  const $eachIfKeyStartsWith = createNavigator({
-    hasParams: true,
-    path: ([prefix]) => [
+  const $eachIfKeyStartsWith = (prefix) => $nav(
+    [
       $eachPair,
       has([0, key => key.substring(0, prefix.length) === prefix]),
       1
     ]
-  });
+  );
 
   t.deepEqual(
     update(

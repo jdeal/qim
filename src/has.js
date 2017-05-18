@@ -1,5 +1,5 @@
 import {traverseEach} from './traverse';
-import {selectKey} from './createNavigator';
+import {selectKey} from './$traverse';
 import reduced, {unreduced} from './utils/reduced';
 import {curry2} from './utils/curry';
 import {isNone} from './$none';

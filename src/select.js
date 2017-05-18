@@ -1,4 +1,4 @@
-import {selectKey} from './createNavigator';
+import {selectKey} from './$traverse';
 import {curry2} from './utils/curry';
 import arrayify from './utils/arrayify';
 import {traverseEach} from './traverse';
