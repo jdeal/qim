@@ -1,7 +1,8 @@
 import objectAssign from 'object-assign';
 
 import copy from './utils/copy';
-import {selectKey, pathKey} from './createNavigator';
+import {selectKey} from './$traverse';
+import {pathKey} from './$nav';
 import arrayify from './utils/arrayify';
 import {$setKey} from './$set';
 import {$defaultKey} from './$default';
@@ -189,7 +190,8 @@ export const traverseEach = (
     }
     return nav[navKey](
       object,
-      (subObject) => traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context)
+      (subObject) => traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context),
+      path, pathIndex
     );
   }
 

@@ -1,10 +1,10 @@
 import copy from './utils/copy';
-import createNavigator from './createNavigator';
+import $traverse from './$traverse';
 import reduceSequence from './utils/reduceSequence';
 import {isNone} from './$none';
 import removed, {isNotRemoved} from './utils/removed';
 
-const $each = createNavigator({
+const $each = $traverse({
   select: (object, next) => {
     // Pass each value along to the next navigator.
     return reduceSequence((result, key) => {

@@ -1,7 +1,7 @@
-import createNavigator from './createNavigator';
+import $traverse from './$traverse';
 import getTypeErrorMessage from './utils/getTypeErrorMessage';
 
-const $begin = createNavigator({
+const $begin = $traverse({
   select: (object, next) => {
     if (Array.isArray(object)) {
       return next([]);

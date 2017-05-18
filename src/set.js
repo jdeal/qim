@@ -1,5 +1,5 @@
 import copy from './utils/copy';
-import {updateKey} from './createNavigator';
+import {updateKey} from './$traverse';
 import {traverseEach} from './traverse';
 import {curry3} from './utils/curry';
 import {undefinedIfNone} from './$none';

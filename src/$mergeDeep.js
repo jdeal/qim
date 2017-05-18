@@ -1,17 +1,10 @@
-import createNavigator from './createNavigator';
+import $traverse from './$traverse';
 import createMerge from './utils/createMerge';
 
 const mergeDeep = createMerge({isDeep: true});
 
-const applyMergeDeep = (args, object, next) => {
-  const [spec] = args;
-  return next(mergeDeep(spec, object));
-};
-
-const $mergeDeep = createNavigator({
-  hasParams: true,
-  select: applyMergeDeep,
-  update: applyMergeDeep
-});
+const $mergeDeep = (spec) => $traverse(
+  (type, object, next) => next(mergeDeep(spec, object))
+);
 
 export default $mergeDeep;

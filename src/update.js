@@ -1,4 +1,4 @@
-import {updateKey} from './createNavigator';
+import {updateKey} from './$traverse';
 import {curry2} from './utils/curry';
 import arrayify from './utils/arrayify';
 import {undefinedIfNone} from './$none';
