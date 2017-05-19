@@ -7,6 +7,7 @@ import arrayify from './utils/arrayify';
 import {$setKey} from './$set';
 import {$defaultKey} from './$default';
 import {$applyKey} from './$apply';
+import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 
@@ -134,16 +135,25 @@ export const traverseEach = (
   switch (nav['@@qim/nav']) {
     // Transform the current value into another value.
     case $applyKey: {
-      return traverseEach(navKey, state, resultFn, path, nav.data(object, context), pathIndex + 1, returnFn, context);
+      return traverseEach(navKey, state, resultFn, path, nav.fn(object, context), pathIndex + 1, returnFn, context);
+    }
+    // Transform the current value into another value.
+    // For updates, apply another transform on the way back.
+    case $lensKey: {
+      const result = traverseEach(navKey, state, resultFn, path, nav.fn(object, context), pathIndex + 1, returnFn, context);
+      if (navKey === selectKey || !nav.fromFn) {
+        return result;
+      }
+      return nav.fromFn(result, object, context);
     }
     // Set the current value to a new constant value.
     case $setKey:
-      return traverseEach(navKey, state, resultFn, path, nav.data, pathIndex + 1, returnFn, context);
+      return traverseEach(navKey, state, resultFn, path, nav.value, pathIndex + 1, returnFn, context);
     // Set the current value to a new constant value if the current value is
     // undefined.
     case $defaultKey: {
       if (typeof object === 'undefined') {
-        return traverseEach(navKey, state, resultFn, path, nav.data, pathIndex + 1, returnFn, context);
+        return traverseEach(navKey, state, resultFn, path, nav.value, pathIndex + 1, returnFn, context);
       }
       return traverseEach(navKey, state, resultFn, path, object, pathIndex + 1, returnFn, context);
     }

@@ -35,4 +35,5 @@ export {default as $pushContext} from './$pushContext';
 
 // Custom navigators
 export {default as $nav} from './$nav';
+export {default as $lens} from './$lens';
 export {default as $traverse} from './$traverse';

@@ -1,5 +1,5 @@
 export const $applyKey = '@@qim/$apply';
 
-const $apply = (transform) => ({'@@qim/nav': $applyKey, data: transform});
+const $apply = (fn) => ({'@@qim/nav': $applyKey, fn});
 
 export default $apply;

@@ -8,6 +8,7 @@ import {
   $apply,
   $traverse,
   $nav,
+  $lens,
   select,
   update,
   set,
@@ -113,5 +114,20 @@ test('parameterized path navigator', t => {
       {a: 1, aa: 2, b: 3, bb: 4}
     ),
     {a: 10, aa: 20, b: 3, bb: 4}
+  );
+});
+
+test('lens navigator', t => {
+  const $pct = $lens(
+    n => n * 100,
+    pct => pct / 100
+  );
+
+  t.deepEqual(
+    update(
+      ['x', $pct, pct => pct > 50, $apply(pct => pct + 5)],
+      {x: .75}
+    ),
+    {x: .80}
   );
 });
