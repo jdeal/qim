@@ -8,8 +8,6 @@ export {default as apply} from './apply';
 
 // Iterator navigators
 export {default as $each} from './$each';
-// 99% sure I'm removing this.
-export {default as $eachValue} from './$eachValue';
 export {default as $eachKey} from './$eachKey';
 export {default as $eachPair} from './$eachPair';
 
