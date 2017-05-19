@@ -114,10 +114,10 @@ const firstNames = select(['users', $each, 'name', 'first'], state);
 ['Joe', 'Mary']
 ```
 
-Let's import an `update` function:
+Let's import a couple more things:
 
 ```js
-import {update} from 'qim';
+import {update, $apply} from 'qim';
 ```
 
 And now we can upper-case all our first names.
@@ -137,14 +137,14 @@ const state = {
   users: {
     joe: {
       name: {
-        first: 'Joe',
+        first: 'JOE',
         last: 'Foo'
       },
       other: 'stuff'
     },
     mary: {
       name: {
-        first: 'Mary',
+        first: 'MARY',
         last: 'Bar'
       },
       other: 'stuff'
