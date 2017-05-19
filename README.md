@@ -1112,13 +1112,14 @@ update(['isOn', $toggle], {isOn: false})
 // {isOn: true}
 ```
 
-In particular though, the important navigators for building other navigators are `$traverse`, `$lens`, and `$nav`.
+In particular though, the important navigators for building other navigators are `$nav`, `$lens`, and `$traverse`.
 
-`$traverse` lets you build, for lack of a better term, "core" navigators. It's the lowest-level option and gives you complete control of data selection and updates. Generally, core navigators are going to be more performant, but they're going to require more code.
+`$nav` lets you build "path" navigators. A path navigator is the highest level option. If you want to abstract away multiple other navigators, or you want to dynamically choose a navigator based on the current object being navigated to, or you want to do a recursive query, you probably want a path navigator.
 
-`$lens` lets you build "lens" navigators. A lens navigator is probably going to be almost as performant as a core navigator, but doesn't offer quite as much control.
+`$lens` lets you build "lens" navigators. A lens navigator is generally going to be simpler than a core navigator and will be almost as performant, but doesn't offer quite as much control. Think of a lens navigator as a two-way `$apply`. You transform the current object for the rest of the query, and for an update, you define a transformation to be applied to the object. If you _always_ want to call the rest of the query, and you only want to call the rest of the query _once_, then a lens navigator is a good fit.
 
-`$nav` lets you build "path" navigators. A path navigator is the highest level option. Path navigators can abstract away complex or recursive queries.
+`$traverse` lets you build, for lack of a better term, "core" navigators. It's the lowest-level option and gives you complete control of data selection and updates. Generally, core navigators are going to be the most performant, but they're also going to require the most code. If you need to _maybe_ call the rest of the query, or you want to call the rest of the query _many_ times, you probably need a core navigator.
+
 
 ### Path navigators
 
