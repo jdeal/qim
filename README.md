@@ -801,11 +801,63 @@ update(
 Navigates to the first value of an array or object.
 
 ```js
+select([$first], [0, 1, 2])
+// [0]
+
+select([$first], {x: 0, y: 1, z: 2})
+// [0]
+
+update([$first, $set('first')], [0, 1, 2])
+// ['first', 1, 2]
+
+update([$first, $set('first')], {x: 0, y: 1, z: 2})
+// {x: 'first', y: 1, z: 2}
 ```
+
+#### `$last`
+
+Navigates to the last value of an array or object.
+
+```js
+select([$last], [0, 1, 2])
+// [2]
+
+select([$last], {x: 0, y: 1, z: 2})
+// [2]
+
+update([$last, $set('last')], [0, 1, 2])
+// [0, 1, 'last']
+
+update([$last, $set('last')], {x: 0, y: 1, z: 2})
+// {x: 0, y: 1, z: 'last'}
+```
+
+#### `$lens(fn, fromFn)`
+
+Lens is like `$apply`, and the first function behaves identically, in that it transforms the current value using the provided function. But it also takes a second function that can be used to apply the result of a transformation to the current object during an update.
+
+```js
+const $pct = $lens(
+  // The first function transforms the result, just like $apply.
+  // This simple example transforms a decimal value to its percentage equivalent.
+  n => n * 100,
+  // The second function inverts the transformation on the way back.
+  // This simple example transforms a percentage value to its decimal equivalent.
+  pct => pct / 100
+);
+
+update(
+  ['x', $pct, pct => pct > 50, $apply(pct => pct + 5)],
+  {x: .75}
+)
+// {x: .80}
+```
+
+See [custom navigators](#custom-navigators) for more about `$lens`.
 
 #### `$merge(spec)`
 
-Similar to `$apply(object => {...object, ...spec})` except:
+Similar to `$apply(object => ({...object, ...spec}))` except:
 
 - Does not create a new object if `object` already has the same keys/values as `spec`.
 - Will create a new array if `object` is an array so can be used to merge arrays.
@@ -871,7 +923,7 @@ update(
 // {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
 ```
 
-If `query` is a function, it will be passed the current object, and it can return a dynamic query. This can be used to inline a custom navigator or just to get the current value in scope.
+If `path` is a function, it will be passed the current object, and it can return a dynamic query. This can be used to inline a custom navigator or just to get the current value in scope.
 
 ```js
 update(
@@ -887,6 +939,8 @@ update(
 //   {x: 1, y: 2, isEqual: false}
 // ]
 ```
+
+See [custom navigators](#custom-navigators) for more about `$lens`.
 
 #### `$none`
 
@@ -1038,9 +1092,28 @@ update(
 // ['a', 'b', 'e', 'f']
 ```
 
+#### `$traverse({select, update})`
+
+See [custom navigators](#custom-navigators).
+
 ## Custom navigators
 
-Custom navigators are simply composed of other navigators, particularly `$nav` and `$traverse`. `$nav` is used to create path navigators, and `$traverse` is used to create, for lack of a better distinction, core navigators. Path navigators are higher level and work by simply returning other query paths. Core navigators are lower level and do the actual data selections and updates. Generally, core navigators are going to let you squeeze out more performance for a low-level operation, but path navigators are going to be more straightforward and make it easy to do recursive queries.
+Custom navigators are simply composed of other navigators. For example, you could create a `$toggle` navigator that flips boolean values like this:
+
+```js
+const $toggle = $apply(val => !Boolean(val));
+
+update(['isOn', $toggle], {isOn: false})
+// {isOn: true}
+```
+
+In particular though, the important navigators for building other navigators are `$traverse`, `$lens`, and `$nav`.
+
+`$traverse` lets you build, for lack of a better term, "core" navigators. It's the lowest-level option and gives you complete control of data selection and updates. Generally, core navigators are going to be more performant, but they're going to require more code.
+
+`$lens` lets you build "lens" navigators. A lens navigator is probably going to be almost as performant as a core navigator, but doesn't offer quite as much control.
+
+`$nav` lets you build "path" navigators. A path navigator is the highest level option. Path navigators can abstract away complex or recursive queries.
 
 ### Path navigators
 
@@ -1150,6 +1223,65 @@ update(
 // [0, 10, 20, 3, 4]
 ```
 
+### Lens navigators
+
+Lens navigators are built by using `$lens`, which takes two functions. The first function applies a transformation for either a select or update. The second function is only invoked for an update and allows you to apply that transformation to the current object.
+
+```js
+// Create a navigator that selects or modifies the length of an array.
+const $length = $lens(
+  (object) => {
+    if (Array.isArray(object)) {
+      return object.length;
+    }
+    throw new Error('$length only works on arrays');
+  },
+  (newLength, object) => {    
+    const newLength = next(object.length);
+    if (newLength < object.length) {
+      return object.slice(0, newLength);
+    }
+    if (newLength > object.length) {
+      object = object.slice(0);
+      for (let i = 0; i < newLength - object.length; i++) {
+        object.push(undefined);
+      }
+      return object;
+    }
+    return object;
+  }
+);
+
+select([$length], [1, 1, 1])
+// [3]
+
+set([$length], 3, [1, 1, 1])
+// [1, 1, 1]
+
+set([$length], 2, [1, 1, 1])
+// [1, 1]
+
+set([$length], 4, [1, 1, 1])
+// [1, 1, 1, undefined]
+```
+
+### Parameterized lens navigators
+
+To parameterize a lens navigator, just create a function that returns a lens navigator.
+
+```js
+const $split = (char) => $lens(
+  (string) => string.split(char),
+  (splitString) => splitString.join(char)
+);
+
+update(
+  [$split('@'), 0, $apply(name => name.toUpperCase())],
+  'joe.foo@example.com'
+)
+// JOE.FOO@example.com
+```
+
 ### Core navigators
 
 Core navigators are built by using `$traverse`, which takes an object with a `select` and `update` function.
@@ -1157,13 +1289,13 @@ Core navigators are built by using `$traverse`, which takes an object with a `se
 ```js
 // Create a navigator that selects or modifies the length of an array.
 const $length = $traverse({
-  select: (nav, object, next) => {
+  select: (object, next) => {
     if (Array.isArray(object)) {
       return next(object.length);
     }
     throw new Error('$length only works on arrays');
   },
-  update: (nav, object, next) => {
+  update: (object, next) => {
     if (Array.isArray(object)) {
       const newLength = next(object.length);
       if (newLength < object.length) {
