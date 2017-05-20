@@ -1378,6 +1378,7 @@ If you want flexible select and update of plain JS objects, `qim` is likely to b
 
 ## TODO
 
+- Work with iterables (like Map).
 - More tests.
 - Better error messages.
 - Expose ES6 modules.
