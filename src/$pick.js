@@ -5,9 +5,11 @@ import isNextNavigatorConstant from './utils/isNextNavigatorConstant';
 import {isNone} from './$none';
 
 const eachArg = (fn, args, object) => {
-  for (let arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
     if (Array.isArray(arg)) {
-      for (let subArg of arg) {
+      for (let j = 0; j < arg.length; j++) {
+        const subArg = arg[j];
         if (subArg in object) {
           fn(subArg);
         }

@@ -203,7 +203,7 @@ test('replace pick', t => {
 
 test('apply pick', t => {
   t.deepEqual(
-    update([$pick('x', 'y'), $each, $apply(val => val + 1)], {x: 1, y: 1, z: 1}),
+    update([$pick(['x', 'y']), $each, $apply(val => val + 1)], {x: 1, y: 1, z: 1}),
     {x: 2, y: 2, z: 1}
   );
 });
