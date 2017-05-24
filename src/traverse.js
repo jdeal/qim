@@ -114,6 +114,10 @@ export const traverseEach = (
     // So defaulting to create an object seems like a sane balance.
     } else if (object == null) {
       const newValue = traverseEach(navKey, state, resultFn, path, undefined, pathIndex + 1, returnFn, context);
+      // Trying to set a key to $none is a no-op.
+      if (isNone(newValue)) {
+        return object;
+      }
       const newObject = {};
       newObject[nav] = newValue;
       return newObject;
