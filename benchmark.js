@@ -110,7 +110,7 @@ const testBenchmark = (name, tests) => {
 };
 
 const matchingBenchmarks = Object.keys(benchmarks)
-  .filter(key => !benchmarkName || benchmarkName === key);
+  .filter(key => (!benchmarkName && key[0] !== '_') || benchmarkName === key);
 
 // Make sure benchmarks are all valid, meaning that all tests within a benchmark
 // return the same result.
