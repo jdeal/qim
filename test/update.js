@@ -145,6 +145,13 @@ test('remove key', t => {
   );
 });
 
+test('remove non-existent key', t => {
+  t.deepEqual(
+    update(['x', $none], {y: 2}),
+    {y: 2}
+  );
+});
+
 test('remove item', t => {
   t.deepEqual(
     update([0, $none], ['a', 'b']),
