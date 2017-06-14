@@ -1,4 +1,5 @@
 import fp from 'lodash/fp';
+import R from 'ramda';
 
 import {update, $each, $apply} from '../src';
 
@@ -45,10 +46,18 @@ export default [
     key: 'native'
   },
   {
-    name: 'lodash/fp',
+    name: 'lodash/fp update',
     test: () => (
       fp.update('users', fp.mapValues(
         fp.update(['name', 'first'], firstName => firstName.toUpperCase())
+      ), state)
+    )
+  },
+  {
+    name: 'Ramda update',
+    test: () => (
+      R.over(R.lensProp('users'), R.map(
+        R.over(R.lensPath(['name', 'first']), firstName => firstName.toUpperCase())
       ), state)
     )
   },

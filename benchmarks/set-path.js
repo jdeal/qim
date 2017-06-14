@@ -1,4 +1,5 @@
 import fp from 'lodash/fp';
+import R from 'ramda';
 import updateHelper from 'immutability-helper';
 import Immutable from 'immutable';
 
@@ -32,8 +33,14 @@ export default [
     name: 'lodash fp set',
     test: () => (
       fp.set(['users', 'joe', 'name', 'first'], 'Joseph', state)
+    )
+  },
+  {
+    name: 'Ramda set',
+    test: () => (
+      R.assocPath(['users', 'joe', 'name', 'first'], 'Joseph', state)
     ),
-    key: 'lodashFpSet'
+    key: 'ramdaSet'
   },
   {
     name: 'Immutable set',
@@ -61,7 +68,7 @@ export default [
     name: 'qim set',
     test: () => set(['users', 'joe', 'name', 'first'], 'Joseph', state),
     compare: {
-      lodashFpSet: 3
+      ramdaSet: .4
     }
   }
 ];

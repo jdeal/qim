@@ -4,13 +4,14 @@
 
 | Test          |    Ops/Sec |
 | :------------ | ---------: |
-| lodash get    | 10,457,657 |
-| lodash-fp get |  1,895,465 |
-| Immutable get |  2,664,894 |
-| qim find      |  9,000,857 |
+| lodash get    | 10,635,648 |
+| lodash-fp get |  1,920,208 |
+| Ramda get     | 10,220,345 |
+| Immutable get |  2,713,050 |
+| qim find      |  9,063,141 |
 
 
-qim find / lodash get = 86% (PASS)
+qim find / lodash get = 85% (PASS)
 
 
 ## find-pick
@@ -19,11 +20,11 @@ qim find / lodash get = 86% (PASS)
 
 | Test        | Ops/Sec |
 | :---------- | ------: |
-| lodash pick | 351,760 |
-| qim pick    | 571,450 |
+| lodash pick | 379,147 |
+| qim pick    | 929,199 |
 
 
-qim pick / lodash pick = 162% (PASS)
+qim pick / lodash pick = 245% (PASS)
 
 
 ## select-simple
@@ -32,12 +33,13 @@ qim pick / lodash pick = 162% (PASS)
 
 | Test           |   Ops/Sec |
 | :------------- | --------: |
-| native         | 2,167,712 |
-| lodash/fp flow |    18,638 |
-| qim select     |   967,212 |
+| native         | 2,223,356 |
+| lodash/fp flow |    17,110 |
+| Ramda pipe     |   278,705 |
+| qim select     |   953,949 |
 
 
-qim select / native = 45% (PASS)
+qim select / native = 43% (PASS)
 
 
 ## set-path
@@ -46,27 +48,29 @@ qim select / native = 45% (PASS)
 
 | Test                | Ops/Sec |
 | :------------------ | ------: |
-| lodash fp set       |  85,313 |
-| Immutable set       | 636,441 |
-| immutability-helper |  83,612 |
-| qim set             | 345,905 |
+| lodash fp set       |  81,457 |
+| Ramda set           | 748,396 |
+| Immutable set       | 658,206 |
+| immutability-helper |  78,104 |
+| qim set             | 347,226 |
 
 
-qim set / lodash fp set = 405% (PASS)
+qim set / Ramda set = 46% (PASS)
 
 
 ## update-complex
 
 [source](../benchmarks/update-complex.js)
 
-| Test             | Ops/Sec |
-| :--------------- | ------: |
-| lodash mapValues |  99,166 |
-| Immutable        | 256,854 |
-| qim update       | 328,568 |
+| Test          | Ops/Sec |
+| :------------ | ------: |
+| lodash update |  33,155 |
+| Ramda update  | 199,690 |
+| Immutable     | 266,949 |
+| qim update    | 323,461 |
 
 
-qim update / lodash mapValues = 331% (PASS)
+qim update / Ramda update = 162% (PASS)
 
 
 ## update-merge
@@ -75,11 +79,11 @@ qim update / lodash mapValues = 331% (PASS)
 
 | Test          | Ops/Sec |
 | :------------ | ------: |
-| Object.assign |  63,421 |
-| qim merge     |  56,426 |
+| Object.assign |  64,302 |
+| qim merge     |  59,074 |
 
 
-qim merge / Object.assign = 89% (PASS)
+qim merge / Object.assign = 92% (PASS)
 
 
 ## update-multi-key
@@ -88,25 +92,26 @@ qim merge / Object.assign = 89% (PASS)
 
 | Test          | Ops/Sec |
 | :------------ | ------: |
-| Object.assign |  63,077 |
-| qim update    |  51,259 |
+| Object.assign |  64,012 |
+| qim update    |  53,363 |
 
 
-qim update / Object.assign = 81% (PASS)
+qim update / Object.assign = 83% (PASS)
 
 
 ## update-simple
 
 [source](../benchmarks/update-simple.js)
 
-| Test       | Ops/Sec |
-| :--------- | ------: |
-| native     | 286,249 |
-| lodash/fp  |  18,029 |
-| qim update | 187,475 |
+| Test             | Ops/Sec |
+| :--------------- | ------: |
+| native           | 300,219 |
+| lodash/fp update |  16,663 |
+| Ramda update     | 117,961 |
+| qim update       | 176,196 |
 
 
-qim update / native = 65% (PASS)
+qim update / native = 59% (PASS)
 
 
 ## update-slice
@@ -115,10 +120,10 @@ qim update / native = 65% (PASS)
 
 | Test                | Ops/Sec |
 | :------------------ | ------: |
-| simple splice       | 408,382 |
-| immutability-helper | 252,643 |
-| qim slice           | 261,210 |
+| simple splice       | 409,182 |
+| immutability-helper | 241,286 |
+| qim slice           | 266,573 |
 
 
-qim slice / simple splice = 64% (PASS)
+qim slice / simple splice = 65% (PASS)
 

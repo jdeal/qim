@@ -1,4 +1,5 @@
 import fp from 'lodash/fp';
+import R from 'ramda';
 
 import {select, $each} from '../src';
 
@@ -35,6 +36,14 @@ export default [
       fp.get('users'),
       fp.map(fp.get(['name', 'first']))
     )(state),
+  },
+  {
+    name: 'Ramda pipe',
+    test: () => R.pipe(
+      R.prop('users'),
+      R.values,
+      R.map(R.path(['name', 'first']))
+    )(state)
   },
   {
     name: 'qim select',

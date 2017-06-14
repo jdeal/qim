@@ -37,6 +37,7 @@
     "immutable": "^3.8.1",
     "lodash": "^4.17.2",
     "markdown-table": "^1.1.0",
+    "ramda": "^0.24.1",
     "require-dir": "^0.3.1",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",

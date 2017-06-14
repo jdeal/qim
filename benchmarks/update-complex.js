@@ -1,4 +1,5 @@
 import fp from 'lodash/fp';
+import R from 'ramda';
 import Immutable from 'immutable';
 
 import {update, $each, $apply} from '../src';
@@ -28,9 +29,9 @@ const immutableState = Immutable.fromJS(state);
 
 export default [
   {
-    name: 'lodash mapValues',
+    name: 'lodash update',
     test: () => (
-      fp.update('users', users => fp.mapValues(
+      fp.update('users', fp.mapValues(
         user => {
           if (user.balance < 500) {
             return user;
@@ -39,11 +40,26 @@ export default [
             ...user,
             balance: user.balance + 10
           };
-        },
-        users
+        }
+      ), state)
+    )
+  },
+  {
+    name: 'Ramda update',
+    test: () => (
+      R.over(R.lensProp('users'), R.map(
+        user => {
+          if (user.balance < 500) {
+            return user;
+          }
+          return {
+            ...user,
+            balance: user.balance + 10
+          };
+        }
       ), state)
     ),
-    key: 'lodashMapValues'
+    key: 'ramdaUpdate'
   },
   {
     name: 'Immutable',
@@ -63,7 +79,7 @@ export default [
     name: 'qim update',
     test: () => update(['users', $each, user => user.balance >= 500, 'balance', $apply(bal => bal + 10)], state),
     compare: {
-      lodashMapValues: 2.5
+      ramdaUpdate: 1.5
     }
   }
 ];
