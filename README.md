@@ -2,15 +2,15 @@
 
 [![travis](https://travis-ci.org/jdeal/qim.svg?branch=master)](https://travis-ci.org/jdeal/qim)
 
-WARNING: `qim` is already useful, but it's still considered experimental. It might have some rough edges, and the API might change!
+WARNING: Qim is already useful, but it's still considered experimental. It might have some rough edges, and the API might change!
 
-`qim` makes it simple to reach in and modify complex nested JS objects. This is possible with a query path that is just a simple JS array, much like you might use with `set` and `update` from `lodash`, but with a more powerful concept of "navigators" (borrowed from [Specter](https://github.com/nathanmarz/specter), a Clojure library). Instead of just string keys, `qim`'s navigators can act as predicates, wildcards, slices, and other tools. Those same navigators allow you to reach in and select parts of JS objects as well.
+Qim makes it simple to reach in and modify complex nested JS objects. This is possible with a query path that is just a simple JS array, much like you might use with `set` and `update` from [Lodash](https://lodash.com/), but with a more powerful concept of "navigators" (borrowed from [Specter](https://github.com/nathanmarz/specter), a Clojure library). Instead of just string keys, Qim's navigators can act as predicates, wildcards, slices, and other tools. Those same navigators allow you to reach in and select parts of JS objects as well.
 
-`qim`'s updates are immutable, returning new objects, but those objects share any unchanged parts with the original object.
+Qim's updates are immutable, returning new objects, but those objects share any unchanged parts with the original object.
 
-`qim`'s API is curried and data last, so it should fit well with other functional libraries like `lodash/fp` and `ramda`.
+Qim's API is curried and data last, so it should fit well with other functional libraries like [Lodash/fp](https://github.com/lodash/lodash/wiki/FP-Guide) and `ramda`.
 
-And `qim` does its best to stay performant!
+And Qim does its best to stay performant!
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -94,7 +94,7 @@ const state = {
 };
 ```
 
-Let's import a couple things from `qim`:
+Let's import a couple things from Qim:
 
 ```js
 import {select, $each} from 'qim';
@@ -161,7 +161,7 @@ const firstNames = Object.keys(state.users)
   .map(username => state.users[username].name.first);
 ```
 
-That's not too bad, but this is a very simple example. The `$each` from `qim` makes things a lot more expressive. Let's look at `lodash/fp` too:
+That's not too bad, but this is a very simple example. The `$each` from Qim makes things a lot more expressive. Let's look at Lodash/fp and Ramda too:
 
 ```js
 const {map, get} from 'lodash/fp';
@@ -172,15 +172,28 @@ const firstName = flow(
 )(state);
 ```
 
-Okay, that's nice and expressive, but it costs a lot in terms of performance.
+```js
+import R from 'ramda';
+
+const firstName = R.pipe(
+  R.prop('users'),
+  R.values,
+  R.map(R.path(['name', 'first']))
+)(state);
+```
+
+Lodash/fp is nice and expressive, but it costs a lot in terms of performance.
 
 | Test           |   Ops/Sec |
 | :------------- | --------: |
-| native         | 2,111,043 |
-| lodash/fp flow |    16,484 |
-| qim select     | 1,197,764 |
+| native         | 2,223,356 |
+| lodash/fp flow |    17,110 |
+| Ramda pipe     |   278,705 |
+| qim select     |   953,949 |
 
-`qim` is slower than native, but it's doing more than the native equivalent, because it's accounting for things like missing keys. And as you'll see later, it has a _lot_ more expressive power. The `lodash/fp` version is two orders of magnitude slower and arguably less readable than the `qim` version.
+Ramda performs a lot better, but it's a little less concise.
+
+Qim is slower than native, but it's doing more than the native equivalent, because it's accounting for things like missing keys. And as you'll see soon, it has a _lot_ more expressive power.
 
 That update in plain JS is a _lot_ more verbose, even for this really simple example:
 
@@ -202,7 +215,7 @@ const newState = {
 };
 ```
 
-So we go with something like `lodash/fp`:
+So we go with something like Lodash/fp:
 
 ```js
 const newState = fp.update('users', fp.mapValues(
@@ -210,15 +223,24 @@ const newState = fp.update('users', fp.mapValues(
 ), state)
 ```
 
-But again, performance is going to take a hit:
+Or Ramda:
 
-| Test       | Ops/Sec |
-| :--------- | ------: |
-| native     | 283,439 |
-| lodash/fp  |  16,844 |
-| qim update | 161,499 |
+```js
+R.over(R.lensProp('users'), R.map(
+  R.over(R.lensPath(['name', 'first']), firstName => firstName.toUpperCase())
+), state)
+```
 
-Again, native is the fastest, but at a cost of being awfully unreadable. `lodash/fp` lags behind, but `qim`'s main goal isn't to be performant but rather to be expressive. `lodash/fp` looks pretty nice, but remember how closely the `update` resembled the `select` with `qim`? With `lodash/fp`, an update is a different animal. And as we'll see with a more complex example, `qim` will retain its simple, expressive query power for updates while lodash is going to get more complicated.
+Again, performance is going to take a hit for Lodash/fp.
+
+| Test             | Ops/Sec |
+| :--------------- | ------: |
+| native           | 300,219 |
+| lodash/fp update |  16,663 |
+| Ramda update     | 117,961 |
+| qim update       | 176,196 |
+
+Ramda is much faster, but we've had to start using lenses. Again, native is the fastest, but at a cost of being awfully unreadable. Qim's main goal isn't to be performant but rather to be expressive. Lodash/fp looks pretty nice, but remember how closely the `update` resembled the `select` with Qim? With Lodash/fp, an update is a different animal. With Ramda, we've had to switch to completely different concepts. As we'll see with a more complex example, Qim will retain its simple, expressive query power for updates while Lodash/fp and Ramda are going to get more complicated.
 
 ## A more complex (not-too-contrived) example
 
@@ -255,7 +277,7 @@ Let's say we want to change our `state` so that for every _savings account_, we:
 
 (And I know banks should have transactions, yada, yada.)
 
-Okay, drum roll... with `qim`, we can do that like this:
+Okay, drum roll... with Qim, we can do that like this:
 
 ```js
 import {update, $each, $apply} from 'qim';
@@ -267,7 +289,7 @@ const newState = update(['entity', 'account', $each,
 ], state);
 ```
 
-Even without any explanation, hopefully you have a rough idea of what's going on. Like we saw in the simple example with `$each` and `$apply`, instead of only accepting an array of strings for a path, `qim`'s `update` function accepts an array of navigators. Using different types of navigators together creates a rich query path for updating a nested object. We'll look closer at this particular query in a bit, but first let's try the same thing with vanilla JS.
+Even without any explanation, hopefully you have a rough idea of what's going on. Like we saw in the simple example with `$each` and `$apply`, instead of only accepting an array of strings for a path, Qim's `update` function accepts an array of navigators. Using different types of navigators together creates a rich query path for updating a nested object. We'll look closer at this particular query in a bit, but first let's try the same thing with vanilla JS.
 
 ```js
 const newState = {
@@ -299,7 +321,7 @@ const newState = {
 };
 ```
 
-Yuck. That is ugly. Lots of references to things we don't really care about. Okay, hopefully nobody writes code like that. Let's use `lodash/fp` to clean that up.
+Yuck. That is ugly. Lots of references to things we don't really care about. Okay, hopefully nobody writes code like that. Let's use Lodash/fp to clean that up.
 
 ```js
 import fp from 'lodash/fp';
@@ -322,7 +344,7 @@ Okay, that's a lot more concise, but there are still some problems:
 3. If we nest deeper _and_ break out of point-free style, it gets pretty awkward to write or read the code. We could clean that up by splitting this into multiple functions, but remember how concise the requirement is vs the resulting code complexity.
 4. If none of our accounts actually match these criteria, we'll still end up with a new state object.
 
-`qim` boils this down to the essential declarative parts, using an expressive query path, and it avoids unnecessary mutations.
+Qim boils this down to the essential declarative parts, using an expressive query path, and it avoids unnecessary mutations.
 
 Let's stretch out the previous example to take a closer look at some of the navigators used.
 
@@ -685,7 +707,7 @@ update(
 
 #### `$default(value)`
 
-By default, `qim` will create missing objects when you try to update a path that doesn't exist. You can use `$default` to change this behavior and provide your own default value.
+By default, Qim will create missing objects when you try to update a path that doesn't exist. You can use `$default` to change this behavior and provide your own default value.
 
 ```js
 set(['x', $default([]), 0], 'a', {})
@@ -1366,15 +1388,15 @@ set([$take(2)], ['x'], ['a', 'b', 'c'])
 
 ## Performance
 
-`qim` aims to be _performant enough_.
+Qim aims to be _performant enough_.
 
-For `lodash` operations that are immutable (like `get` and `set`), `qim` should have similar performance. Many `lodash` functions mutate (like `update`), and in most cases, `qim` will be faster than `lodash/fp`'s immutable functions. Likewise, `qim` will typically be faster than React's immutability helper (now an [external package](https://github.com/kolodny/immutability-helper)).
+For Lodash operations that are immutable (like `get` and `set`), Qim should have similar performance. Many Lodash functions mutate (like `update`), and in nearly all cases, Qim will be faster than Lodash/fp's immutable functions. Likewise, Qim will typically be faster than React's immutability helper (now an [external package](https://github.com/kolodny/immutability-helper)). Ramda seems to perform much better than Lodash/fp, and sometimes it will be faster than Qim, while sometimes Qim will be faster.
 
-In some cases, a custom native helper function using `Object.assign` or `slice` along with a mutation may be faster for simple operations, but `qim` aims to be as close as possible, while still allowing for a flexible querying API.
+In some cases, a custom native helper function using `Object.assign` or `slice` along with a mutation may be faster for simple operations, but Qim aims to be as close as possible, while still allowing for a flexible querying API.
 
 Comparing to Immutable.js is difficult in that it heavily depends on your particular use case. The sweet spot for Immutable.js is lots of transformations of _large_ objects or arrays (thousands of items). And even then, you need to avoid marshalling data back and forth between Immutable and plain JS. If you marshal the data back and forth, you'll lose most of the benefit, and if you work with smaller objects and arrays, you're unlikely to see much benefit.
 
-If you want flexible select and update of plain JS objects, `qim` is likely to be a good fit. You can check out the [current benchmarks](docs/benchmark-results.md) to get an idea how `qim` stacks up. As with all benchmarks, be careful reading into them too much. Also, `qim` is new and performance tradeoffs could change in favor of simplifying the code or API.
+If you want flexible select and update of plain JS objects, Qim is likely to be a good fit. You can check out the [current benchmarks](docs/benchmark-results.md) to get an idea how Qim stacks up. As with all benchmarks, be careful reading into them too much. Also, Qim is new, and performance tradeoffs could change in favor of simplifying the code or API. Overall, remember that the goal of Qim is to be expressive and _performant enough_, not to win at every benchmark.
 
 ## TODO
 
@@ -1382,7 +1404,7 @@ If you want flexible select and update of plain JS objects, `qim` is likely to b
 - More tests.
 - Better error messages.
 - Expose ES6 modules.
-- Static typing? `qim` might be diametrically opposed to static types, but worth seeing how good/bad they would fit.
+- Static typing? Qim might be diametrically opposed to static types, but worth seeing how good/bad they would fit.
 
 ## Contributing
 
