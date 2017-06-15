@@ -7,7 +7,9 @@ import {
   $each,
   $eachKey,
   $eachPair,
-  $pick
+  $pick,
+  $nav,
+  $apply
 } from 'qim/src';
 
 const isEven = value => value % 2 === 0;
@@ -94,5 +96,18 @@ test('$pick', t => {
       {joe: {name: 'Joe'}, mary: {name: 'Mary'}, bob: {name: 'Bob'}}
     ),
     ['Joe', 'Mary']
+  );
+});
+
+test('multi $nav', t => {
+  t.deepEqual(
+    select(
+      [
+        $nav(['x'], ['y']),
+        $apply(val => val * 10)
+      ],
+      {x: 1, y: 2}
+    ),
+    [10, 20]
   );
 });

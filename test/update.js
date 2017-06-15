@@ -244,3 +244,16 @@ test('dynamic nav', t => {
     }
   );
 });
+
+test('multi $nav', t => {
+  t.deepEqual(
+    update(
+      [
+        $nav(['x'], ['y']),
+        $apply(val => val * 10)
+      ],
+      {x: 1, y: 2}
+    ),
+    {x: 10, y: 20}
+  );
+});

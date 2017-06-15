@@ -10,6 +10,7 @@ import {$applyKey} from './$apply';
 import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
+import {isReduced} from './utils/reduced';
 
 // `traverseEach` is the heart of `qim`. It's a little ugly because it needs to
 // be performant, and it's generic across select and update.
@@ -173,24 +174,49 @@ export const traverseEach = (
 
   let navPath = nav[pathKey];
 
+  // TODO: Combine this with array navigator.
   // Path navigators.
   if (navPath) {
-    // If it's a function, get our path dynamically.
-    if (typeof navPath === 'function') {
-      navPath = nav.hasArgs ? navPath(nav.args, object, nav.self) : navPath(object, nav);
-      navPath = arrayify(navPath);
-    }
-    // An empty query just means continue.
-    if (navPath.length === 0) {
-      return traverseEach(navKey, state, resultFn, path, object, pathIndex + 1, returnFn, context);
-    }
-    // Otherwise, recurse in with our new query, but pass a `returnFn` so we can
-    // continue where we left off.
-    return traverseEach(navKey,
-      state, resultFn, navPath, object, 0,
-      (_object, _context) => traverseEach(navKey, state, resultFn, path, _object, pathIndex + 1, returnFn, _context),
-      context
-    );
+    // A path navigator can potentially go down multiple paths.
+    const moreNavPath = nav.moreNavPath;
+    let moreNavPathIndex = 0;
+    let navResult = object;
+    do {
+      // If it's a function, get our path dynamically.
+      if (typeof navPath === 'function') {
+        navPath = nav.hasArgs ? navPath(nav.args, object, nav.self) : navPath(object, nav);
+        navPath = arrayify(navPath);
+      }
+      // TODO: Use mutationMarker.
+      // An empty query just means continue.
+      if (navPath.length === 0) {
+        navResult = traverseEach(navKey, state, resultFn, path, object, pathIndex + 1, returnFn, context);
+      // Otherwise, recurse in with our new query, but pass a `returnFn` so we can
+      // continue where we left off.
+      } else {
+        navResult = traverseEach(navKey,
+          state, resultFn, navPath, object, 0,
+          (_object, _context) => traverseEach(navKey, state, resultFn, path, _object, pathIndex + 1, returnFn, _context),
+          context
+        );
+      }
+      if (moreNavPath) {
+        // Selects should be applied to the same object, since nothing has changed. If we've reduced, then we're done.
+        if (navKey === selectKey) {
+          if (isReduced(navResult)) {
+            return navResult;
+          }
+        // Updates should be applied to the new object.
+        } else {
+          object = undefinedIfNone(navResult);
+        }
+        navPath = moreNavPath[moreNavPathIndex];
+        moreNavPathIndex++;
+      } else {
+        navPath = undefined;
+      }
+    } while (navPath);
+    return navResult;
   }
 
   // Core select/update navigator.
