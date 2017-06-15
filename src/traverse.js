@@ -178,8 +178,8 @@ export const traverseEach = (
   // Path navigators.
   if (navPath) {
     // A path navigator can potentially go down multiple paths.
-    const moreNavPath = nav.moreNavPath;
-    let moreNavPathIndex = 0;
+    const moreNavPaths = nav.moreNavPaths;
+    let moreNavPathsIndex = 0;
     let navResult = object;
     do {
       // If it's a function, get our path dynamically.
@@ -200,7 +200,7 @@ export const traverseEach = (
           context
         );
       }
-      if (moreNavPath) {
+      if (moreNavPaths) {
         // Selects should be applied to the same object, since nothing has changed. If we've reduced, then we're done.
         if (navKey === selectKey) {
           if (isReduced(navResult)) {
@@ -210,8 +210,8 @@ export const traverseEach = (
         } else {
           object = undefinedIfNone(navResult);
         }
-        navPath = moreNavPath[moreNavPathIndex];
-        moreNavPathIndex++;
+        navPath = moreNavPaths[moreNavPathsIndex];
+        moreNavPathsIndex++;
       } else {
         navPath = undefined;
       }

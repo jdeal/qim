@@ -10,7 +10,7 @@ const $nav = function (path) {
   const nav = {[pathKey]: path};
   nav.self = nav;
   if (arguments.length > 1) {
-    const moreNavPath = [];
+    const moreNavPaths = [];
     for (let i = 1; i < arguments.length; i++) {
       path = arguments[i];
       if (typeof path !== 'function' && !Array.isArray(path)) {
@@ -19,9 +19,9 @@ const $nav = function (path) {
         }
         path = [path];
       }
-      moreNavPath.push(path);
+      moreNavPaths.push(path);
     }
-    nav.moreNavPath = moreNavPath;
+    nav.moreNavPaths = moreNavPaths;
   }
   return nav;
 };

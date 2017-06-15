@@ -908,7 +908,7 @@ update([$mergeDeep({a: {ab: 2}})], {a: {aa: 1}, b: 2})
 // {a: {aa: 1, ab: 2}, b: 2}
 ```
 
-#### `$nav(path)`
+#### `$nav(path, ...morePaths)`
 
 Given a query path, `$nav` navigates as if that query was a single selector. This is useful for using queries as navigators (instead of nested queries). This has the same affect as spreading (`...`) a query into another query.
 
@@ -936,6 +936,25 @@ const $eachUser = $nav(['users', $each]);
 
 update(
   [$eachUser, 'name', $apply(name => name.toUpperCase())],
+  {
+    users: {
+      joe: {
+        name: 'Joe'
+      },
+      mary: {
+        name: 'Mary'
+      }
+    }
+  }
+)
+// {users: {joe: {name: 'JOE'}, mary: {name: 'MARY'}}}
+```
+
+You can pass multiple paths to `$nav` to navigate to all of those paths.
+
+```js
+update(
+  ['users', $nav(['joe'], ['mary']), 'name', $apply(name => name.toUpperCase())],
   {
     users: {
       joe: {
