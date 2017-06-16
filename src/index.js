@@ -37,3 +37,6 @@ export {default as $pushContext} from './$pushContext';
 export {default as $nav} from './$nav';
 export {default as $lens} from './$lens';
 export {default as $traverse} from './$traverse';
+
+// Utilities
+export {isReduced as isReduced} from './utils/reduced';
