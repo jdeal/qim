@@ -89,8 +89,8 @@ test('parameterized navigator', t => {
 });
 
 test('recursive path navigator', t => {
-  const $walk = $nav((item, $self) =>
-    Array.isArray(item) ? [$each, $self] : []
+  const $walk = $nav((item) =>
+    Array.isArray(item) ? [$each, $walk] : []
   );
 
   t.deepEqual(

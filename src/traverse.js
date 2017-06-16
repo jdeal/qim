@@ -184,7 +184,7 @@ export const traverseEach = (
     do {
       // If it's a function, get our path dynamically.
       if (typeof navPath === 'function') {
-        navPath = nav.hasArgs ? navPath(nav.args, object, nav.self) : navPath(object, nav);
+        navPath = nav.hasArgs ? navPath(nav.args, object, context) : navPath(object, context);
         navPath = arrayify(navPath);
       }
       // TODO: Use mutationMarker.

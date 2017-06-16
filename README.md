@@ -986,7 +986,7 @@ update(
 // ]
 ```
 
-See [custom navigators](#custom-navigators) for more about `$lens`.
+See [custom navigators](#custom-navigators) for more about `$nav`.
 
 #### `$none`
 
@@ -1079,7 +1079,7 @@ update(
 
 #### `$setContext(key, (value, context) => contextValue)`
 
-Sets a context value for later retrieval in an `$apply`.
+Sets a context value for later retrieval in an `$apply` or `$nav`.
 
 Context is a way to grab a piece of data at one point in a query and use it at a later point in a query. A good example is grabbing a key from a key/value pair and retrieving that key along with a descendant value so that it can be returned in a selection or used in an update. You could use a `$nav` function to pull that key into scope, but for multiple levels of nesting, this can get unwieldy. And for recursive queries, this is impossible without creating some kind of complex enveloping mechanism.
 
@@ -1108,6 +1108,26 @@ select(
 //   {level: 'warning', key: 'baz', message: 'c'},
 //   {level: 'warning', key: 'qux', message: 'd'}
 // ]
+```
+
+```js
+select(
+  [
+    $setContext('favorites', select(['favorites', $each])),
+    'stooges',
+    $nav((nodes, ctx) => [$pick(ctx.favorites)]),
+    $each, 'name'
+  ],
+  {
+    stooges: {
+      a: {name: 'Moe'},
+      b: {name: 'Larry'},
+      c: {name: 'Curly'}
+    },
+    favorites: ['a', 'c']
+  }
+)
+// ['Moe', 'Curly']
 ```
 
 #### `$slice(begin, end)`
@@ -1222,7 +1242,7 @@ select(
 ['foo', 'bar']
 ```
 
-You can also create recursive queries using the `$self` parameter. You can also just refer to your own navigator by its variable name, but `$self` allows you to create recursive anonymous/inline navigators.
+You can also create recursive queries using path navigators.
 
 ```js
 const $walk = $nav(

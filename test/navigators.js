@@ -164,8 +164,8 @@ test('$nav', t => {
 });
 
 test('$nav recursive', t => {
-  const $walk = $nav((item, $self) =>
-    Array.isArray(item) ? [$each, $self] : []
+  const $walk = $nav((item) =>
+    Array.isArray(item) ? [$each, $walk] : []
   );
 
   t.deepEqual(
@@ -248,9 +248,9 @@ test('$pushContext', t => {
 
   const data = {a: {b: {c: 1, d: 2}}};
 
-  const $walk = $nav((value, $self) => {
+  const $walk = $nav((value) => {
     if (value && typeof value === 'object') {
-      return [$eachPair, $pushContext('path', find($first)), $last, $self];
+      return [$eachPair, $pushContext('path', find($first)), $last, $walk];
     }
     return [];
   });
