@@ -3,6 +3,7 @@
   "version": "0.0.47",
   "description": "Immutable/functional select/update queries for plain JS.",
   "main": "index.js",
+  "browser": "umd/qim.js",
   "scripts": {
     "benchmark": "babel-node --expose-gc benchmark.js",
     "test": "ava test",
@@ -39,8 +40,10 @@
     "markdown-table": "^1.1.0",
     "ramda": "^0.24.1",
     "require-dir": "^0.3.1",
-    "rollup": "^0.41.6",
+    "rollup": "^0.43.0",
     "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
     "shelljs": "^0.7.7",
     "sinon": "^1.17.6"
   },

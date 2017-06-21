@@ -1,11 +1,12 @@
 import babel from 'rollup-plugin-babel';
+import commonjs from 'rollup-plugin-commonjs';
+import nodeResolve from 'rollup-plugin-node-resolve';
 
-export default {
+import {update, $begin, $end, $set} from './src/index';
+
+const baseConfig = {
   entry: 'src/index.js',
-  format: 'cjs',
-  external: [
-    'object-assign'
-  ],
+  external: [],
   plugins: [
     babel({
       babelrc: false,
@@ -15,6 +16,32 @@ export default {
       ],
       plugins: ['external-helpers']
     }),
-  ],
-  dest: 'build/index.js'
+  ]
 };
+
+const cjsConfig = update(
+  [
+    ['format', $set('cjs')],
+    ['external', $end, $set(['object-assign'])],
+    ['dest', $set('build/index.js')]
+  ],
+  baseConfig
+);
+
+const umdConfig = update(
+  [
+    ['format', $set('umd')],
+    ['dest', $set('build/umd/qim.js')],
+    ['moduleName', $set('qim')],
+    ['plugins', $begin, $set([
+      nodeResolve(),
+      commonjs()
+    ])]
+  ],
+  baseConfig
+);
+
+export default [
+  cjsConfig,
+  umdConfig
+];
