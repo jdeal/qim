@@ -1,6 +1,7 @@
 import babel from 'rollup-plugin-babel';
 import commonjs from 'rollup-plugin-commonjs';
 import nodeResolve from 'rollup-plugin-node-resolve';
+import uglify from 'rollup-plugin-uglify';
 
 import {update, $begin, $end, $set} from './src/index';
 
@@ -41,7 +42,18 @@ const umdConfig = update(
   baseConfig
 );
 
+const umdMinConfig = update(
+  [
+    ['dest', $set('build/umd/qim.min.js')],
+    ['plugins', $end, $set([
+      uglify()
+    ])]
+  ],
+  umdConfig
+);
+
 export default [
   cjsConfig,
-  umdConfig
+  umdConfig,
+  umdMinConfig
 ];

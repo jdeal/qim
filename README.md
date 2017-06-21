@@ -450,6 +450,8 @@ import $each from 'qim/$each';
 import $apply from 'qim/$apply';
 ```
 
+If you `npm install qim`, you'll have UMD builds in `node_modules/qim/build/umd/qim.js` and `node_modules/qim/build/umd.min.js`.
+
 ## API
 
 ### `apply(query, transform, object)`
