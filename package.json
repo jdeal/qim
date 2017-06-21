@@ -1,6 +1,6 @@
 {
   "name": "qim",
-  "version": "0.0.48",
+  "version": "0.0.49",
   "description": "Immutable/functional select/update queries for plain JS.",
   "main": "index.js",
   "browser": "umd/qim.js",
