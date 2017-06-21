@@ -493,10 +493,36 @@ test('simple parameterized navigator', t => {
   );
 });
 
+test('$nav with function to static id', t => {
+  const todoStateStaticId = update(
+    ['todos', $eachPair, 1, 'id', $set('foo')],
+    todoState1
+  );
+
+  t.deepEqual(
+    todoStateStaticId,
+    {
+      todos: {
+        todo1: {
+          id: 'foo',
+          text: 'invent time machine',
+          isDone: true
+        },
+        todo2: {
+          id: 'foo',
+          text: 'fix mistakes',
+          isDone: false
+        }
+      },
+      ids: ['todo1', 'todo2']
+    }
+  );
+});
+
 test('$nav with function', t => {
 
   const todoState2 = update(
-    ['todos', $eachPair, $nav(([key]) => [1, 'id', $set(key)])],
+    ['todos', $eachPair, $nav(([id]) => [1, 'id', $set(id)])],
     todoState1
   );
 
