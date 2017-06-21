@@ -365,6 +365,20 @@ test('remove a property', t => {
   );
 });
 
+test('get pairs', t => {
+  const pairs = select(
+    ['todos', $eachPair],
+    todoState1
+  );
+  t.deepEqual(
+    pairs,
+    [
+      ['todo1', {text: 'invent time machine', isDone: true}],
+      ['todo2', {text: 'fix mistakes', isDone: false}]
+    ]
+  );
+});
+
 test('iterate over pairs', t => {
 
   const todoState2 = update(
