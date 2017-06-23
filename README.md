@@ -4,7 +4,7 @@ Immutable/functional select/update queries for plain JS.
 
 [![travis](https://travis-ci.org/jdeal/qim.svg?branch=master)](https://travis-ci.org/jdeal/qim)
 
-![qim logo](media/qim-logo.svg)
+<img src="media/qim-logo.png" width="300">
 
 WARNING: Qim is already useful, but it's still considered experimental. It might have some rough edges, and the API might change!
 
