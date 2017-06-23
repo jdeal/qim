@@ -1,6 +1,10 @@
 # qim
 
+Immutable/functional select/update queries for plain JS.
+
 [![travis](https://travis-ci.org/jdeal/qim.svg?branch=master)](https://travis-ci.org/jdeal/qim)
+
+![qim logo](media/qim-logo.svg)
 
 WARNING: Qim is already useful, but it's still considered experimental. It might have some rough edges, and the API might change!
 
@@ -1305,7 +1309,7 @@ const $length = $lens(
     }
     throw new Error('$length only works on arrays');
   },
-  (newLength, object) => {    
+  (newLength, object) => {
     const newLength = next(object.length);
     if (newLength < object.length) {
       return object.slice(0, newLength);
