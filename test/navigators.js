@@ -8,6 +8,7 @@ import {
   find,
   $first,
   $last,
+  $slice,
   $merge,
   $mergeDeep,
   $set,
@@ -18,6 +19,8 @@ import {
   $setContext,
   $pushContext
 } from 'qim/src';
+
+const toUpperCase = s => s.toUpperCase();
 
 test('$first', t => {
   t.deepEqual(
@@ -35,6 +38,25 @@ test('$first', t => {
   t.deepEqual(
     update([$first, $set('first')], {x: 0, y: 1, z: 2}),
     {x: 'first', y: 1, z: 2}
+  );
+});
+
+test('$slice', t => {
+  t.deepEqual(
+    select([$slice(1), $each], ['a', 'b', 'c']),
+    ['b', 'c']
+  );
+  t.deepEqual(
+    select([$slice(-2), $each], ['a', 'b', 'c']),
+    ['b', 'c']
+  );
+  t.deepEqual(
+    update([$slice(1), $each, $apply(toUpperCase)], ['a', 'b', 'c']),
+    ['a', 'B', 'C']
+  );
+  t.deepEqual(
+    update([$slice(-2), $each, $apply(toUpperCase)], ['a', 'b', 'c']),
+    ['a', 'B', 'C']
   );
 });
 
