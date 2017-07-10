@@ -458,6 +458,13 @@ If you `npm install qim`, you'll have UMD builds in `node_modules/qim/build/umd/
 
 ## API
 
+All methods in this section are curried, meaning if you leave off any of the arguments, you'll get a function that takes the remaining arguments. Specifically, this is most useful for the last `object` parameter. For example:
+
+```js
+const archiveAllMessages = update(['messages', $each, 'isArchived', $set(true)]);
+const archivedMessageState = archiveAllMessages(state);
+```
+
 ### `apply(query, transform, object)`
 
 Just a convenience method for updating with a single transform ($apply) function.
