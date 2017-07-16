@@ -42,7 +42,7 @@ export const traverseEach = (
     return navKey === selectKey ? $none : object;
   }
 
-  // Primitives are handled right her inside traverseEach to state efficient.
+  // Primitives are handled right here inside traverseEach to state efficient.
   if (typeof nav === 'string' || typeof nav === 'number' || typeof nav === 'boolean') {
     // select, which is pretty simple
     if (navKey === selectKey) {
