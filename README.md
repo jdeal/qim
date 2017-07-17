@@ -50,7 +50,7 @@ And Qim does its best to stay performant!
     - [`$lens(fn, fromFn)`](#lensfn-fromfn)
     - [`$merge(spec)`](#mergespec)
     - [`$mergeDeep(spec)`](#mergedeepspec)
-    - [`$nav(path)`](#navpath)
+    - [`$nav(path, ...morePaths)`](#navpath-morepaths)
     - [`$none`](#none)
     - [`$pick(keys, ...keys)`](#pickkeys-keys)
     - [`$pushContext(key, (obj, context) => contextValue)`](#pushcontextkey-obj-context--contextvalue)
