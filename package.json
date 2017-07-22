@@ -25,7 +25,7 @@
   "author": "Justin Deal <justin.deal@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "ava": "^0.16.0",
+    "ava": "^0.21.0",
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.0",
     "babel-plugin-external-helpers": "^6.22.0",
@@ -50,5 +50,8 @@
   },
   "dependencies": {
     "object-assign": "^4.1.0"
-  }
+  },
+	"ava": {
+		"babel": "inherit"
+	}
 }
