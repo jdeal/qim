@@ -3,6 +3,7 @@ import {updateKey} from './$traverse';
 import {traverseEach} from './traverse';
 import {curry3} from './utils/curry';
 import {undefinedIfNone} from './$none';
+import {unwrap} from './utils/data';
 
 const set = (path, value, obj) => {
 
@@ -25,7 +26,7 @@ const set = (path, value, obj) => {
 
   path = Array.isArray(path) ? path : [path];
 
-  return undefinedIfNone(traverseEach(updateKey, undefined, undefined, path, obj, 0, () => value));
+  return undefinedIfNone(unwrap(traverseEach(updateKey, undefined, undefined, path, obj, 0, () => value)));
 };
 
 export default curry3(set);

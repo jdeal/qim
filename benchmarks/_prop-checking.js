@@ -7,6 +7,10 @@ const get = (key, obj) => obj[key];
 const key = 'foo';
 const missingKey = 'bar';
 
+const hasDefined = (key, obj) => typeof obj[key] !== 'undefined';
+
+const safeGet = (key, obj) => typeof obj[key] === 'undefined' ? undefined : obj[key];
+
 export default [
   {
     name: 'stuff[key]',
@@ -30,6 +34,24 @@ export default [
     name: 'get(missingKey, stuff)',
     test: () => {
       const bar = get(missingKey, stuff);
+    }
+  },
+  {
+    name: 'typeof stuff[missingKey]',
+    test: () => {
+      const hasMissing = typeof stuff[missingKey] !== 'undefined';
+    }
+  },
+  {
+    name: 'hasDefined(missingKey, stuff)',
+    test: () => {
+      const hasMissing = hasDefined(missingKey, stuff);
+    }
+  },
+  {
+    name: 'safeGet(missingKey, stuff)',
+    test: () => {
+      const bar = safeGet(missingKey, stuff);
     }
   }
 ];
