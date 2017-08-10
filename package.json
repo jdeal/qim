@@ -1,12 +1,12 @@
 {
   "name": "qim",
-  "version": "0.0.50",
+  "version": "0.0.51",
   "description": "Immutable/functional select/update queries for plain JS.",
   "main": "index.js",
   "browser": "umd/qim.js",
-  "repository" : {
-    "type" : "git",
-    "url" : "https://github.com/jdeal/qim.git"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jdeal/qim.git"
   },
   "scripts": {
     "benchmark": "babel-node --expose-gc benchmark.js",
@@ -55,7 +55,7 @@
   "dependencies": {
     "object-assign": "^4.1.0"
   },
-	"ava": {
-		"babel": "inherit"
-	}
+  "ava": {
+    "babel": "inherit"
+  }
 }
