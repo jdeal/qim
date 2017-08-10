@@ -4,6 +4,10 @@
   "description": "Immutable/functional select/update queries for plain JS.",
   "main": "index.js",
   "browser": "umd/qim.js",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/jdeal/qim.git"
+  },
   "scripts": {
     "benchmark": "babel-node --expose-gc benchmark.js",
     "test": "ava test",
