@@ -61,6 +61,10 @@ test('select values', t => {
     [1, 2, 3]
   );
   t.deepEqual(
+    select([$each], {'': 0, 'x': 1, 'y': 2}),
+    [0, 1, 2]
+  );
+  t.deepEqual(
     select([$each, isEven], [1, 2, 3, 4]),
     [2, 4]
   );
@@ -72,8 +76,8 @@ test('select values', t => {
 
 test('select keys', t => {
   t.deepEqual(
-    select([$eachKey], {x: 1, y: 2}),
-    ['x', 'y']
+    select([$eachKey], {'': 0, x: 1, y: 2}),
+    ['', 'x', 'y']
   );
 });
 
