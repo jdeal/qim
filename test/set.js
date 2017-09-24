@@ -99,3 +99,10 @@ test('fill in path with $default', t => {
     {x: [1, 0]}
   );
 });
+
+test('set by index', t => {
+  t.deepEqual(
+    set([5], 5, [0, 1, 2, 3, 4]),
+    [0, 1, 2, 3, 4, 5]
+  );
+});
