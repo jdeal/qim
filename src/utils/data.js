@@ -11,6 +11,24 @@ const isInteger = value => {
   }
 };
 
+const eachFlattenedKey = (fn, keys, object) => {
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (Array.isArray(key)) {
+      for (let j = 0; j < key.length; j++) {
+        const subKey = key[j];
+        if (subKey in object) {
+          fn(subKey);
+        }
+      }
+    } else {
+      if (key in object) {
+        fn(key);
+      }
+    }
+  }
+};
+
 const wrapKey = '@@qim/wrap';
 
 export const isWrappedUnsafe = (source) => typeof source[wrapKey] === 'undefined' ?
@@ -30,6 +48,25 @@ export const wrap = (source) => isWrapped(source) ?
 export const unwrap = (wrapped) => isWrapped(wrapped) ?
   wrapped.value() :
   wrapped;
+
+const replaceSliceOfArray = (begin, end, newSlice, source) => {
+  const sliceBegin = normalizeIndex(begin, source.length, 0);
+  const sliceEnd = normalizeIndex(end, source.length, source.length);
+  newSlice = unwrap(newSlice);
+  newSlice = newSlice === undefined ? [] : newSlice;
+  const newArray = [];
+  for (let i = 0; i < sliceBegin; i++) {
+    newArray.push(source[i]);
+  }
+  newSlice = [].concat(newSlice);
+  for (let i = 0; i < newSlice.length; i++) {
+    newArray.push(newSlice[i]);
+  }
+  for (let i = sliceEnd; i < source.length; i++) {
+    newArray.push(source[i]);
+  }
+  return newArray;
+};
 
 Wrapper = function (source) {
   this['@@qim/wrap'] = true;
@@ -68,6 +105,12 @@ methods[PRIMITIVE_TYPE] = createMethods(baseMethods, {
   },
   set() {
     return this;
+  },
+  sliceToValue() {
+    return undefined;
+  },
+  pickToValue() {
+    return undefined;
   }
 });
 
@@ -89,6 +132,13 @@ methods[OBJECT_TYPE] = createMethods(baseMethods, {
       result[key] = this._source[key];
       return result;
     }, {});
+  },
+  pickToValue(keys) {
+    const picked = {};
+    eachFlattenedKey((key) => {
+      picked[key] = this._source[key];
+    }, keys, this._source);
+    return picked;
   }
 });
 
@@ -107,6 +157,16 @@ methods[ARRAY_TYPE] = createMethods(baseMethods, {
   },
   sliceToValue(begin, end) {
     return this._source.slice(begin, end);
+  },
+  pickToValue(keys) {
+    const picked = [];
+    eachFlattenedKey((key) => {
+      picked.push(this._source[key]);
+    }, keys, this._source);
+    return picked;
+  },
+  replaceSlice(begin, end, newSlice) {
+    return replaceSliceOfArray(begin, end, newSlice, this._source);
   }
 });
 
@@ -137,6 +197,15 @@ methods[STRING_TYPE] = createMethods(baseMethods, {
   },
   sliceToValue(begin, end) {
     return this._source.substr(begin, end);
+  },
+  pickToValue(keys) {
+    let picked = '';
+    eachFlattenedKey((key) => {
+      if (isInteger(key)) {
+        picked += this._source[key] || '';
+      }
+    }, keys, this._source);
+    return picked;
   }
 });
 
@@ -183,6 +252,24 @@ Wrapper.prototype = {
   sliceToValue(begin, end) {
     setMethod(this, 'sliceToValue');
     return this.sliceToValue(begin, end);
+  },
+  replaceSlice(begin, end, newSlice) {
+    setMethod(this, 'replaceSlice');
+    return this.replaceSlice(begin, end, newSlice);
+  },
+  pickToValue(keys) {
+    setMethod(this, 'pickToValue');
+    return this.pickToValue(keys);
+  }
+};
+
+const delegateMethods = {
+  type() {
+    if (isWrapped(this._source)) {
+      this._type = this._source.type();
+    }
+    setMethod(this, 'type');
+    return this._type;
   }
 };
 
@@ -196,14 +283,7 @@ const SliceWrapper = function (source, begin, end) {
 
 export const wrapSlice = (source, begin, end) => new SliceWrapper(source, begin, end);
 
-SliceWrapper.prototype = {
-  type() {
-    if (isWrapped(this._source)) {
-      this._type = this._source.type();
-    }
-    setMethod(this, 'type');
-    return this._type;
-  },
+SliceWrapper.prototype = createMethods(delegateMethods, {
   value() {
     if (isWrapped(this._source)) {
       this._source = this._source.value();
@@ -213,7 +293,28 @@ SliceWrapper.prototype = {
     setMethod(this, 'value');
     return this._source;
   },
+});
+
+const PickWrapper = function (source, properties) {
+  this['@@qim/wrap'] = true;
+  this._source = source;
+  this._hasMutated = false;
+  this._properties = properties;
 };
+
+export const wrapPick = (source, properties) => new PickWrapper(source, properties);
+
+PickWrapper.prototype = createMethods(delegateMethods, {
+  value() {
+    if (isWrapped(this._source)) {
+      this._source = this._source.value();
+    }
+    setMethod(this, 'pickToValue');
+    this._source = this.pickToValue(this._properties);
+    setMethod(this, 'value');
+    return this._source;
+  },
+});
 
 export const isNil = value => value == null;
 
@@ -312,30 +413,62 @@ export const deleteProperty = (key, source) => {
   return source;
 };
 
-export const replaceSlice = (begin, end, newSlice = [], source) => {
+// TODO: isNone
+export const replaceSlice = (begin, end, newSlice, source) => {
   if (typeof source === 'object') {
     if (isWrappedUnsafe(source)) {
-      return source.replaceSlice(begin, end, newSlice, source);
+      return source.replaceSlice(begin, end, newSlice);
     }
+    if (Array.isArray(source)) {
+      return replaceSliceOfArray(begin, end, newSlice, source);
+    }
+    newSlice = newSlice === undefined ? {} : newSlice;
+    if (typeof newSlice !== 'object') {
+      throw new Error('No way to splice a non-object into an object.');
+    }
+    const keys = Object.keys(source);
+    const sliceBegin = normalizeIndex(begin, keys.length, 0);
+    const sliceEnd = normalizeIndex(end, keys.length, keys.length);
+    const newObject = {};
+    for (let i = 0; i < sliceBegin; i++) {
+      newObject[keys[i]] = source[keys[i]];
+    }
+    for (let i = sliceEnd; i < source.length; i++) {
+      newObject[keys[i]] = source[keys[i]];
+    }
+    objectAssign(newObject, newSlice);
+    return newObject;
+  }
+  if (typeof source === 'string') {
     const sliceBegin = normalizeIndex(begin, source.length, 0);
     const sliceEnd = normalizeIndex(end, source.length, source.length);
+    return source.substr(0, sliceBegin) + newSlice + source.substr(sliceEnd);
+  }
+  return source;
+};
+
+// TODO: isNone
+export const replacePick = (properties, newPick, source) => {
+  if (typeof source === 'object') {
+    if (isWrappedUnsafe(source)) {
+      return source.replacePick(properties, newPick, source);
+    }
     if (Array.isArray(source)) {
+      newPick = newPick === undefined ? [] : newPick;
       const newArray = [];
-      for (let i = 0; i < sliceBegin; i++) {
-        newArray.push(source[i]);
-      }
-      newSlice = [].concat(newSlice);
-      for (let i = 0; i < newSlice.length; i++) {
-        newArray.push(newSlice[i]);
-      }
-      for (let i = sliceEnd; i < source.length; i++) {
-        newArray.push(source[i]);
-      }
       return newArray;
     }
-    if (typeof source === 'string') {
-      return source.substr(0, sliceBegin) + newSlice + source.substr(sliceEnd);
-    }
+    newPick = unwrap(newPick);
+    newPick = newPick === undefined ? {} : newPick;
+    const newObject = {...source};
+    eachFlattenedKey((key) => {
+      delete newObject[key];
+    }, properties, source);
+    objectAssign(newObject, newPick);
+    return newObject;
+  }
+  if (typeof source === 'string') {
+    // not implemented
   }
   return source;
 };

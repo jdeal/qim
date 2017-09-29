@@ -8,8 +8,7 @@ import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 import {isReduced} from './utils/reduced';
-import {wrap, unwrap, isWrapped, isNil, getProperty, deleteProperty, setProperty, hasProperty} from './utils/data';
-import copy from './utils/copy';
+import {wrap, unwrap, isNil, getProperty, deleteProperty, setProperty, hasProperty} from './utils/data';
 
 // `traverseEach` is the heart of `qim`. It's a little ugly because it needs to
 // be performant, and it's generic across select and update.
@@ -189,14 +188,12 @@ export const traverseEach = (
     if (nav.hasArgs) {
       return nav[navKey](
         nav.args, unwrap(object),
-        (subObject) => unwrap(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context)),
-        path, pathIndex
+        (subObject) => unwrap(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context))
       );
     }
     return nav[navKey](
       unwrap(object),
-      (subObject) => unwrap(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context)),
-      path, pathIndex
+      (subObject) => unwrap(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context))
     );
   }
 
