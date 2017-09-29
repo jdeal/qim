@@ -89,6 +89,9 @@ const baseMethods = {
   },
   get(key) {
     return this._source[key];
+  },
+  value() {
+    return this._source;
   }
 };
 

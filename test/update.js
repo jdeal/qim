@@ -19,6 +19,7 @@ import {
 
 const increment = value => value + 1;
 const isEven = value => value % 2 === 0;
+const toUpperCase = s => s.toUpperCase();
 
 test('update identity', t => {
   t.deepEqual(
@@ -208,7 +209,21 @@ test('replace slice', t => {
   );
 });
 
+test('replace slice with dynamic', t => {
+  t.deepEqual(
+    update([$slice(0, 2), $each, $apply(toUpperCase)], ['a', 'b', 'c', 'd']),
+    ['A', 'B', 'c', 'd']
+  );
+});
+
 test('replace pick', t => {
+  t.deepEqual(
+    update([$pick('x', 'y'), $each, $apply(increment)], {x: 1, y: 1, z: 1}),
+    {x: 2, y: 2, z: 1}
+  );
+});
+
+test('replace pick with dynamic', t => {
   t.deepEqual(
     update([$pick('x', 'y'), $set({a: 1})], {x: 1, y: 1, z: 1}),
     {a: 1, z: 1}
