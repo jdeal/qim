@@ -1,6 +1,6 @@
 import objectAssign from 'object-assign';
 
-import normalizeIndex from './normalizeIndex';
+import normalizeIndex, {normalizeEnd} from './normalizeIndex';
 
 const isInteger = value => {
   if (isNaN(value)) {
@@ -131,7 +131,10 @@ methods[OBJECT_TYPE] = createMethods(baseMethods, {
     return this;
   },
   sliceToValue(begin, end) {
-    return Object.keys(this._source).slice(begin, end).reduce((result, key) => {
+    const keys = Object.keys(this._source);
+    begin = normalizeEnd(begin, keys.length);
+    end = normalizeEnd(end, keys.length);
+    return keys.slice(begin, end).reduce((result, key) => {
       result[key] = this._source[key];
       return result;
     }, {});
@@ -159,7 +162,10 @@ methods[ARRAY_TYPE] = createMethods(baseMethods, {
     return this;
   },
   sliceToValue(begin, end) {
-    return this._source.slice(begin, end);
+    const source = this._source;
+    end = normalizeEnd(end, source.length);
+    begin = normalizeEnd(begin, source.length);
+    return source.slice(begin, end);
   },
   pickToValue(keys) {
     const picked = [];
@@ -199,7 +205,10 @@ methods[STRING_TYPE] = createMethods(baseMethods, {
     return this;
   },
   sliceToValue(begin, end) {
-    return this._source.substr(begin, end);
+    const source = this._source;
+    end = normalizeEnd(end, source.length);
+    begin = normalizeEnd(begin, source.length);
+    return source.substr(begin, end);
   },
   pickToValue(keys) {
     let picked = '';
@@ -417,6 +426,8 @@ export const deleteProperty = (key, source) => {
 };
 
 // TODO: isNone
+// TODO: check for empty newSlice
+// TODO: order keys correctly with object slice
 export const replaceSlice = (begin, end, newSlice, source) => {
   if (typeof source === 'object') {
     if (isWrappedUnsafe(source)) {
@@ -436,7 +447,7 @@ export const replaceSlice = (begin, end, newSlice, source) => {
     for (let i = 0; i < sliceBegin; i++) {
       newObject[keys[i]] = source[keys[i]];
     }
-    for (let i = sliceEnd; i < source.length; i++) {
+    for (let i = sliceEnd; i < keys.length; i++) {
       newObject[keys[i]] = source[keys[i]];
     }
     objectAssign(newObject, newSlice);

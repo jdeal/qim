@@ -6,6 +6,8 @@ import {
   select,
   update,
   find,
+  $begin,
+  $end,
   $first,
   $last,
   $slice,
@@ -21,6 +23,44 @@ import {
 } from 'qim/src';
 
 const toUpperCase = s => s.toUpperCase();
+
+test('$begin', t => {
+  t.deepEqual(
+    select([$begin], [0, 1, 2]),
+    [[]]
+  );
+  t.deepEqual(
+    select([$begin], {a: 0, b: 1}),
+    [{}]
+  );
+  t.deepEqual(
+    update([$begin, $set([0])], [1, 2]),
+    [0, 1, 2]
+  );
+  t.deepEqual(
+    update([$begin, $set({a: 1})], {b: 2}),
+    {a: 1, b: 2}
+  );
+});
+
+test('$end', t => {
+  t.deepEqual(
+    select([$end], [0, 1, 2]),
+    [[]]
+  );
+  t.deepEqual(
+    select([$end], {a: 0, b: 1}),
+    [{}]
+  );
+  t.deepEqual(
+    update([$end, $set([2])], [0, 1]),
+    [0, 1, 2]
+  );
+  t.deepEqual(
+    update([$end, $set({b: 2})], {a: 1}),
+    {a: 1, b: 2}
+  );
+});
 
 test('$first', t => {
   t.deepEqual(
