@@ -1,6 +1,6 @@
 import copy from './utils/copy';
 import $traverse from './$traverse';
-import reduceSequence from './utils/reduceSequence';
+import {reduceSequence} from './utils/data';
 import {isNone} from './$none';
 import removed, {isNotRemoved} from './utils/removed';
 

@@ -1,6 +1,12 @@
 import objectAssign from 'object-assign';
 
+import {isReduced} from './reduced';
+import {isNone} from '../$none';
+import getTypeErrorMessage from './getTypeErrorMessage';
 import normalizeIndex, {normalizeEnd} from './normalizeIndex';
+
+const cloneEmptyObject = object =>
+  Object.create((object.constructor && object.constructor.prototype) || null);
 
 const isInteger = value => {
   if (isNaN(value)) {
@@ -68,9 +74,9 @@ const replaceSliceOfArray = (begin, end, newSlice, source) => {
   return newArray;
 };
 
-Wrapper = function (source) {
+Wrapper = function (source, type) {
   this['@@qim/wrap'] = true;
-  this._type = undefined;
+  this._type = type;
   this._source = source;
   this._hasMutated = false;
 };
@@ -92,6 +98,18 @@ const baseMethods = {
   },
   value() {
     return this._source;
+  },
+  append() {
+    throw new Error(getTypeErrorMessage('append', ['appendable sequence'], this._source));
+  },
+  canAppend() {
+    return false;
+  }
+};
+
+const appendableMethods = {
+  canAppend() {
+    return true;
   }
 };
 
@@ -109,22 +127,40 @@ methods[PRIMITIVE_TYPE] = createMethods(baseMethods, {
   set() {
     return this;
   },
+  delete() {
+    return this;
+  },
   sliceToValue() {
-    return undefined;
+    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
   },
   pickToValue() {
-    return undefined;
+    throw new Error(getTypeErrorMessage('pickToValue', ['sequence'], this._source));
   }
 });
 
 methods[OBJECT_TYPE] = createMethods(baseMethods, {
+  delete(key) {
+    if (!this._hasMutated) {
+      const source = this._source;
+      if (!(key in source)) {
+        return this;
+      }
+      this._source = objectAssign(cloneEmptyObject(source), source);
+      this._hasMutated = true;
+    }
+    delete this._source[key];
+    return this;
+  },
   set(key, value) {
+    if (isNone(value)) {
+      return this.delete(key);
+    }
     if (!this._hasMutated) {
       const source = this._source;
       if (source[key] === value && key in source) {
         return this;
       }
-      this._source = objectAssign(source.constructor(), source);
+      this._source = objectAssign(cloneEmptyObject(source), source);
       this._hasMutated = true;
     }
     this._source[key] = value;
@@ -145,11 +181,30 @@ methods[OBJECT_TYPE] = createMethods(baseMethods, {
       picked[key] = this._source[key];
     }, keys, this._source);
     return picked;
+  },
+  cloneEmpty() {
+    const empty = new Wrapper(cloneEmptyObject(this._source), OBJECT_TYPE);
+    empty._hasMutated = true;
+    return empty;
+  },
+  forEach(fn) {
+    const source = this._source;
+    for (let key in source) {
+      if (source.hasOwnProperty(key)) {
+        const shouldContinue = fn(source[key], key);
+        if (shouldContinue === false) {
+          break;
+        }
+      }
+    }
   }
 });
 
-methods[ARRAY_TYPE] = createMethods(baseMethods, {
+methods[ARRAY_TYPE] = createMethods(baseMethods, appendableMethods, {
   set(key, value) {
+    if (isNone(value)) {
+      return this.delete(key);
+    }
     if (!this._hasMutated) {
       const source = this._source;
       if (source[key] === value && key in source) {
@@ -159,6 +214,22 @@ methods[ARRAY_TYPE] = createMethods(baseMethods, {
       this._hasMutated = true;
     }
     this._source[key] = value;
+    return this;
+  },
+  delete(key) {
+    if (!this._hasMutated) {
+      const source = this._source;
+      if (!(key in source)) {
+        return this;
+      }
+      this._source = source.slice(0);
+      this._hasMutated = true;
+    }
+    if (isInteger(key)) {
+      this._source.splice(key, 1);
+    } else {
+      delete this._source[key];
+    }
     return this;
   },
   sliceToValue(begin, end) {
@@ -176,10 +247,35 @@ methods[ARRAY_TYPE] = createMethods(baseMethods, {
   },
   replaceSlice(begin, end, newSlice) {
     return replaceSliceOfArray(begin, end, newSlice, this._source);
+  },
+  cloneEmpty() {
+    const empty = new Wrapper([], ARRAY_TYPE);
+    empty._hasMutated = true;
+    return empty;
+  },
+  forEach(fn) {
+    const source = this._source;
+    for (var i = 0; i < source.length; i++) {
+      const shouldContinue = fn(source[i], i);
+      if (shouldContinue === false) {
+        break;
+      }
+    }
+  },
+  append(value) {
+    if (isNone(value)) {
+      return this;
+    }
+    if (!this._hasMutated) {
+      this._source = this._source.slice(0);
+      this._hasMutated = true;
+    }
+    this._source.push(value);
+    return this;
   }
 });
 
-methods[STRING_TYPE] = createMethods(baseMethods, {
+methods[STRING_TYPE] = createMethods(baseMethods, appendableMethods, {
   has(key) {
     if (isInteger(key)) {
       return this._source.charAt(key) !== '';
@@ -193,6 +289,9 @@ methods[STRING_TYPE] = createMethods(baseMethods, {
     return undefined;
   },
   set(key, value) {
+    if (isNone(value)) {
+      value = '';
+    }
     if (isInteger(key)) {
       const source = this._source;
       if (source.charAt(key) === '') {
@@ -203,6 +302,9 @@ methods[STRING_TYPE] = createMethods(baseMethods, {
       }
     }
     return this;
+  },
+  delete(key) {
+    return this.set(key, '');
   },
   sliceToValue(begin, end) {
     const source = this._source;
@@ -218,6 +320,24 @@ methods[STRING_TYPE] = createMethods(baseMethods, {
       }
     }, keys, this._source);
     return picked;
+  },
+  cloneEmpty() {
+    const empty = new Wrapper('', STRING_TYPE);
+    empty._hasMutated = true;
+    return empty;
+  },
+  forEach(fn) {
+    const source = this._source;
+    for (var i = 0; i < source.length; i++) {
+      const shouldContinue = fn(source[i], i);
+      if (shouldContinue === false) {
+        break;
+      }
+    }
+  },
+  append(value) {
+    this._source += value;
+    return this;
   }
 });
 
@@ -261,6 +381,10 @@ Wrapper.prototype = {
     setMethod(this, 'set');
     return this.set(key, value);
   },
+  delete(key) {
+    setMethod(this, 'delete');
+    return this.delete(key);
+  },
   sliceToValue(begin, end) {
     setMethod(this, 'sliceToValue');
     return this.sliceToValue(begin, end);
@@ -272,6 +396,22 @@ Wrapper.prototype = {
   pickToValue(keys) {
     setMethod(this, 'pickToValue');
     return this.pickToValue(keys);
+  },
+  cloneEmpty() {
+    setMethod(this, 'cloneEmpty');
+    return this.cloneEmpty();
+  },
+  forEach(fn) {
+    setMethod(this, 'forEach');
+    return this.forEach(fn);
+  },
+  append(value) {
+    setMethod(this, 'append');
+    return this.append(value);
+  },
+  canAppend() {
+    setMethod(this, 'canAppend');
+    return this.canAppend();
   }
 };
 
@@ -410,7 +550,7 @@ export const deleteProperty = (key, source) => {
     if (!(key in source)) {
       return source;
     }
-    source = objectAssign(source.constructor(), source);
+    source = objectAssign(cloneEmptyObject(source), source);
     delete source[key];
     return source;
   }
@@ -428,6 +568,7 @@ export const deleteProperty = (key, source) => {
 // TODO: isNone
 // TODO: check for empty newSlice
 // TODO: order keys correctly with object slice
+// TODO: null/undefined
 export const replaceSlice = (begin, end, newSlice, source) => {
   if (typeof source === 'object') {
     if (isWrappedUnsafe(source)) {
@@ -458,10 +599,12 @@ export const replaceSlice = (begin, end, newSlice, source) => {
     const sliceEnd = normalizeIndex(end, source.length, source.length);
     return source.substr(0, sliceBegin) + newSlice + source.substr(sliceEnd);
   }
-  return source;
+  throw new Error(getTypeErrorMessage('replaceSlice', ['sequence'], source));
 };
 
 // TODO: isNone
+// TODO: strings
+// TODO: null/undefined
 export const replacePick = (properties, newPick, source) => {
   if (typeof source === 'object') {
     if (isWrappedUnsafe(source)) {
@@ -484,5 +627,31 @@ export const replacePick = (properties, newPick, source) => {
   if (typeof source === 'string') {
     // not implemented
   }
-  return source;
+  throw new Error(getTypeErrorMessage('replacePick', ['sequence'], source));
+};
+
+// TODO: wrapper
+// TODO: strings
+export const reduceSequence = (eachFn, initialValue, seq) => {
+  let result = initialValue;
+  if (Array.isArray(seq)) {
+    for (let i = 0; i < seq.length; i++) {
+      result = eachFn(result, i);
+      if (isReduced(result)) {
+        return result;
+      }
+    }
+  } else if (seq !== null && typeof seq === 'object') {
+    for (let key in seq) {
+      if (seq.hasOwnProperty(key)) {
+        result = eachFn(result, key);
+        if (isReduced(result)) {
+          return result;
+        }
+      }
+    }
+  } else {
+    throw new Error(getTypeErrorMessage('reduceSequence', ['sequence'], seq));
+  }
+  return result;
 };
