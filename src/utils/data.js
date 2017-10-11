@@ -4,6 +4,9 @@ import {isReduced} from './reduced';
 import {isNone} from '../$none';
 import getTypeErrorMessage from './getTypeErrorMessage';
 import normalizeIndex, {normalizeEnd} from './normalizeIndex';
+import unwrapMacro from '../macros/unwrap.macro';
+import isWrappedMacro from '../macros/isWrapped.macro';
+import isWrappedUnsafeMacro from '../macros/isWrappedUnsafe.macro';
 
 const cloneEmptyObject = object =>
   Object.create((object.constructor && object.constructor.prototype) || null);
@@ -35,25 +38,21 @@ const eachFlattenedKey = (fn, keys, object) => {
   }
 };
 
-const wrapKey = '@@qim/wrap';
+export const isWrappedUnsafe = (source) =>
+  isWrappedUnsafeMacro(source);
 
-export const isWrappedUnsafe = (source) => typeof source[wrapKey] === 'undefined' ?
-  false :
-  true;
-
-export const isWrapped = (source) => source == null || typeof source[wrapKey] === 'undefined' ?
-  false :
-  true;
+export const isWrapped = (source) =>
+  isWrappedMacro(source);
 
 let Wrapper;
 
-export const wrap = (source) => isWrapped(source) ?
-  source :
-  new Wrapper(source);
+export const wrap = (source) =>
+  isWrappedMacro(source) ?
+    source :
+    new Wrapper(source);
 
-export const unwrap = (wrapped) => isWrapped(wrapped) ?
-  wrapped.value() :
-  wrapped;
+export const unwrap = (wrapped) =>
+  unwrapMacro(wrapped);
 
 const replaceSliceOfArray = (begin, end, newSlice, source) => {
   const sliceBegin = normalizeIndex(begin, source.length, 0);
@@ -115,9 +114,9 @@ const appendableMethods = {
 
 const methods = [];
 
-const createMethods = (...moreMethods) => objectAssign({}, ...moreMethods);
+const mix = (...moreMethods) => objectAssign({}, ...moreMethods);
 
-methods[PRIMITIVE_TYPE] = createMethods(baseMethods, {
+methods[PRIMITIVE_TYPE] = mix(baseMethods, {
   has() {
     return false;
   },
@@ -138,7 +137,7 @@ methods[PRIMITIVE_TYPE] = createMethods(baseMethods, {
   }
 });
 
-methods[OBJECT_TYPE] = createMethods(baseMethods, {
+methods[OBJECT_TYPE] = mix(baseMethods, {
   delete(key) {
     if (!this._hasMutated) {
       const source = this._source;
@@ -200,7 +199,7 @@ methods[OBJECT_TYPE] = createMethods(baseMethods, {
   }
 });
 
-methods[ARRAY_TYPE] = createMethods(baseMethods, appendableMethods, {
+methods[ARRAY_TYPE] = mix(baseMethods, appendableMethods, {
   set(key, value) {
     if (isNone(value)) {
       return this.delete(key);
@@ -275,7 +274,7 @@ methods[ARRAY_TYPE] = createMethods(baseMethods, appendableMethods, {
   }
 });
 
-methods[STRING_TYPE] = createMethods(baseMethods, appendableMethods, {
+methods[STRING_TYPE] = mix(baseMethods, appendableMethods, {
   has(key) {
     if (isInteger(key)) {
       return this._source.charAt(key) !== '';
@@ -417,7 +416,7 @@ Wrapper.prototype = {
 
 const delegateMethods = {
   type() {
-    if (isWrapped(this._source)) {
+    if (isWrappedMacro(this._source)) {
       this._type = this._source.type();
     }
     setMethod(this, 'type');
@@ -435,9 +434,9 @@ const SliceWrapper = function (source, begin, end) {
 
 export const wrapSlice = (source, begin, end) => new SliceWrapper(source, begin, end);
 
-SliceWrapper.prototype = createMethods(delegateMethods, {
+SliceWrapper.prototype = mix(delegateMethods, {
   value() {
-    if (isWrapped(this._source)) {
+    if (isWrappedMacro(this._source)) {
       this._source = this._source.value();
     }
     setMethod(this, 'sliceToValue');
@@ -456,9 +455,9 @@ const PickWrapper = function (source, properties) {
 
 export const wrapPick = (source, properties) => new PickWrapper(source, properties);
 
-PickWrapper.prototype = createMethods(delegateMethods, {
+PickWrapper.prototype = mix(delegateMethods, {
   value() {
-    if (isWrapped(this._source)) {
+    if (isWrappedMacro(this._source)) {
       this._source = this._source.value();
     }
     setMethod(this, 'pickToValue');
@@ -470,7 +469,7 @@ PickWrapper.prototype = createMethods(delegateMethods, {
 
 export const isNil = value => value == null;
 
-export const hasProperty = (key, source) => {
+export const hasPropertyUnsafe = (key, source) => {
   if (typeof source == 'object') {
     if (isWrappedUnsafe(source)) {
       return source.has(key);
@@ -485,6 +484,19 @@ export const hasProperty = (key, source) => {
   return false;
 };
 
+export const hasProperty = (key, source) => {
+  if (source === null) {
+    return false;
+  }
+  return hasPropertyUnsafe(key, source);
+};
+
+const getProperty_Wrapper = (key, source) => source.get(key);
+
+const getProperty_Object = (key, source) => source[key];
+
+const getProperty_Array = (key, source) => source[key];
+
 export const getProperty = (key, source) => {
   if (typeof source === 'object') {
     if (isWrappedUnsafe(source)) {
@@ -498,6 +510,26 @@ export const getProperty = (key, source) => {
     }
   }
   return undefined;
+};
+
+const setProperty_Wrapper = (key, value, source) => source.set(key, value);
+
+const setProperty_Object = (key, value, source) => {
+  if (key in source && source[key] === value) {
+    return source;
+  }
+  source = objectAssign({}, source);
+  source[key] = value;
+  return source;
+};
+
+const setProperty_Array = (key, value, source) => {
+  if (key in source && source[key] === value) {
+    return source;
+  }
+  source = source.slice(0);
+  source[key] = value;
+  return source;
 };
 
 export const setProperty = (key, value, source) => {
@@ -525,6 +557,22 @@ export const setProperty = (key, value, source) => {
         return source.substr(0, key) + value + source.substr(key + 1);
       }
     }
+  }
+  return source;
+};
+
+const deleteProperty_Wrapper = (key, source) => source.delete(key);
+
+const deleteProperty_Object = (key, source) => {
+  source = objectAssign({}, source);
+  delete source[key];
+  return source;
+};
+
+const deleteProperty_Array = (key, source) => {
+  source = source.slice(0);
+  if (key in source) {
+    source.splice(key, 1);
   }
   return source;
 };
@@ -654,4 +702,61 @@ export const reduceSequence = (eachFn, initialValue, seq) => {
     throw new Error(getTypeErrorMessage('reduceSequence', ['sequence'], seq));
   }
   return result;
+};
+
+const baseSpec = {
+  isNull: false
+};
+
+const wrapperSpec = mix(baseSpec, {
+  get: getProperty_Wrapper,
+  set: setProperty_Wrapper,
+  delete: deleteProperty_Wrapper,
+});
+
+const objectSpec = mix(baseSpec, {
+  get: getProperty_Object,
+  set: setProperty_Object,
+  delete: deleteProperty_Object
+});
+
+const arraySpec = {
+  isNull: false,
+  get: getProperty_Array,
+  set: setProperty_Array,
+  delete: deleteProperty_Array
+};
+
+const stringSpec = mix(baseSpec, {
+
+});
+
+const primitiveSpec = mix(baseSpec, {
+
+});
+
+const nullSpec = mix(baseSpec, primitiveSpec, {
+  isNull: true
+});
+
+export const getSpec = (source) => {
+  if (source == null) {
+    return nullSpec;
+  }
+  if (typeof source === 'object') {
+    if (isWrappedUnsafeMacro(source)) {
+      return wrapperSpec;
+    }
+    if (typeof source.length !== 'number') {
+      return objectSpec;
+    }
+    if (Array.isArray(source)) {
+      return arraySpec;
+    }
+    return objectSpec;
+  }
+  if (typeof source === 'string') {
+    return stringSpec;
+  }
+  return primitiveSpec;
 };

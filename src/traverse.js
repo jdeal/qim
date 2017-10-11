@@ -8,7 +8,10 @@ import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 import {isReduced} from './utils/reduced';
-import {wrap, unwrap, isNil, getProperty, deleteProperty, setProperty, hasProperty} from './utils/data';
+import {wrap, isNil, getProperty, deleteProperty, setProperty, hasProperty, getSpec} from './utils/data';
+import copy from './utils/copy';
+
+import unwrapMacro from './macros/unwrap.macro';
 
 // `traverseEach` is the heart of `qim`. It's a little ugly because it needs to
 // be performant, and it's generic across select and update.
@@ -29,14 +32,14 @@ export const traverseEach = (
       return returnFn(object, context);
     }
     // Default to identity if there's no result function.
-    return resultFn ? resultFn(state, unwrap(object)) : object;
+    return resultFn ? resultFn(state, unwrapMacro(object)) : object;
   }
 
   const nav = path[pathIndex];
 
   // null/undefined selects/updates nothing.
   if (nav == null) {
-    return navKey === selectKey ? $none : unwrap(object);
+    return navKey === selectKey ? $none : unwrapMacro(object);
   }
 
   // Primitives are handled right here inside traverseEach to stay efficient.
@@ -62,14 +65,18 @@ export const traverseEach = (
     }
     // update, which is not as simple
     if (!isNil(object)) {
-      const value = getProperty(nav, object);
+      const spec = getSpec(object);
+      const _get = spec.get;
+      const value = _get(nav, object);
       // Dig in for the new value.
-      const newValue = unwrap(traverseEach(navKey, state, resultFn, path, value, pathIndex + 1, returnFn, context));
+      const newValue = unwrapMacro(traverseEach(navKey, state, resultFn, path, value, pathIndex + 1, returnFn, context));
       // A new value of $none means we've removed it.
       if (isNone(newValue)) {
-        return deleteProperty(nav, object);
+        const _delete = spec.delete;
+        return _delete(nav, object);
       }
-      return setProperty(nav, newValue, object);
+      const _set = spec.set;
+      return _set(nav, newValue, object);
     // If we got back null/undefined, then intelligently create a new object.
     // It's debatable on whether or not this is a good idea. Integers used to
     // auto-create arrays, but that's probably wrong more than right. An
@@ -80,7 +87,7 @@ export const traverseEach = (
     // `default({})`, and then you're right back to being able to make typos.
     // So defaulting to create an object seems like a sane balance.
     }
-    const newValue = unwrap(traverseEach(navKey, state, resultFn, path, undefined, pathIndex + 1, returnFn, context));
+    const newValue = unwrapMacro(traverseEach(navKey, state, resultFn, path, undefined, pathIndex + 1, returnFn, context));
     // Trying to set a key to $none is a no-op.
     if (isNone(newValue)) {
       return object;
@@ -92,10 +99,10 @@ export const traverseEach = (
 
   // Predicate navigator, keep going if there's a match.
   if (typeof nav === 'function') {
-    if (nav(unwrap(object))) {
+    if (nav(unwrapMacro(object))) {
       return traverseEach(navKey, state, resultFn, path, object, pathIndex + 1, returnFn, context);
     } else {
-      return navKey === selectKey ? $none : unwrap(object);
+      return navKey === selectKey ? $none : unwrapMacro(object);
     }
   }
 
@@ -103,13 +110,13 @@ export const traverseEach = (
   switch (nav['@@qim/nav']) {
     // Transform the current value into another value.
     case $applyKey: {
-      return traverseEach(navKey, state, resultFn, path, nav.fn(unwrap(object), context), pathIndex + 1, returnFn, context);
+      return traverseEach(navKey, state, resultFn, path, nav.fn(unwrapMacro(object), context), pathIndex + 1, returnFn, context);
     }
     // Transform the current value into another value.
     // For updates, apply another transform on the way back.
     case $lensKey: {
-      const unwrapped = unwrap(object);
-      const result = unwrap(traverseEach(navKey, state, resultFn, path, nav.fn(unwrapped, context), pathIndex + 1, returnFn, context));
+      const unwrapped = unwrapMacro(object);
+      const result = unwrapMacro(traverseEach(navKey, state, resultFn, path, nav.fn(unwrapped, context), pathIndex + 1, returnFn, context));
       if (navKey === selectKey || !nav.fromFn) {
         return result;
       }
@@ -131,7 +138,7 @@ export const traverseEach = (
       return $none;
     // Set a context value, to later be used by $apply.
     case $setContextKey: {
-      context = nav.setContext(nav, nav.fn(unwrap(object), context || {}), context);
+      context = nav.setContext(nav, nav.fn(unwrapMacro(object), context || {}), context);
       return traverseEach(navKey, state, resultFn, path, object, pathIndex + 1, returnFn, context);
     }
   }
@@ -148,7 +155,7 @@ export const traverseEach = (
     do {
       // If it's a function, get our path dynamically.
       if (typeof navPath === 'function') {
-        navPath = nav.hasArgs ? navPath(nav.args, unwrap(object), context) : navPath(object, context);
+        navPath = nav.hasArgs ? navPath(nav.args, unwrapMacro(object), context) : navPath(object, context);
         navPath = arrayify(navPath);
       }
       // TODO: Use mutationMarker.
@@ -187,13 +194,13 @@ export const traverseEach = (
   if (nav[navKey]) {
     if (nav.hasArgs) {
       return nav[navKey](
-        nav.args, unwrap(object),
-        (subObject) => unwrap(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context))
+        nav.args, unwrapMacro(object),
+        (subObject) => unwrapMacro(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context))
       );
     }
     return nav[navKey](
-      unwrap(object),
-      (subObject) => unwrap(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context))
+      unwrapMacro(object),
+      (subObject) => unwrapMacro(traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context))
     );
   }
 
