@@ -564,12 +564,18 @@ export const setProperty = (key, value, source) => {
 const deleteProperty_Wrapper = (key, source) => source.delete(key);
 
 const deleteProperty_Object = (key, source) => {
+  if (!(key in source)) {
+    return source;
+  }
   source = objectAssign({}, source);
   delete source[key];
   return source;
 };
 
 const deleteProperty_Array = (key, source) => {
+  if (!(key in source)) {
+    return source;
+  }
   source = source.slice(0);
   if (key in source) {
     source.splice(key, 1);
@@ -705,7 +711,7 @@ export const reduceSequence = (eachFn, initialValue, seq) => {
 };
 
 const baseSpec = {
-  isNull: false
+  isNil: false
 };
 
 const wrapperSpec = mix(baseSpec, {
@@ -735,13 +741,13 @@ const primitiveSpec = mix(baseSpec, {
 
 });
 
-const nullSpec = mix(baseSpec, primitiveSpec, {
-  isNull: true
+const nilSpec = mix(baseSpec, primitiveSpec, {
+  isNil: true
 });
 
 export const getSpec = (source) => {
   if (source == null) {
-    return nullSpec;
+    return nilSpec;
   }
   if (typeof source === 'object') {
     if (isWrappedUnsafeMacro(source)) {

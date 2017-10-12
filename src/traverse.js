@@ -64,8 +64,8 @@ export const traverseEach = (
       }
     }
     // update, which is not as simple
-    if (!isNil(object)) {
-      const spec = getSpec(object);
+    const spec = getSpec(object);
+    if (!spec.isNil) {
       const _get = spec.get;
       const value = _get(nav, object);
       // Dig in for the new value.
