@@ -23,6 +23,12 @@ const $each = $traverse({
         }
       }
       if (canAppend) {
+        if (newValue === undefined && oldValue === undefined) {
+          if (!objectWrapped.has(key)) {
+            newObjectWrapped.appendHole();
+            return;
+          }
+        }
         newObjectWrapped.append(newValue);
       } else {
         newObjectWrapped.set(key, newValue);

@@ -101,6 +101,9 @@ const baseMethods = {
   append() {
     throw new Error(getTypeErrorMessage('append', ['appendable sequence'], this._source));
   },
+  appendHole() {
+    return this.append();
+  },
   canAppend() {
     return false;
   }
@@ -156,7 +159,7 @@ methods[OBJECT_TYPE] = mix(baseMethods, {
     }
     if (!this._hasMutated) {
       const source = this._source;
-      if (source[key] === value && key in source) {
+      if (source[key] === value) {
         return this;
       }
       this._source = objectAssign(cloneEmptyObject(source), source);
@@ -206,7 +209,7 @@ methods[ARRAY_TYPE] = mix(baseMethods, appendableMethods, {
     }
     if (!this._hasMutated) {
       const source = this._source;
-      if (source[key] === value && key in source) {
+      if (source[key] === value) {
         return source;
       }
       this._source = source.slice(0);
@@ -215,7 +218,7 @@ methods[ARRAY_TYPE] = mix(baseMethods, appendableMethods, {
     this._source[key] = value;
     return this;
   },
-  delete(key) {
+  delete(key, shouldLeaveHole) {
     if (!this._hasMutated) {
       const source = this._source;
       if (!(key in source)) {
@@ -224,7 +227,7 @@ methods[ARRAY_TYPE] = mix(baseMethods, appendableMethods, {
       this._source = source.slice(0);
       this._hasMutated = true;
     }
-    if (isInteger(key)) {
+    if (isInteger(key) && !shouldLeaveHole) {
       this._source.splice(key, 1);
     } else {
       delete this._source[key];
@@ -270,6 +273,11 @@ methods[ARRAY_TYPE] = mix(baseMethods, appendableMethods, {
       this._hasMutated = true;
     }
     this._source.push(value);
+    return this;
+  },
+  appendHole() {
+    this.append(undefined);
+    delete this._source[this._source.length - 1];
     return this;
   }
 });
@@ -408,6 +416,10 @@ Wrapper.prototype = {
     setMethod(this, 'append');
     return this.append(value);
   },
+  appendHole(value) {
+    setMethod(this, 'appendHole');
+    return this.appendHole(value);
+  },
   canAppend() {
     setMethod(this, 'canAppend');
     return this.canAppend();
@@ -515,7 +527,7 @@ export const getProperty = (key, source) => {
 const setProperty_Wrapper = (key, value, source) => source.set(key, value);
 
 const setProperty_Object = (key, value, source) => {
-  if (key in source && source[key] === value) {
+  if (source[key] === value) {
     return source;
   }
   source = objectAssign({}, source);
@@ -524,7 +536,7 @@ const setProperty_Object = (key, value, source) => {
 };
 
 const setProperty_Array = (key, value, source) => {
-  if (key in source && source[key] === value) {
+  if (source[key] === value) {
     return source;
   }
   source = source.slice(0);

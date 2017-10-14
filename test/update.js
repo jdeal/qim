@@ -35,6 +35,46 @@ test('update $set', t => {
   );
 });
 
+test('update non-existent in object with undefined', t => {
+  t.deepEqual(
+    update(['x', $set(undefined)], {}),
+    {}
+  );
+});
+
+test('update non-existent in array with undefined', t => {
+  t.deepEqual(
+    update([1, $set(undefined)], ['a']),
+    ['a']
+  );
+});
+
+test('update array with holes', t => {
+  const array = [];
+  const other = [];
+  array[2] = 'z';
+  other[0] = 'a';
+  other[2] = 'z';
+  const newArray = update([0, $set('a')], array);
+  t.is(newArray[0], 'a');
+  t.is(newArray[1], undefined);
+  t.is(newArray[2], 'z');
+  t.false(1 in newArray);
+});
+
+test('update array with holes', t => {
+  const array = ['a'];
+  array[2] = 'z';
+  const other = array.slice(0);
+  other[0] = 'A';
+
+  const newArray = update([$each, letter => letter === 'a', $set('A')], array);
+  t.is(newArray[0], 'A');
+  t.is(newArray[1], undefined);
+  t.is(newArray[2], 'z');
+  t.false(1 in newArray);
+});
+
 test('update $apply', t => {
   t.deepEqual(
     update(['x', $apply(increment)], {x: 1}),

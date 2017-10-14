@@ -8,8 +8,7 @@ import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 import {isReduced} from './utils/reduced';
-import {wrap, isNil, getProperty, deleteProperty, setProperty, hasProperty, getSpec} from './utils/data';
-import copy from './utils/copy';
+import {wrap, isNil, getProperty, hasProperty, getSpec} from './utils/data';
 
 import unwrapMacro from './macros/unwrap.macro';
 
