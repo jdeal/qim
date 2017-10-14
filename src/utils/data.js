@@ -106,12 +106,29 @@ const baseMethods = {
   },
   canAppend() {
     return false;
+  },
+  reduce() {
+    throw new Error(getTypeErrorMessage('reduce', ['appendable sequence'], this._source));
   }
 };
 
 const appendableMethods = {
   canAppend() {
     return true;
+  }
+};
+
+const sequenceMethods = {
+  reduce(fn, initial) {
+    let accum = initial;
+    this.forEach((value, key) => {
+      accum = fn(accum, value, key);
+      if (isReduced(accum)) {
+        return false;
+      }
+      return undefined;
+    });
+    return accum;
   }
 };
 
@@ -140,7 +157,7 @@ methods[PRIMITIVE_TYPE] = mix(baseMethods, {
   }
 });
 
-methods[OBJECT_TYPE] = mix(baseMethods, {
+methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   delete(key) {
     if (!this._hasMutated) {
       const source = this._source;
@@ -154,6 +171,9 @@ methods[OBJECT_TYPE] = mix(baseMethods, {
     return this;
   },
   set(key, value) {
+    if (isNone(key)) {
+      return this;
+    }
     if (isNone(value)) {
       return this.delete(key);
     }
@@ -202,8 +222,11 @@ methods[OBJECT_TYPE] = mix(baseMethods, {
   }
 });
 
-methods[ARRAY_TYPE] = mix(baseMethods, appendableMethods, {
+methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
   set(key, value) {
+    if (isNone(key)) {
+      return this;
+    }
     if (isNone(value)) {
       return this.delete(key);
     }
@@ -276,13 +299,16 @@ methods[ARRAY_TYPE] = mix(baseMethods, appendableMethods, {
     return this;
   },
   appendHole() {
-    this.append(undefined);
-    delete this._source[this._source.length - 1];
+    if (!this._hasMutated) {
+      this._source = this._source.slice(0);
+      this._hasMutated = true;
+    }
+    this._source.length = this._source.length + 1;
     return this;
   }
 });
 
-methods[STRING_TYPE] = mix(baseMethods, appendableMethods, {
+methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
   has(key) {
     if (isInteger(key)) {
       return this._source.charAt(key) !== '';
@@ -296,6 +322,9 @@ methods[STRING_TYPE] = mix(baseMethods, appendableMethods, {
     return undefined;
   },
   set(key, value) {
+    if (isNone(key)) {
+      return this;
+    }
     if (isNone(value)) {
       value = '';
     }
@@ -411,6 +440,10 @@ Wrapper.prototype = {
   forEach(fn) {
     setMethod(this, 'forEach');
     return this.forEach(fn);
+  },
+  reduce(fn, initial) {
+    setMethod(this, 'reduce');
+    return this.reduce(fn, initial);
   },
   append(value) {
     setMethod(this, 'append');

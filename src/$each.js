@@ -1,21 +1,21 @@
 import $traverse from './$traverse';
-import {reduceSequence, wrap} from './utils/data';
+import {wrap} from './utils/data';
 import {isNone} from './$none';
 
 const $each = $traverse({
   select: (object, next) => {
     // Pass each value along to the next navigator.
-    return reduceSequence((result, key) => {
-      return next(object[key]);
+    const wrapped = wrap(object);
+    return wrapped.reduce((result, value, key) => {
+      return next(wrapped.get(key));
     }, undefined, object);
   },
   update: (object, next) => {
-    const objectWrapped = wrap(object);
-    const newObjectWrapped = objectWrapped.cloneEmpty();
+    const wrapped = wrap(object);
+    const newWrapped = wrapped.cloneEmpty();
     let hasMutated = false;
-    const canAppend = objectWrapped.canAppend();
-    objectWrapped.forEach((value, key) => {
-      const oldValue = objectWrapped.get(key);
+    const canAppend = wrapped.canAppend();
+    wrapped.forEach((oldValue, key) => {
       const newValue = next(oldValue);
       if (!hasMutated) {
         if (oldValue !== newValue || isNone(newValue)) {
@@ -24,20 +24,20 @@ const $each = $traverse({
       }
       if (canAppend) {
         if (newValue === undefined && oldValue === undefined) {
-          if (!objectWrapped.has(key)) {
-            newObjectWrapped.appendHole();
+          if (!wrapped.has(key)) {
+            newWrapped.appendHole();
             return;
           }
         }
-        newObjectWrapped.append(newValue);
+        newWrapped.append(newValue);
       } else {
-        newObjectWrapped.set(key, newValue);
+        newWrapped.set(key, newValue);
       }
     });
     if (!hasMutated) {
       return object;
     }
-    return newObjectWrapped.value();
+    return newWrapped.value();
   }
 });
 

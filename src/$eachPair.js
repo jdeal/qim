@@ -1,73 +1,65 @@
-import copy from './utils/copy';
 import $traverse from './$traverse';
-import {reduceSequence} from './utils/data';
+import {wrap} from './utils/data';
 import {isNone} from './$none';
 import removed, {isNotRemoved} from './utils/removed';
 
 const $eachPair = $traverse({
   select: (object, next) => {
-    // Pass each pair along to the next navigator.
-    return reduceSequence((result, key) => {
-      return next([key, object[key]]);
+    // Pass each key along to the next navigator.
+    const wrapped = wrap(object);
+    return wrapped.reduce((result, value, key) => {
+      return next([key, value]);
     }, undefined, object);
   },
   update: (object, next) => {
-    const isArray = Array.isArray(object);
-    // Marker for if we removed pairs from an array. Since we filter out
-    // removed pairs, we don't want to do that iteration if we don't have to.
-    // Maybe there's a better way to do this, but removing array values in place
-    // is kind of ugly, since positions change.
-    let didRemovePairs = false;
-    const newObject = reduceSequence((result, key) => {
-      const value = object[key];
-      const pair = [key, value];
-      const newPair = next(pair);
+    const wrapped = wrap(object);
+    const newWrapped = wrapped.cloneEmpty();
+    let hasMutated = false;
+    let hasRemoved = false;
+    const canAppend = wrapped.canAppend();
+    wrapped.forEach((oldValue, oldKey) => {
+      const newPair = next([oldKey, oldValue]);
       let newKey;
       let newValue;
-      // Undefined/null pair will result in undefined key, which will be
-      // treated as $none.
       if (newPair != null) {
         newKey = newPair[0];
         newValue = newPair[1];
       }
-      const isPairNone = (
-        // Undefined/null key doesn't make much sense, so treat it as $none.
-        newKey == null ||
-        isNone(newPair) ||
-        // isNone(newValue) covers a goofy edge where you might have the value
-        // $none stored in an object/array. In that case, it would match, but we
-        // still want to remove it.
-        isNone(newValue)
-      );
-      // This is a no-op unless we actually have a different value or key.
-      if (newKey !== key || newValue !== value || isPairNone) {
-        // Create a new object if we haven't done that yet.
-        if (object === result) {
-          result = copy(result);
-        }
-        if (newKey !== key) {
-          // For arrays, we'll store a removed value so indexes don't get wonky.
-          if (isArray) {
-            result[key] = removed;
-            didRemovePairs = true;
-          // Otherwise, we'll just delete it now.
-          } else {
-            delete result[key];
-          }
-        }
-        // If we haven't removed the key or value, then set the new key to the
-        // new value.
-        if (!isPairNone) {
-          result[newKey] = newValue;
+      if (!hasMutated) {
+        if (oldKey !== newKey || oldValue !== newValue || isNone(newPair) || isNone(newKey) || isNone(oldValue)) {
+          hasMutated = true;
         }
       }
-      return result;
-    }, object, object);
-    // Filter our removed values from arrays.
-    if (isArray && didRemovePairs) {
-      return newObject.filter(isNotRemoved);
+      if (canAppend) {
+        if (isNone(newPair) || isNone(newKey) || isNone(newValue)) {
+          hasRemoved = true;
+          newWrapped.set(oldKey, removed);
+        } else {
+          if (newKey !== oldKey) {
+            hasRemoved = true;
+            newWrapped.set(oldKey, removed);
+          }
+          newWrapped.set(newKey, newValue);
+        }
+      } else {
+        if (!isNone(newPair)) {
+          newWrapped.set(newKey, newValue);
+        }
+      }
+    });
+    if (!hasMutated) {
+      return object;
     }
-    return newObject;
+    if (canAppend && hasRemoved) {
+      const newWrappedWithoutRemoved = newWrapped.cloneEmpty();
+      newWrapped.forEach((value) => {
+        if (isNotRemoved(value)) {
+          newWrappedWithoutRemoved.append(value);
+        }
+      });
+      return newWrappedWithoutRemoved.value();
+    }
+    return newWrapped.value();
   }
 });
 

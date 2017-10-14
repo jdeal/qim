@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-const input = _.range(10)
+const input = _.range(10000)
   .reduce((string) => string.concat('abcdefghijklmnopqrstuvwxyz0123456789'), '')
   .split('');
 

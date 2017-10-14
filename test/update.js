@@ -228,6 +228,13 @@ test('remove all keys with $none', t => {
   );
 });
 
+test('remove even keys with $none', t => {
+  t.deepEqual(
+    update([$eachKey, isEven, $none], ['a', 'b', 'c', 'd']),
+    ['b', 'd']
+  );
+});
+
 test('remove all pairs from array with $none', t => {
   t.deepEqual(
     update([$eachPair, $none], ['a', 'b']),
