@@ -157,7 +157,7 @@ test('count slice', t => {
     2
   );
   t.deepEqual(
-    wrapSlice(['a', 'b', 'c', 'd'], -0).count(),
+    wrapSlice(['a', 'b', 'c', 'd'], Infinity).count(),
     0
   );
 });

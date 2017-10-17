@@ -3,7 +3,7 @@ import objectAssign from 'object-assign';
 import {isReduced} from './reduced';
 import {isNone} from '../$none';
 import getTypeErrorMessage from './getTypeErrorMessage';
-import normalizeIndex, {isNegativeZero, normalizeEnd, normalizeIndexIfValid} from './normalizeIndex';
+import normalizeIndex, {normalizeIndexIfValid} from './normalizeIndex';
 import unwrapMacro from '../macros/unwrap.macro';
 import isWrappedMacro from '../macros/isWrapped.macro';
 import isWrappedUnsafeMacro from '../macros/isWrappedUnsafe.macro';
@@ -148,9 +148,6 @@ const appendableMethods = {
 
 const nativeSequenceMethods = {
   getAtIndex(i) {
-    if (isNegativeZero(i)) {
-      return undefined;
-    }
     if (i < 0) {
       i = normalizeIndexIfValid(i, this._source.length);
       if (i === undefined) {
@@ -208,9 +205,6 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
     return Object.keys(this._source).length;
   },
   getAtIndex(i) {
-    if (isNegativeZero(i)) {
-      return undefined;
-    }
     const keys = Object.keys(this._source);
     if (i < 0) {
       i = normalizeIndexIfValid(i, keys.length);
@@ -261,8 +255,6 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   },
   sliceToValue(begin, end) {
     const keys = Object.keys(this._source);
-    begin = normalizeEnd(begin, keys.length);
-    end = normalizeEnd(end, keys.length);
     return keys.slice(begin, end).reduce((result, key) => {
       result[key] = this._source[key];
       return result;
@@ -321,9 +313,6 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     return this;
   },
   setAtIndex(i, value) {
-    if (isNegativeZero(i)) {
-      i = this._source.length;
-    }
     if (i >= 0) {
       return this.set(i, value);
     }
@@ -351,8 +340,6 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
   },
   sliceToValue(begin, end) {
     const source = this._source;
-    end = normalizeEnd(end, source.length);
-    begin = normalizeEnd(begin, source.length);
     return source.slice(begin, end);
   },
   pickToValue(keys) {
@@ -437,9 +424,6 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
     return this;
   },
   setAtIndex(i, value) {
-    if (isNegativeZero(i)) {
-      i = this._source.length;
-    }
     if (i >= 0) {
       if (i >= this._source.length) {
         this._hasMutated = true;
@@ -458,8 +442,6 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
   },
   sliceToValue(begin, end) {
     const source = this._source;
-    end = normalizeEnd(end, source.length);
-    begin = normalizeEnd(begin, source.length);
     return source.substr(begin, end);
   },
   pickToValue(keys) {
