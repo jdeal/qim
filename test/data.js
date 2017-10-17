@@ -70,7 +70,8 @@ test(wrapMethodsMacro, {foo: 'bar'}, {
   set: [
     ['foo', 'baz'], {foo: 'baz'},
     [0, 'zero'], {foo: 'baz', 0: 'zero'}
-  ]
+  ],
+  count: 2
 });
 
 test(wrapMethodsMacro, ['a'], {
@@ -81,7 +82,8 @@ test(wrapMethodsMacro, ['a'], {
   set: [
     [0, 'aa'], ['aa'],
     [1, 'bb'], ['aa', 'bb']
-  ]
+  ],
+  count: 2
 });
 
 test('slice', t => {
@@ -128,8 +130,42 @@ test('replace slice with wrapped slice', t => {
 test('replace slice of wrapped with wrapped slice', t => {
   const array = ['a', 'b', 'c'];
   t.deepEqual(
-    replaceSlice(1, 2, wrap(['x']), wrap(array)),
+    unwrap(replaceSlice(1, 2, wrap(['x']), wrap(array))),
     ['a', 'x', 'c']
+  );
+});
+
+test('count slice', t => {
+  t.deepEqual(
+    wrapSlice(['a', 'b', 'c', 'd'], 1, 3).count(),
+    2
+  );
+  t.deepEqual(
+    wrapSlice(['a', 'b', 'c', 'd'], 1).count(),
+    3
+  );
+  t.deepEqual(
+    wrapSlice(['a', 'b', 'c', 'd'], 1).count(),
+    3
+  );
+  t.deepEqual(
+    wrapSlice(['a', 'b', 'c', 'd'], -3).count(),
+    3
+  );
+  t.deepEqual(
+    wrapSlice(['a', 'b', 'c', 'd'], -3, -1).count(),
+    2
+  );
+  t.deepEqual(
+    wrapSlice(['a', 'b', 'c', 'd'], -0).count(),
+    0
+  );
+});
+
+test('get at slice index', t => {
+  t.deepEqual(
+    wrapSlice(['a', 'b', 'c', 'd'], 1, 3).getAtIndex(0),
+    'b'
   );
 });
 
@@ -171,5 +207,12 @@ test('replace pick with wrapped pick', t => {
   t.deepEqual(
     replacePick(['a', 'c'], wrap({x: 10}), object),
     {b: 1, x: 10}
+  );
+});
+
+test('count pick', t => {
+  t.deepEqual(
+    wrapPick({a: 0, b: 1, c: 2}, ['a', 'c']).count(),
+    2
   );
 });

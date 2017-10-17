@@ -1,4 +1,4 @@
-const isNegativeZero = Object.is ?
+export const isNegativeZero = Object.is ?
   num => Object.is(num, -0) :
   num => (1 / num) === -Infinity;
 
@@ -20,5 +20,19 @@ const normalizeIndex = (index, count, defaultIndex) => {
 
 export const normalizeEnd = (index, count) =>
   isNegativeZero(index) ? count : index;
+
+export const normalizeIndexIfValid = (index, count) => {
+  if (index === undefined || count === 0 || isNegativeZero(index)) {
+    return undefined;
+  }
+  if (index >= 0) {
+    if (count > index) {
+      return index;
+    }
+  } else if (count >= -index) {
+    return count + index;
+  }
+  return undefined;
+};
 
 export default normalizeIndex;

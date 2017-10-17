@@ -3,7 +3,7 @@ import objectAssign from 'object-assign';
 import {isReduced} from './reduced';
 import {isNone} from '../$none';
 import getTypeErrorMessage from './getTypeErrorMessage';
-import normalizeIndex, {normalizeEnd} from './normalizeIndex';
+import normalizeIndex, {isNegativeZero, normalizeEnd, normalizeIndexIfValid} from './normalizeIndex';
 import unwrapMacro from '../macros/unwrap.macro';
 import isWrappedMacro from '../macros/isWrapped.macro';
 import isWrappedUnsafeMacro from '../macros/isWrappedUnsafe.macro';
@@ -73,6 +73,25 @@ const replaceSliceOfArray = (begin, end, newSlice, source) => {
   return newArray;
 };
 
+const replaceSliceOfObject = (begin, end, newSlice, source) => {
+  const keys = Object.keys(source);
+  const sliceBegin = normalizeIndex(begin, keys.length, 0);
+  const sliceEnd = normalizeIndex(end, keys.length, keys.length);
+  newSlice = newSlice === undefined ? {} : newSlice;
+  if (typeof newSlice !== 'object') {
+    throw new Error('No way to splice a non-object into an object.');
+  }
+  const newObject = {};
+  for (let i = 0; i < sliceBegin; i++) {
+    newObject[keys[i]] = source[keys[i]];
+  }
+  for (let i = sliceEnd; i < keys.length; i++) {
+    newObject[keys[i]] = source[keys[i]];
+  }
+  objectAssign(newObject, newSlice);
+  return newObject;
+};
+
 Wrapper = function (source, type) {
   this['@@qim/wrap'] = true;
   this._type = type;
@@ -95,6 +114,15 @@ const baseMethods = {
   get(key) {
     return this._source[key];
   },
+  getAtIndex() {
+    throw new Error(getTypeErrorMessage('getAtIndex', ['sequence'], this._source));
+  },
+  setAtIndex() {
+    throw new Error(getTypeErrorMessage('setAtIndex', ['sequence'], this._source));
+  },
+  count() {
+    throw new Error(getTypeErrorMessage('getAtIndex', ['sequence'], this._source));
+  },
   value() {
     return this._source;
   },
@@ -115,6 +143,24 @@ const baseMethods = {
 const appendableMethods = {
   canAppend() {
     return true;
+  }
+};
+
+const nativeSequenceMethods = {
+  getAtIndex(i) {
+    if (isNegativeZero(i)) {
+      return undefined;
+    }
+    if (i < 0) {
+      i = normalizeIndexIfValid(i, this._source.length);
+      if (i === undefined) {
+        return undefined;
+      }
+    }
+    return this._source[i];
+  },
+  count() {
+    return this._source.length;
   }
 };
 
@@ -158,6 +204,22 @@ methods[PRIMITIVE_TYPE] = mix(baseMethods, {
 });
 
 methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
+  count() {
+    return Object.keys(this._source).length;
+  },
+  getAtIndex(i) {
+    if (isNegativeZero(i)) {
+      return undefined;
+    }
+    const keys = Object.keys(this._source);
+    if (i < 0) {
+      i = normalizeIndexIfValid(i, keys.length);
+      if (i === undefined) {
+        return undefined;
+      }
+    }
+    return this._source[keys[i]];
+  },
   delete(key) {
     if (!this._hasMutated) {
       const source = this._source;
@@ -188,6 +250,15 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
     this._source[key] = value;
     return this;
   },
+  setAtIndex(i, value) {
+    const keys = Object.keys(this._source);
+    i = normalizeIndexIfValid(i, keys.length);
+    // TODO: throw error for invalid index
+    if (i !== undefined) {
+      return this.set(keys[i], value);
+    }
+    return this;
+  },
   sliceToValue(begin, end) {
     const keys = Object.keys(this._source);
     begin = normalizeEnd(begin, keys.length);
@@ -203,6 +274,14 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
       picked[key] = this._source[key];
     }, keys, this._source);
     return picked;
+  },
+  replaceSlice(begin, end, newSlice) {
+    const newSource = replaceSliceOfObject(begin, end, newSlice, this._source);
+    if (newSource !== this._source) {
+      this._hasMutated = true;
+      this._source = newSource;
+    }
+    return this;
   },
   cloneEmpty() {
     const empty = new Wrapper(cloneEmptyObject(this._source), OBJECT_TYPE);
@@ -222,7 +301,7 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   }
 });
 
-methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
+methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
   set(key, value) {
     if (isNone(key)) {
       return this;
@@ -239,6 +318,19 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
       this._hasMutated = true;
     }
     this._source[key] = value;
+    return this;
+  },
+  setAtIndex(i, value) {
+    if (isNegativeZero(i)) {
+      i = this._source.length;
+    }
+    if (i >= 0) {
+      return this.set(i, value);
+    }
+    i = normalizeIndexIfValid(i, this._source.length);
+    if (i !== undefined) {
+      return this.set(i, value);
+    }
     return this;
   },
   delete(key, shouldLeaveHole) {
@@ -271,7 +363,12 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
     return picked;
   },
   replaceSlice(begin, end, newSlice) {
-    return replaceSliceOfArray(begin, end, newSlice, this._source);
+    const newSource = replaceSliceOfArray(begin, end, newSlice, this._source);
+    if (newSource !== this._source) {
+      this._hasMutated = true;
+      this._source = newSource;
+    }
+    return this;
   },
   cloneEmpty() {
     const empty = new Wrapper([], ARRAY_TYPE);
@@ -308,7 +405,7 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
   }
 });
 
-methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
+methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
   has(key) {
     if (isInteger(key)) {
       return this._source.charAt(key) !== '';
@@ -339,6 +436,23 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
     }
     return this;
   },
+  setAtIndex(i, value) {
+    if (isNegativeZero(i)) {
+      i = this._source.length;
+    }
+    if (i >= 0) {
+      if (i >= this._source.length) {
+        this._hasMutated = true;
+        this._source = this._source + Array(2 + (i - this._source.length)).join(' ');
+      }
+      return this.set(i, value);
+    }
+    i = normalizeIndexIfValid(i, this._source.length);
+    if (i !== undefined) {
+      return this.set(i, value);
+    }
+    return this;
+  },
   delete(key) {
     return this.set(key, '');
   },
@@ -357,6 +471,7 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, {
     }, keys, this._source);
     return picked;
   },
+  // TODO: replaceSlice for strings
   cloneEmpty() {
     const empty = new Wrapper('', STRING_TYPE);
     empty._hasMutated = true;
@@ -413,9 +528,21 @@ Wrapper.prototype = {
     setMethod(this, 'get');
     return this.get(key);
   },
+  count() {
+    setMethod(this, 'count');
+    return this.count();
+  },
+  getAtIndex(i) {
+    setMethod(this, 'getAtIndex');
+    return this.getAtIndex(i);
+  },
   set(key, value) {
     setMethod(this, 'set');
     return this.set(key, value);
+  },
+  setAtIndex(i, value) {
+    setMethod(this, 'setAtIndex');
+    return this.setAtIndex(i, value);
   },
   delete(key) {
     setMethod(this, 'delete');
@@ -459,7 +586,91 @@ Wrapper.prototype = {
   }
 };
 
+const prepareDelegateSource = (wrapper) => {
+  if (wrapper._isPrepared) {
+    return false;
+  }
+  wrapper._isPrepared = true;
+  wrapper._source = wrap(wrapper._source);
+  return true;
+};
+
 const delegateMethods = {
+  has(key) {
+    this.value();
+    setMethod(this, 'has');
+    return this.has(key);
+  },
+  get(key) {
+    this.value();
+    setMethod(this, 'get');
+    return this.get(key);
+  },
+  count() {
+    this.value();
+    setMethod(this, 'count');
+    return this.count();
+  },
+  getAtIndex() {
+    this.value();
+    setMethod(this, 'getAtIndex');
+    return this.getAtIndex();
+  },
+  set(key, value) {
+    this.value();
+    setMethod(this, 'set');
+    return this.set(key, value);
+  },
+  delete(key) {
+    this.value();
+    setMethod(this, 'delete');
+    return this.delete(key);
+  },
+  sliceToValue(begin, end) {
+    this.value();
+    setMethod(this, 'sliceToValue');
+    return this.sliceToValue(begin, end);
+  },
+  replaceSlice(begin, end, newSlice) {
+    this.value();
+    setMethod(this, 'replaceSlice');
+    return this.replaceSlice(begin, end, newSlice);
+  },
+  pickToValue(keys) {
+    this.value();
+    setMethod(this, 'pickToValue');
+    return this.pickToValue(keys);
+  },
+  cloneEmpty() {
+    this.value();
+    setMethod(this, 'cloneEmpty');
+    return this.cloneEmpty();
+  },
+  forEach(fn) {
+    this.value();
+    setMethod(this, 'forEach');
+    return this.forEach(fn);
+  },
+  reduce(fn, initial) {
+    this.value();
+    setMethod(this, 'reduce');
+    return this.reduce(fn, initial);
+  },
+  append(value) {
+    this.value();
+    setMethod(this, 'append');
+    return this.append(value);
+  },
+  appendHole(value) {
+    this.value();
+    setMethod(this, 'appendHole');
+    return this.appendHole(value);
+  },
+  canAppend() {
+    this.value();
+    setMethod(this, 'canAppend');
+    return this.canAppend();
+  },
   type() {
     if (isWrappedMacro(this._source)) {
       this._type = this._source.type();
@@ -479,7 +690,35 @@ const SliceWrapper = function (source, begin, end) {
 
 export const wrapSlice = (source, begin, end) => new SliceWrapper(source, begin, end);
 
+const prepareSliceWrapper = (wrapper) => {
+  if (prepareDelegateSource(wrapper)) {
+    const sourceCount = wrapper._source.count();
+    wrapper._begin = normalizeIndex(wrapper._begin, sourceCount, 0);
+    wrapper._end = normalizeIndex(wrapper._end, sourceCount, sourceCount);
+  }
+};
+
 SliceWrapper.prototype = mix(delegateMethods, {
+  count() {
+    if (this._isResolved) {
+      setMethod(this, 'count');
+      return this.count();
+    }
+    prepareSliceWrapper(this);
+    return this._end - this._begin;
+  },
+  getAtIndex(i) {
+    if (this._isResolved) {
+      setMethod(this, 'getAtIndex');
+      return this.getAtIndex();
+    }
+    prepareSliceWrapper(this);
+    const position = this._begin + i;
+    if (position < this._end) {
+      return this._source.getAtIndex(position);
+    }
+    return undefined;
+  },
   value() {
     if (isWrappedMacro(this._source)) {
       this._source = this._source.value();
@@ -487,6 +726,7 @@ SliceWrapper.prototype = mix(delegateMethods, {
     setMethod(this, 'sliceToValue');
     this._source = this.sliceToValue(this._begin, this._end);
     setMethod(this, 'value');
+    this._isResolved = true;
     return this._source;
   },
 });
