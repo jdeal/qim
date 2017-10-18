@@ -137,6 +137,12 @@ const baseMethods = {
   },
   reduce() {
     throw new Error(getTypeErrorMessage('reduce', ['appendable sequence'], this._source));
+  },
+  merge(spec) {
+    return wrap(spec);
+  },
+  canMerge() {
+    return false;
   }
 };
 
@@ -172,6 +178,31 @@ const sequenceMethods = {
       return undefined;
     });
     return accum;
+  },
+  merge(spec, isDeep = false) {
+    if (spec && typeof spec === 'object') {
+      const wrappedSpec = wrap(spec);
+      if (!wrappedSpec.canMerge()) {
+        return wrappedSpec;
+      }
+      wrap(spec).forEach((value, key) => {
+        if (!isDeep) {
+          this.set(key, value);
+          return;
+        }
+        const childValue = this.get(key);
+        if (childValue && typeof childValue === 'object') {
+          this.set(key, wrap(childValue).merge(value, true).value());
+          return;
+        }
+        this.set(key, value);
+      });
+      return this;
+    }
+    return spec;
+  },
+  canMerge() {
+    return true;
   }
 };
 
@@ -472,6 +503,10 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
     this._source += value;
     return this;
   }
+}, {
+  merge: baseMethods.merge,
+  mergeDeep: baseMethods.mergeDeep,
+  canMerge: baseMethods.canMerge
 });
 
 const getType = (source) => {
@@ -553,6 +588,14 @@ Wrapper.prototype = {
   reduce(fn, initial) {
     setMethod(this, 'reduce');
     return this.reduce(fn, initial);
+  },
+  merge(spec, isDeep) {
+    setMethod(this, 'merge');
+    return this.merge(spec, isDeep);
+  },
+  canMerge() {
+    setMethod(this, 'canMerge');
+    return this.canMerge();
   },
   append(value) {
     setMethod(this, 'append');

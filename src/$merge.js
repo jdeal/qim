@@ -1,10 +1,8 @@
 import $traverse from './$traverse';
-import createMerge from './utils/createMerge';
-
-const merge = createMerge();
+import {wrap} from './utils/data';
 
 const $merge = (spec) => $traverse(
-  (type, object, next) => next(merge(spec, object))
+  (type, object, next) => next(wrap(object).merge(spec).value())
 );
 
 export default $merge;
