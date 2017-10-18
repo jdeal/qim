@@ -25,7 +25,8 @@ export {default as $end} from './$end';
 export {default as $pick} from './$pick';
 export {default as $slice} from './$slice';
 
-// Array item navigators
+// Indexed item navigators
+export {default as $at} from './$at';
 export {default as $first} from './$first';
 export {default as $last} from './$last';
 
