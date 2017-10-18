@@ -807,6 +807,8 @@ const getProperty_Object = (key, source) => source[key];
 
 const getProperty_Array = (key, source) => source[key];
 
+const getProperty_Primitive = () => undefined;
+
 export const getProperty = (key, source) => {
   if (typeof source === 'object') {
     if (isWrappedUnsafe(source)) {
@@ -1048,7 +1050,7 @@ const stringSpec = mix(baseSpec, {
 });
 
 const primitiveSpec = mix(baseSpec, {
-
+  get: getProperty_Primitive
 });
 
 const nilSpec = mix(baseSpec, primitiveSpec, {
