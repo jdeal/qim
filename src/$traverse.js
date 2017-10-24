@@ -4,10 +4,12 @@ export const updateKey = '@@qim/navUpdate';
 const $traverse = (spec) => {
   if (typeof spec === 'function') {
     return {
-      [selectKey]: (object, next, path, index) =>
-        spec('select', object, next, path, index),
-      [updateKey]: (object, next, path, index) =>
-        spec('update', object, next, path, index)
+      [selectKey](object, next, path, index) {
+        return spec.call(this, 'select', object, next, path, index);
+      },
+      [updateKey](object, next, path, index) {
+        return spec.call(this, 'update', object, next, path, index);
+      }
     };
   }
   return {
