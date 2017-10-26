@@ -8,7 +8,7 @@ import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 import {isReduced} from './utils/reduced';
-import {wrap, getProperty, hasProperty, getSpec} from './utils/data';
+import {wrap, getPropertyUnsafe, hasPropertyUnsafe, getSpec} from './utils/data';
 
 import unwrapMacro from './macros/unwrap.macro';
 
@@ -47,14 +47,11 @@ export const traverseEach = (
     if (navKey === selectKey) {
       // If we have something with properties, grab the property and keep digging.
       if (object != null) {
-        //const subObject = typeof object === 'object' && typeof object['@@qim/spec'] === 'undefined' ? object[nav] : getProperty(nav, object);
-         //
-        //  typeof object === 'object' && !isWrapped(object) ? object[nav] : getProperty(nav, object);
-        const subObject = getProperty(nav, object);
+        const subObject = getPropertyUnsafe(nav, object);
         // Special case so `has` can differentiate between missing keys and keys
         // pointing to undefined values. Maybe a better way? Maybe just don't
         // worry about `has(['x'], {x: undefined}) === false`?
-        if (typeof subObject === 'undefined' && !hasProperty(nav, object) && pathIndex === path.length - 1) {
+        if (typeof subObject === 'undefined' && !hasPropertyUnsafe(nav, object) && pathIndex === path.length - 1) {
           return $none;
         }
         return traverseEach(navKey, state, resultFn, path, subObject, pathIndex + 1, returnFn, context);

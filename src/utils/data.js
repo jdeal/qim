@@ -781,34 +781,21 @@ export const hasPropertyUnsafe = (key, source) => {
   return false;
 };
 
-export const hasProperty = (key, source) => {
-  if (source === null) {
-    return false;
-  }
-  return hasPropertyUnsafe(key, source);
-};
-
 const getProperty_Wrapper = (key, source) => source.get(key);
 
 const getProperty_Object = (key, source) => source[key];
 
-const getProperty_Array = (key, source) => source[key];
+const getProperty_Array = getProperty_Object;
+
+const getProperty_String = getProperty_Object;
 
 const getProperty_Primitive = () => undefined;
 
-export const getProperty = (key, source) => {
-  if (typeof source === 'object') {
-    if (isWrappedUnsafe(source)) {
-      return source.get(key);
-    }
-    return source[key];
+export const getPropertyUnsafe = (key, source) => {
+  if (isWrappedUnsafe(source)) {
+    return source.get(key);
   }
-  if (typeof source === 'string') {
-    if (isInteger(key)) {
-      return source.charAt(key);
-    }
-  }
-  return undefined;
+  return source[key];
 };
 
 const setProperty_Wrapper = (key, value, source) => source.set(key, value);
@@ -830,6 +817,20 @@ const setProperty_Array = (key, value, source) => {
   source[key] = value;
   return source;
 };
+
+const setProperty_String = (key, value, source) => {
+  if (isInteger(key)) {
+    if (source.charAt(key) === '') {
+      return source;
+    }
+    if (typeof value === 'string') {
+      this._source = source.substr(0, key) + value + source.substr(key + 1);
+    }
+  }
+  return source;
+};
+
+const setProperty_Primitive = (key, value, source) => source;
 
 export const setProperty = (key, value, source) => {
   if (typeof source === 'object') {
@@ -881,6 +882,10 @@ const deleteProperty_Array = (key, source) => {
   }
   return source;
 };
+
+const deleteProperty_String = (key, source) => setProperty_String(key, '', source);
+
+const deleteProperty_Primitive = (key, value, source) => source;
 
 export const deleteProperty = (key, source) => {
   if (typeof source === 'object') {
@@ -1026,18 +1031,21 @@ const objectSpec = mix(baseSpec, {
 });
 
 const arraySpec = {
-  isNull: false,
   get: getProperty_Array,
   set: setProperty_Array,
   delete: deleteProperty_Array
 };
 
 const stringSpec = mix(baseSpec, {
-
+  get: getProperty_String,
+  set: setProperty_String,
+  delete: deleteProperty_String
 });
 
 const primitiveSpec = mix(baseSpec, {
-  get: getProperty_Primitive
+  get: getProperty_Primitive,
+  set: setProperty_Primitive,
+  delete: deleteProperty_Primitive
 });
 
 const nilSpec = mix(baseSpec, primitiveSpec, {
