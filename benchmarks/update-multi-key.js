@@ -18,7 +18,7 @@ export default [
     ),
     key: 'assign'
   },
-  // This is only comparable because of the mutationMarker optimization.
+  // This is comparable because of the mutable wrapper.
   {
     name: 'qim update',
     test: () => (
@@ -29,7 +29,7 @@ export default [
       ], state)
     ),
     compare: {
-      assign: .80
+      assign: .70
     }
   }
 ];

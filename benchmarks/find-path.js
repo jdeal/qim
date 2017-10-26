@@ -39,7 +39,7 @@ export default [
     name: 'qim find',
     test: () => find(['users', 'joe', 'name', 'first'], state),
     compare: {
-      lodashGet: .80
+      lodashGet: .75
     }
   }
 ];

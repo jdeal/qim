@@ -79,7 +79,7 @@ export default [
     name: 'qim update',
     test: () => update(['users', $each, user => user.balance >= 500, 'balance', $apply(bal => bal + 10)], state),
     compare: {
-      ramdaUpdate: 1.5
+      ramdaUpdate: 1.3
     }
   }
 ];

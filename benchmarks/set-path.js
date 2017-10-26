@@ -68,7 +68,7 @@ export default [
     name: 'qim set',
     test: () => set(['users', 'joe', 'name', 'first'], 'Joseph', state),
     compare: {
-      ramdaSet: .4
+      ramdaSet: .35
     }
   }
 ];

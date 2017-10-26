@@ -142,6 +142,7 @@ const cleanup = () => new Promise(resolve => {
 });
 
 matchingBenchmarks.reduce((promise, key) => {
+  collectGarbage();
   return promise
     .then((results) => (
       results.length > 0 ? (
