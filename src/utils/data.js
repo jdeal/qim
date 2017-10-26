@@ -114,14 +114,20 @@ const baseMethods = {
   get(key) {
     return this._source[key];
   },
+  set() {
+    return this;
+  },
+  delete() {
+    return this;
+  },
   getAtIndex() {
-    throw new Error(getTypeErrorMessage('getAtIndex', ['sequence'], this._source));
+    return undefined;
   },
   setAtIndex() {
-    throw new Error(getTypeErrorMessage('setAtIndex', ['sequence'], this._source));
+    return this;
   },
   count() {
-    throw new Error(getTypeErrorMessage('getAtIndex', ['sequence'], this._source));
+    throw new Error(getTypeErrorMessage('count', ['sequence'], this._source));
   },
   value() {
     return this._source;
@@ -143,6 +149,12 @@ const baseMethods = {
   },
   canMerge() {
     return false;
+  },
+  sliceToValue() {
+    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
+  },
+  pickToValue() {
+    throw new Error(getTypeErrorMessage('pickToValue', ['sequence'], this._source));
   }
 };
 
@@ -211,23 +223,11 @@ const methods = [];
 const mix = (...moreMethods) => objectAssign({}, ...moreMethods);
 
 methods[PRIMITIVE_TYPE] = mix(baseMethods, {
-  has() {
-    return false;
+  has(key) {
+    return this._source == null ? undefined : key in this._source;
   },
-  get() {
-    return undefined;
-  },
-  set() {
-    return this;
-  },
-  delete() {
-    return this;
-  },
-  sliceToValue() {
-    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
-  },
-  pickToValue() {
-    throw new Error(getTypeErrorMessage('pickToValue', ['sequence'], this._source));
+  get(key) {
+    return this._source == null ? undefined : this._source[key];
   }
 });
 
@@ -424,18 +424,6 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
 });
 
 methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
-  has(key) {
-    if (isInteger(key)) {
-      return this._source.charAt(key) !== '';
-    }
-    return false;
-  },
-  get(key) {
-    if (isInteger(key)) {
-      return this._source.charAt(key);
-    }
-    return undefined;
-  },
   set(key, value) {
     if (isNone(key)) {
       return this;
@@ -511,7 +499,7 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
 
 const getType = (source) => {
   if (typeof source === 'object') {
-    if (Array.isArray(source)) {
+    if (typeof source.length === 'number' && Array.isArray(source)) {
       return ARRAY_TYPE;
     }
     return OBJECT_TYPE;
@@ -529,6 +517,7 @@ const setMethod = (wrapper, methodKey) => {
   wrapper[methodKey] = methods[wrapper._type][methodKey];
 };
 
+// TODO: generate some of this
 Wrapper.prototype = {
   type() {
     setMethod(this, 'type');
@@ -776,8 +765,6 @@ PickWrapper.prototype = mix(delegateMethods, {
     return this._source;
   },
 });
-
-export const isNil = value => value == null;
 
 export const hasPropertyUnsafe = (key, source) => {
   if (typeof source == 'object') {
@@ -1077,4 +1064,18 @@ export const getSpec = (source) => {
     return stringSpec;
   }
   return primitiveSpec;
+};
+
+export const objectReaderSpec = {
+  get: getProperty_Object
+};
+
+export const getReaderSpec = (source) => {
+  if (source == null) {
+    return nilSpec;
+  }
+  if (isWrappedUnsafeMacro(source)) {
+    return wrapperSpec;
+  }
+  return objectReaderSpec;
 };

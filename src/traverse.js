@@ -8,7 +8,7 @@ import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
 import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 import {isReduced} from './utils/reduced';
-import {wrap, isNil, getProperty, hasProperty, getSpec} from './utils/data';
+import {wrap, getProperty, hasProperty, getSpec} from './utils/data';
 
 import unwrapMacro from './macros/unwrap.macro';
 
@@ -46,7 +46,7 @@ export const traverseEach = (
     // select, which is pretty simple
     if (navKey === selectKey) {
       // If we have something with properties, grab the property and keep digging.
-      if (!isNil(object)) {
+      if (object != null) {
         //const subObject = typeof object === 'object' && typeof object['@@qim/spec'] === 'undefined' ? object[nav] : getProperty(nav, object);
          //
         //  typeof object === 'object' && !isWrapped(object) ? object[nav] : getProperty(nav, object);
