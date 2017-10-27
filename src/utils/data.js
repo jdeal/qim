@@ -141,6 +141,9 @@ const baseMethods = {
   canAppend() {
     return false;
   },
+  forEach() {
+    throw new Error(getTypeErrorMessage('forEach', ['appendable sequence'], this._source));
+  },
   reduce() {
     throw new Error(getTypeErrorMessage('reduce', ['appendable sequence'], this._source));
   },
@@ -153,8 +156,14 @@ const baseMethods = {
   sliceToValue() {
     throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
   },
+  replaceSlice() {
+    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
+  },
   pickToValue() {
     throw new Error(getTypeErrorMessage('pickToValue', ['sequence'], this._source));
+  },
+  cloneEmpty() {
+    throw new Error(getTypeErrorMessage('cloneEmpty', ['appendable sequence'], this._source));
   }
 };
 
@@ -517,88 +526,24 @@ const setMethod = (wrapper, methodKey) => {
   wrapper[methodKey] = methods[wrapper._type][methodKey];
 };
 
-// TODO: generate some of this
-Wrapper.prototype = {
-  type() {
-    setMethod(this, 'type');
-    return this._type;
-  },
-  value() {
-    return this._source;
-  },
-  has(key) {
-    setMethod(this, 'has');
-    return this.has(key);
-  },
-  get(key) {
-    setMethod(this, 'get');
-    return this.get(key);
-  },
-  count() {
-    setMethod(this, 'count');
-    return this.count();
-  },
-  getAtIndex(i) {
-    setMethod(this, 'getAtIndex');
-    return this.getAtIndex(i);
-  },
-  set(key, value) {
-    setMethod(this, 'set');
-    return this.set(key, value);
-  },
-  setAtIndex(i, value) {
-    setMethod(this, 'setAtIndex');
-    return this.setAtIndex(i, value);
-  },
-  delete(key) {
-    setMethod(this, 'delete');
-    return this.delete(key);
-  },
-  sliceToValue(begin, end) {
-    setMethod(this, 'sliceToValue');
-    return this.sliceToValue(begin, end);
-  },
-  replaceSlice(begin, end, newSlice) {
-    setMethod(this, 'replaceSlice');
-    return this.replaceSlice(begin, end, newSlice);
-  },
-  pickToValue(keys) {
-    setMethod(this, 'pickToValue');
-    return this.pickToValue(keys);
-  },
-  cloneEmpty() {
-    setMethod(this, 'cloneEmpty');
-    return this.cloneEmpty();
-  },
-  forEach(fn) {
-    setMethod(this, 'forEach');
-    return this.forEach(fn);
-  },
-  reduce(fn, initial) {
-    setMethod(this, 'reduce');
-    return this.reduce(fn, initial);
-  },
-  merge(spec, isDeep) {
-    setMethod(this, 'merge');
-    return this.merge(spec, isDeep);
-  },
-  canMerge() {
-    setMethod(this, 'canMerge');
-    return this.canMerge();
-  },
-  append(value) {
-    setMethod(this, 'append');
-    return this.append(value);
-  },
-  appendHole(value) {
-    setMethod(this, 'appendHole');
-    return this.appendHole(value);
-  },
-  canAppend() {
-    setMethod(this, 'canAppend');
-    return this.canAppend();
+Wrapper.prototype = mix(
+  Object.keys(baseMethods).reduce((base, name) => {
+    base[name] = function (a, b, c) {
+      setMethod(this, name);
+      return this[name](a, b, c);
+    };
+    return base;
+  }, {}),
+  {
+    type() {
+      setMethod(this, 'type');
+      return this._type;
+    },
+    value() {
+      return this._source;
+    },
   }
-};
+);
 
 const prepareDelegateSource = (wrapper) => {
   if (wrapper._isPrepared) {
@@ -609,90 +554,25 @@ const prepareDelegateSource = (wrapper) => {
   return true;
 };
 
-const delegateMethods = {
-  has(key) {
-    this.value();
-    setMethod(this, 'has');
-    return this.has(key);
-  },
-  get(key) {
-    this.value();
-    setMethod(this, 'get');
-    return this.get(key);
-  },
-  count() {
-    this.value();
-    setMethod(this, 'count');
-    return this.count();
-  },
-  getAtIndex() {
-    this.value();
-    setMethod(this, 'getAtIndex');
-    return this.getAtIndex();
-  },
-  set(key, value) {
-    this.value();
-    setMethod(this, 'set');
-    return this.set(key, value);
-  },
-  delete(key) {
-    this.value();
-    setMethod(this, 'delete');
-    return this.delete(key);
-  },
-  sliceToValue(begin, end) {
-    this.value();
-    setMethod(this, 'sliceToValue');
-    return this.sliceToValue(begin, end);
-  },
-  replaceSlice(begin, end, newSlice) {
-    this.value();
-    setMethod(this, 'replaceSlice');
-    return this.replaceSlice(begin, end, newSlice);
-  },
-  pickToValue(keys) {
-    this.value();
-    setMethod(this, 'pickToValue');
-    return this.pickToValue(keys);
-  },
-  cloneEmpty() {
-    this.value();
-    setMethod(this, 'cloneEmpty');
-    return this.cloneEmpty();
-  },
-  forEach(fn) {
-    this.value();
-    setMethod(this, 'forEach');
-    return this.forEach(fn);
-  },
-  reduce(fn, initial) {
-    this.value();
-    setMethod(this, 'reduce');
-    return this.reduce(fn, initial);
-  },
-  append(value) {
-    this.value();
-    setMethod(this, 'append');
-    return this.append(value);
-  },
-  appendHole(value) {
-    this.value();
-    setMethod(this, 'appendHole');
-    return this.appendHole(value);
-  },
-  canAppend() {
-    this.value();
-    setMethod(this, 'canAppend');
-    return this.canAppend();
-  },
-  type() {
-    if (isWrappedMacro(this._source)) {
-      this._type = this._source.type();
+const delegateMethods = mix(
+  Object.keys(baseMethods).reduce((base, name) => {
+    base[name] = function (a, b, c) {
+      this.value();
+      setMethod(this, name);
+      return this[name](a, b, c);
+    };
+    return base;
+  }, {}),
+  {
+    type() {
+      if (isWrappedMacro(this._source)) {
+        this._type = this._source.type();
+      }
+      setMethod(this, 'type');
+      return this._type;
     }
-    setMethod(this, 'type');
-    return this._type;
   }
-};
+);
 
 const SliceWrapper = function (source, begin, end) {
   this['@@qim/wrap'] = true;

@@ -79,7 +79,18 @@ LazyWrapper.prototype.valueAfterLookup = function () {
 
 const lazyWrapper = new LazyWrapper();
 
-lazyWrapper.valueAfterLookup();
+const LazyWrapperWithMethodClosure = function () {
+  this._value = 1;
+};
+
+['valueAfterLookup'].forEach((name) => {
+  LazyWrapperWithMethodClosure.prototype[name] = function (a, b, c) {
+    setMethod(this, name);
+    return this[name](a, b, c);
+  };
+});
+
+const lazyWrapperWithMethodClosure = new LazyWrapperWithMethodClosure();
 
 const thePrototype = {
   value() {
@@ -118,6 +129,12 @@ export default [
       lazyWrapper.valueAfterLookup()
     )
   },
+  {
+    name: 'lazy wrapper with lookup, method in closure',
+    test: () => (
+      lazyWrapperWithMethodClosure.valueAfterLookup()
+    )
+  }
   /*
   {
     name: 'plain wrapper property',
