@@ -1,8 +1,7 @@
 import {updateKey} from './$traverse';
 import {traverseEach} from './traverse';
 import {curry3} from './utils/curry';
-import {undefinedIfNone} from './$none';
-import {unwrap, getSpec} from './utils/data';
+import {undefinedIfNone, unwrap, getSpec} from './utils/data';
 
 const set = (path, value, obj) => {
 

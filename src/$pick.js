@@ -1,5 +1,5 @@
 import $traverse from './$traverse';
-import {wrapPick, unwrap, replacePick} from './utils/data';
+import {wrap, wrapPick, unwrap} from './utils/data';
 
 function Pick(args) {
   this.args = args;
@@ -13,7 +13,7 @@ Pick.prototype = $traverse({
     const pick = wrapPick(object, this.args);
     const result = next(pick);
 
-    return unwrap(replacePick(this.args, result, object));
+    return unwrap(wrap(object).replacePick(this.args, result));
   }
 });
 

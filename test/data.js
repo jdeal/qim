@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import 'babel-core/register';
 
-import {wrap, unwrap, wrapSlice, wrapPick, replaceSlice, replacePick} from 'qim/src/utils/data';
+import {wrap, unwrap, wrapSlice, wrapPick} from 'qim/src/utils/data';
 
 test('wrap/unwrap', t => {
   const wrappedValue = wrap(0);
@@ -114,7 +114,7 @@ test('slice object', t => {
 test('replace slice', t => {
   const array = ['a', 'b', 'c'];
   t.deepEqual(
-    replaceSlice(1, 2, ['x'], array),
+    wrap(array).replaceSlice(1, 2, ['x']).value(),
     ['a', 'x', 'c']
   );
 });
@@ -122,7 +122,7 @@ test('replace slice', t => {
 test('replace slice with wrapped slice', t => {
   const array = ['a', 'b', 'c'];
   t.deepEqual(
-    replaceSlice(1, 2, wrap(['x']), array),
+    wrap(array).replaceSlice(1, 2, wrap(['x'])).value(),
     ['a', 'x', 'c']
   );
 });
@@ -130,7 +130,7 @@ test('replace slice with wrapped slice', t => {
 test('replace slice of wrapped with wrapped slice', t => {
   const array = ['a', 'b', 'c'];
   t.deepEqual(
-    unwrap(replaceSlice(1, 2, wrap(['x']), wrap(array))),
+    wrap(array).replaceSlice(1, 2, wrap(['x'])).value(),
     ['a', 'x', 'c']
   );
 });
@@ -197,7 +197,7 @@ test('pick array', t => {
 test('replace pick', t => {
   const object = {a: 0, b: 1, c: 2};
   t.deepEqual(
-    replacePick(['a', 'c'], {x: 10}, object),
+    wrap(object).replacePick(['a', 'c'], {x: 10}).value(),
     {b: 1, x: 10}
   );
 });
@@ -205,7 +205,7 @@ test('replace pick', t => {
 test('replace pick with wrapped pick', t => {
   const object = {a: 0, b: 1, c: 2};
   t.deepEqual(
-    replacePick(['a', 'c'], wrap({x: 10}), object),
+    wrap(object).replacePick(['a', 'c'], wrap({x: 10})).value(),
     {b: 1, x: 10}
   );
 });

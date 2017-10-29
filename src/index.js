@@ -14,7 +14,7 @@ export {default as $eachPair} from './$eachPair';
 // Transformation navigators
 export {default as $apply} from './$apply';
 export {default as $set} from './$set';
-export {default as $none} from './$none';
+export {$none as $none} from './utils/data';
 export {default as $default} from './$default';
 export {default as $merge} from './$merge';
 export {default as $mergeDeep} from './$mergeDeep';

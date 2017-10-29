@@ -1,5 +1,5 @@
 import $traverse from './$traverse';
-import {wrapSlice, unwrap, replaceSlice} from './utils/data';
+import {wrap, wrapSlice, unwrap} from './utils/data';
 
 function Slice(begin, end) {
   this.begin = begin;
@@ -14,7 +14,7 @@ Slice.prototype = $traverse({
     const slice = wrapSlice(object, this.begin, this.end);
     const result = next(slice);
 
-    return unwrap(replaceSlice(this.begin, this.end, result, object));
+    return unwrap(wrap(object).replaceSlice(this.begin, this.end, result));
   }
 });
 

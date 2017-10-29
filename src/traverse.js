@@ -6,9 +6,11 @@ import {$defaultKey} from './$default';
 import {$applyKey} from './$apply';
 import {$lensKey} from './$lens';
 import {$setContextKey} from './$setContext';
-import $none, {$noneKey, undefinedIfNone, isNone} from './$none';
 import {isReduced} from './utils/reduced';
-import {wrap, getPropertyUnsafe, hasPropertyUnsafe, getSpec} from './utils/data';
+import {
+  $none, $noneKey, undefinedIfNone, isNone,
+  wrap, getPropertyUnsafe, hasPropertyUnsafe, getSpec
+} from './utils/data';
 
 import unwrapMacro from './macros/unwrap.macro';
 

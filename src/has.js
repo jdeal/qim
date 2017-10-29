@@ -2,7 +2,7 @@ import {traverseEach} from './traverse';
 import {selectKey} from './$traverse';
 import reduced, {unreduced} from './utils/reduced';
 import {curry2} from './utils/curry';
-import {isNone} from './$none';
+import {isNone} from './utils/data';
 
 // has uses the same reduced envelope as find.
 const selectFirstResultFn = (state, result) => {

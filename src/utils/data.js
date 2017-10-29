@@ -1,12 +1,20 @@
 import objectAssign from 'object-assign';
 
 import {isReduced} from './reduced';
-import {isNone} from '../$none';
 import getTypeErrorMessage from './getTypeErrorMessage';
 import normalizeIndex, {normalizeIndexIfValid} from './normalizeIndex';
 import unwrapMacro from '../macros/unwrap.macro';
 import isWrappedMacro from '../macros/isWrapped.macro';
 import isWrappedUnsafeMacro from '../macros/isWrappedUnsafe.macro';
+import removed, {isNotRemoved} from './removed';
+
+const hasSymbol = typeof Symbol !== 'undefined';
+
+const iteratorKey = hasSymbol ? Symbol.iterator : '@@iterator';
+
+const getAllProperties = (object) => Object.keys(object).concat(
+  iteratorKey === '@@iterator' ? [] : Object.getOwnPropertySymbols(object)
+);
 
 const cloneEmptyObject = object =>
   Object.create((object.constructor && object.constructor.prototype) || null);
@@ -19,6 +27,9 @@ const isInteger = value => {
     return (0 | x) === x;
   }
 };
+
+const falseFn = function () {return false;};
+const trueFn = function () {return true;};
 
 const eachFlattenedKey = (fn, keys, object) => {
   for (let i = 0; i < keys.length; i++) {
@@ -54,44 +65,6 @@ export const wrap = (source) =>
 export const unwrap = (wrapped) =>
   unwrapMacro(wrapped);
 
-const replaceSliceOfArray = (begin, end, newSlice, source) => {
-  const sliceBegin = normalizeIndex(begin, source.length, 0);
-  const sliceEnd = normalizeIndex(end, source.length, source.length);
-  newSlice = unwrap(newSlice);
-  newSlice = newSlice === undefined ? [] : newSlice;
-  const newArray = [];
-  for (let i = 0; i < sliceBegin; i++) {
-    newArray.push(source[i]);
-  }
-  newSlice = [].concat(newSlice);
-  for (let i = 0; i < newSlice.length; i++) {
-    newArray.push(newSlice[i]);
-  }
-  for (let i = sliceEnd; i < source.length; i++) {
-    newArray.push(source[i]);
-  }
-  return newArray;
-};
-
-const replaceSliceOfObject = (begin, end, newSlice, source) => {
-  const keys = Object.keys(source);
-  const sliceBegin = normalizeIndex(begin, keys.length, 0);
-  const sliceEnd = normalizeIndex(end, keys.length, keys.length);
-  newSlice = newSlice === undefined ? {} : newSlice;
-  if (typeof newSlice !== 'object') {
-    throw new Error('No way to splice a non-object into an object.');
-  }
-  const newObject = {};
-  for (let i = 0; i < sliceBegin; i++) {
-    newObject[keys[i]] = source[keys[i]];
-  }
-  for (let i = sliceEnd; i < keys.length; i++) {
-    newObject[keys[i]] = source[keys[i]];
-  }
-  objectAssign(newObject, newSlice);
-  return newObject;
-};
-
 Wrapper = function (source, type) {
   this['@@qim/wrap'] = true;
   this._type = type;
@@ -99,10 +72,58 @@ Wrapper = function (source, type) {
   this._hasMutated = false;
 };
 
-const PRIMITIVE_TYPE = 0;
-const OBJECT_TYPE = 1;
-const ARRAY_TYPE = 2;
-const STRING_TYPE = 3;
+const NONE_TYPE = 0;
+const PRIMITIVE_TYPE = 1;
+const OBJECT_TYPE = 2;
+const ARRAY_TYPE = 3;
+const STRING_TYPE = 4;
+
+const hasUndefinedSource = (wrapper) => wrapper._source === undefined;
+
+const hasNoneSource = (wrapper) => wrapper._type === NONE_TYPE;
+
+const ObjectIterator = function (source) {
+  this._source = source;
+  this._keys = Object.keys(source);
+  this._index = 0;
+};
+
+ObjectIterator.prototype = {
+  next() {
+    if (this._keys.length > this._index) {
+      const key = this._keys[this._index];
+      this._index++;
+      return {
+        value: [key, this._source[key]],
+        done: false
+      };
+    }
+    return {
+      done: true
+    };
+  }
+};
+
+const IndexedIterator = function (source) {
+  this._source = source;
+  this._index = 0;
+};
+
+IndexedIterator.prototype = {
+  next() {
+    if (this._source.length > this._index) {
+      const value = this._source[this._index];
+      this._index++;
+      return {
+        value,
+        done: false
+      };
+    }
+    return {
+      done: true
+    };
+  }
+};
 
 const baseMethods = {
   type() {
@@ -138,9 +159,7 @@ const baseMethods = {
   appendHole() {
     return this.append();
   },
-  canAppend() {
-    return false;
-  },
+  canAppend: falseFn,
   forEach() {
     throw new Error(getTypeErrorMessage('forEach', ['appendable sequence'], this._source));
   },
@@ -150,13 +169,14 @@ const baseMethods = {
   merge(spec) {
     return wrap(spec);
   },
-  canMerge() {
-    return false;
-  },
+  canMerge: falseFn,
   sliceToValue() {
     throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
   },
   replaceSlice() {
+    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
+  },
+  replacePick() {
     throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
   },
   pickToValue() {
@@ -164,13 +184,20 @@ const baseMethods = {
   },
   cloneEmpty() {
     throw new Error(getTypeErrorMessage('cloneEmpty', ['appendable sequence'], this._source));
-  }
+  },
+  isUndefined() {
+    return this._source === undefined;
+  },
+  isNone: falseFn,
+  [iteratorKey]() {
+    return new ObjectIterator(this._source);
+  },
+  isSequence: falseFn,
+  hasKeys: falseFn
 };
 
 const appendableMethods = {
-  canAppend() {
-    return true;
-  }
+  canAppend: trueFn
 };
 
 const nativeSequenceMethods = {
@@ -185,10 +212,14 @@ const nativeSequenceMethods = {
   },
   count() {
     return this._source.length;
+  },
+  [iteratorKey]() {
+    return new IndexedIterator(this._source);
   }
 };
 
 const sequenceMethods = {
+  isSequence: trueFn,
   reduce(fn, initial) {
     let accum = initial;
     this.forEach((value, key) => {
@@ -222,14 +253,24 @@ const sequenceMethods = {
     }
     return spec;
   },
-  canMerge() {
-    return true;
-  }
+  canMerge: trueFn
 };
 
 const methods = [];
 
 const mix = (...moreMethods) => objectAssign({}, ...moreMethods);
+
+export const $noneKey = '@@qim/$noneKey';
+
+export const isNone = (value) => value && value['@@qim/nav'] === $noneKey;
+
+export const undefinedIfNone = (value) => isNone(value) ? undefined : value;
+
+methods[NONE_TYPE] = mix(baseMethods, {
+  has() {return undefined;},
+  get() {return undefined;},
+  isNone: trueFn
+});
 
 methods[PRIMITIVE_TYPE] = mix(baseMethods, {
   has(key) {
@@ -241,6 +282,7 @@ methods[PRIMITIVE_TYPE] = mix(baseMethods, {
 });
 
 methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
+  hasKeys: trueFn,
   count() {
     return Object.keys(this._source).length;
   },
@@ -307,12 +349,50 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
     }, keys, this._source);
     return picked;
   },
+  // TODO: order keys correctly with object slice
   replaceSlice(begin, end, newSlice) {
-    const newSource = replaceSliceOfObject(begin, end, newSlice, this._source);
-    if (newSource !== this._source) {
+    const source = this._source;
+    const keys = Object.keys(source);
+    const sliceBegin = normalizeIndex(begin, keys.length, 0);
+    const sliceEnd = normalizeIndex(end, keys.length, keys.length);
+    newSlice = unwrap(newSlice);
+    newSlice = newSlice === undefined || isNone(newSlice) ? {} : newSlice;
+    if (typeof newSlice !== 'object') {
+      throw new Error('No way to splice a non-object into an object.');
+    }
+    const newSource = {};
+    for (let i = 0; i < sliceBegin; i++) {
+      newSource[keys[i]] = source[keys[i]];
+    }
+    for (let i = sliceEnd; i < keys.length; i++) {
+      newSource[keys[i]] = source[keys[i]];
+    }
+    objectAssign(newSource, newSlice);
+    if (newSource !== source) {
       this._hasMutated = true;
       this._source = newSource;
     }
+    return this;
+  },
+  replacePick(properties, newPick) {
+    const source = this._source;
+    newPick = wrap(newPick);
+    newPick = hasUndefinedSource(newPick) || hasNoneSource(newPick) ? wrap({}) : newPick;
+    if (!newPick.isSequence()) {
+      throw new Error('Pick can only be replaced with a sequence.');
+    }
+    const newObject = {...source};
+    eachFlattenedKey((key) => {
+      if (newPick.has(key)) {
+        newObject[key] = newPick.get(key);
+      } else {
+        delete newObject[key];
+      }
+    }, properties, source);
+    newPick.forEach((value, key) => {
+      newObject[key] = value;
+    });
+    this._source = newObject;
     return this;
   },
   cloneEmpty() {
@@ -390,11 +470,52 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     return picked;
   },
   replaceSlice(begin, end, newSlice) {
-    const newSource = replaceSliceOfArray(begin, end, newSlice, this._source);
+    const source = this._source;
+    const sliceBegin = normalizeIndex(begin, source.length, 0);
+    const sliceEnd = normalizeIndex(end, source.length, source.length);
+    newSlice = unwrap(newSlice);
+    newSlice = newSlice === undefined || isNone(newSlice) ? [] : newSlice;
+    const newSource = [];
+    for (let i = 0; i < sliceBegin; i++) {
+      newSource.push(source[i]);
+    }
+    newSlice = [].concat(newSlice);
+    for (let i = 0; i < newSlice.length; i++) {
+      newSource.push(newSlice[i]);
+    }
+    for (let i = sliceEnd; i < source.length; i++) {
+      newSource.push(source[i]);
+    }
     if (newSource !== this._source) {
       this._hasMutated = true;
       this._source = newSource;
     }
+    return this;
+  },
+  replacePick(properties, newPick) {
+    const source = this._source;
+    newPick = wrap(newPick);
+    newPick = hasUndefinedSource(newPick) || hasNoneSource(newPick) ? wrap([]) : newPick;
+    newPick = newPick.isSequence() ? newPick : wrap([newPick.value()]);
+    const newSource = this._source.slice(0);
+    const iter = newPick[iteratorKey]();
+    let curr = iter.next();
+    eachFlattenedKey((key) => {
+      if (curr.done) {
+        newSource[key] = removed;
+      } else {
+        const value = newPick.hasKeys() ? curr.value[1] : curr.value;
+        if (newSource[key] !== value) {
+          newSource[key] = value;
+          curr = iter.next();
+        }
+      }
+    }, properties, source);
+    while (!curr.done) {
+      newSource.push(curr.value);
+      curr = iter.next();
+    }
+    this._source = newSource;
     return this;
   },
   cloneEmpty() {
@@ -481,7 +602,19 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
     }, keys, this._source);
     return picked;
   },
-  // TODO: replaceSlice for strings
+  replaceSlice(begin, end, newSlice) {
+    const source = this._source;
+    const sliceBegin = normalizeIndex(begin, source.length, 0);
+    const sliceEnd = normalizeIndex(end, source.length, source.length);
+    newSlice = unwrap(newSlice);
+    newSlice = newSlice === undefined || isNone(newSlice) ? '' : newSlice;
+    this._source = source.substr(0, sliceBegin) + newSlice + source.substr(sliceEnd);
+    return this;
+  },
+  replacePick(begin, end, newPick) {
+    this._source = wrap(this._source.split('')).replacePick(begin, end, newPick).value().join('');
+    return this;
+  },
   cloneEmpty() {
     const empty = new Wrapper('', STRING_TYPE);
     empty._hasMutated = true;
@@ -502,7 +635,6 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
   }
 }, {
   merge: baseMethods.merge,
-  mergeDeep: baseMethods.mergeDeep,
   canMerge: baseMethods.canMerge
 });
 
@@ -527,7 +659,7 @@ const setMethod = (wrapper, methodKey) => {
 };
 
 Wrapper.prototype = mix(
-  Object.keys(baseMethods).reduce((base, name) => {
+  getAllProperties(baseMethods).reduce((base, name) => {
     base[name] = function (a, b, c) {
       setMethod(this, name);
       return this[name](a, b, c);
@@ -545,6 +677,13 @@ Wrapper.prototype = mix(
   }
 );
 
+export const $none = wrap(undefined);
+
+$none._type = NONE_TYPE;
+$none._source = $none;
+
+$none['@@qim/nav'] = $noneKey;
+
 const prepareDelegateSource = (wrapper) => {
   if (wrapper._isPrepared) {
     return false;
@@ -555,7 +694,7 @@ const prepareDelegateSource = (wrapper) => {
 };
 
 const delegateMethods = mix(
-  Object.keys(baseMethods).reduce((base, name) => {
+  getAllProperties(baseMethods).reduce((base, name) => {
     base[name] = function (a, b, c) {
       this.value();
       setMethod(this, name);
@@ -712,35 +851,6 @@ const setProperty_String = (key, value, source) => {
 
 const setProperty_Primitive = (key, value, source) => source;
 
-export const setProperty = (key, value, source) => {
-  if (typeof source === 'object') {
-    if (isWrappedUnsafe(source)) {
-      return source.set(key, value);
-    }
-    if (source[key] === value && key in source) {
-      return source;
-    }
-    if (Array.isArray(source)) {
-      source = source.slice(0);
-    } else {
-      source = objectAssign({}, source);
-    }
-    source[key] = value;
-    return source;
-  }
-  if (typeof source === 'string') {
-    if (isInteger(key)) {
-      if (source.charAt(key) !== '') {
-        return source;
-      }
-      if (typeof value === 'string') {
-        return source.substr(0, key) + value + source.substr(key + 1);
-      }
-    }
-  }
-  return source;
-};
-
 const deleteProperty_Wrapper = (key, source) => source.delete(key);
 
 const deleteProperty_Object = (key, source) => {
@@ -766,133 +876,6 @@ const deleteProperty_Array = (key, source) => {
 const deleteProperty_String = (key, source) => setProperty_String(key, '', source);
 
 const deleteProperty_Primitive = (key, value, source) => source;
-
-export const deleteProperty = (key, source) => {
-  if (typeof source === 'object') {
-    if (isWrappedUnsafe(source)) {
-      return source.delete(key);
-    }
-    if (Array.isArray(source)) {
-      if (!(key in source)) {
-        return source;
-      }
-      source = source.slice(0);
-      // Could have a silly edge here where nav was a property and not an
-      // index, which means it disappears. If it's still here, that means
-      // it's an index.
-      if (key in source) {
-        source.splice(key, 1);
-      }
-      return source;
-    }
-    if (!(key in source)) {
-      return source;
-    }
-    source = objectAssign(cloneEmptyObject(source), source);
-    delete source[key];
-    return source;
-  }
-  if (typeof source === 'string') {
-    if (isInteger(key)) {
-      if (source.charAt(key) === '') {
-        return source;
-      }
-      return source.substr(0, key) + source.substr(key + 1);
-    }
-  }
-  return source;
-};
-
-// TODO: isNone
-// TODO: check for empty newSlice
-// TODO: order keys correctly with object slice
-// TODO: null/undefined
-export const replaceSlice = (begin, end, newSlice, source) => {
-  if (typeof source === 'object') {
-    if (isWrappedUnsafe(source)) {
-      return source.replaceSlice(begin, end, newSlice);
-    }
-    if (Array.isArray(source)) {
-      return replaceSliceOfArray(begin, end, newSlice, source);
-    }
-    newSlice = newSlice === undefined ? {} : newSlice;
-    if (typeof newSlice !== 'object') {
-      throw new Error('No way to splice a non-object into an object.');
-    }
-    const keys = Object.keys(source);
-    const sliceBegin = normalizeIndex(begin, keys.length, 0);
-    const sliceEnd = normalizeIndex(end, keys.length, keys.length);
-    const newObject = {};
-    for (let i = 0; i < sliceBegin; i++) {
-      newObject[keys[i]] = source[keys[i]];
-    }
-    for (let i = sliceEnd; i < keys.length; i++) {
-      newObject[keys[i]] = source[keys[i]];
-    }
-    objectAssign(newObject, newSlice);
-    return newObject;
-  }
-  if (typeof source === 'string') {
-    const sliceBegin = normalizeIndex(begin, source.length, 0);
-    const sliceEnd = normalizeIndex(end, source.length, source.length);
-    return source.substr(0, sliceBegin) + newSlice + source.substr(sliceEnd);
-  }
-  throw new Error(getTypeErrorMessage('replaceSlice', ['sequence'], source));
-};
-
-// TODO: isNone
-// TODO: strings
-// TODO: null/undefined
-export const replacePick = (properties, newPick, source) => {
-  if (typeof source === 'object') {
-    if (isWrappedUnsafe(source)) {
-      return source.replacePick(properties, newPick, source);
-    }
-    if (Array.isArray(source)) {
-      newPick = newPick === undefined ? [] : newPick;
-      const newArray = [];
-      return newArray;
-    }
-    newPick = unwrap(newPick);
-    newPick = newPick === undefined ? {} : newPick;
-    const newObject = {...source};
-    eachFlattenedKey((key) => {
-      delete newObject[key];
-    }, properties, source);
-    objectAssign(newObject, newPick);
-    return newObject;
-  }
-  if (typeof source === 'string') {
-    // not implemented
-  }
-  throw new Error(getTypeErrorMessage('replacePick', ['sequence'], source));
-};
-
-// TODO: wrapper
-// TODO: strings
-export const reduceSequence = (eachFn, initialValue, seq) => {
-  let result = initialValue;
-  if (Array.isArray(seq)) {
-    for (let i = 0; i < seq.length; i++) {
-      result = eachFn(result, i);
-      if (isReduced(result)) {
-        return result;
-      }
-    }
-  } else if (seq !== null && typeof seq === 'object') {
-    for (let key in seq) {
-      if (seq.hasOwnProperty(key)) {
-        result = eachFn(result, key);
-        if (isReduced(result)) {
-          return result;
-        }
-      }
-    }
-  } else {
-    throw new Error(getTypeErrorMessage('reduceSequence', ['sequence'], seq));
-  }
-  return result;
-};
 
 const baseSpec = {
   isNil: false

@@ -1,6 +1,5 @@
 import $traverse from './$traverse';
-import {wrap} from './utils/data';
-import {isNone} from './$none';
+import {wrap, isNone} from './utils/data';
 
 const $each = $traverse({
   select: (object, next) => {
