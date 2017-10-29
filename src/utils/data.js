@@ -497,12 +497,14 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     newPick = wrap(newPick);
     newPick = hasUndefinedSource(newPick) || hasNoneSource(newPick) ? wrap([]) : newPick;
     newPick = newPick.isSequence() ? newPick : wrap([newPick.value()]);
-    const newSource = this._source.slice(0);
+    let newSource = this._source.slice(0);
     const iter = newPick[iteratorKey]();
     let curr = iter.next();
+    let hasRemoved = false;
     eachFlattenedKey((key) => {
       if (curr.done) {
         newSource[key] = removed;
+        hasRemoved = true;
       } else {
         const value = newPick.hasKeys() ? curr.value[1] : curr.value;
         if (newSource[key] !== value) {
@@ -514,6 +516,14 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     while (!curr.done) {
       newSource.push(curr.value);
       curr = iter.next();
+    }
+    if (hasRemoved) {
+      newSource = [];
+      newSource.forEach((value) => {
+        if (isNotRemoved(value)) {
+          newSource.push(value);
+        }
+      });
     }
     this._source = newSource;
     return this;
