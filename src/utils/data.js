@@ -435,6 +435,9 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
   setAtIndex(i, value) {
     if (i >= 0) {
       return this.set(i, value);
+    } else if (this._source.length < -i) {
+      this._source = Array(-i - this._source.length).concat(this._source);
+      this._hasMutated = true;
     }
     i = normalizeIndexIfValid(i, this._source.length);
     if (i !== undefined) {
@@ -589,6 +592,8 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
         this._source = this._source + Array(2 + (i - this._source.length)).join(' ');
       }
       return this.set(i, value);
+    } else if (this._source.length < -i) {
+      this._source = Array(1 + (-i - this._source.length)).join(' ') + this._source;
     }
     i = normalizeIndexIfValid(i, this._source.length);
     if (i !== undefined) {
@@ -649,6 +654,9 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
 });
 
 const getType = (source) => {
+  if (source == null) {
+    return PRIMITIVE_TYPE;
+  }
   if (typeof source === 'object') {
     if (typeof source.length === 'number' && Array.isArray(source)) {
       return ARRAY_TYPE;
