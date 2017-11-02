@@ -566,23 +566,27 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
   }
 });
 
+const setProperty_String = (key, value, source) => {
+  if (isNone(key)) {
+    return source;
+  }
+  if (isNone(value)) {
+    value = '';
+  }
+  if (isInteger(key)) {
+    if (source.charAt(key) === '') {
+      return source;
+    }
+    if (typeof value === 'string') {
+      return source.substr(0, key) + value + source.substr(key + 1);
+    }
+  }
+  return source;
+};
+
 methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
   set(key, value) {
-    if (isNone(key)) {
-      return this;
-    }
-    if (isNone(value)) {
-      value = '';
-    }
-    if (isInteger(key)) {
-      const source = this._source;
-      if (source.charAt(key) === '') {
-        return this;
-      }
-      if (typeof value === 'string') {
-        this._source = source.substr(0, key) + value + source.substr(key + 1);
-      }
-    }
+    this._source = setProperty_String(key, value, this._source);
     return this;
   },
   setAtIndex(i, value) {
@@ -852,18 +856,6 @@ const setProperty_Array = (key, value, source) => {
   }
   source = source.slice(0);
   source[key] = value;
-  return source;
-};
-
-const setProperty_String = (key, value, source) => {
-  if (isInteger(key)) {
-    if (source.charAt(key) === '') {
-      return source;
-    }
-    if (typeof value === 'string') {
-      this._source = source.substr(0, key) + value + source.substr(key + 1);
-    }
-  }
   return source;
 };
 
