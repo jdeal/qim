@@ -16,6 +16,8 @@ const selectAtMacro = (t, index, input, expected) => {
   t.deepEqual(result, expected);
 };
 
+selectAtMacro.title = (title, index) => `select $at(${index})`;
+
 test(selectAtMacro, 0, ['a', 'b', 'c'], ['a']);
 test(selectAtMacro, 1, ['a', 'b', 'c'], ['b']);
 test(selectAtMacro, -1, ['a', 'b', 'c'], ['c']);
@@ -47,7 +49,7 @@ const updateAtMacro = (t, index, value, input, expected) => {
   t.deepEqual(result, expected);
 };
 
-updateAtMacro.title = (title, index, value) => `$at(${index}) $set(${util.inspect(value)})`;
+updateAtMacro.title = (title, index, value) => `update $at(${index}) $set(${util.inspect(value)})`;
 
 test(updateAtMacro, 0, 'X', ['a', 'b', 'c'], ['X', 'b', 'c']);
 test(updateAtMacro, 1, 'X', ['a', 'b', 'c'], ['a', 'X', 'c']);

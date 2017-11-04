@@ -163,13 +163,15 @@ const baseMethods = {
   forEach() {
     throw new Error(getTypeErrorMessage('forEach', ['appendable sequence'], this._source));
   },
+  toArray() {
+    throw new Error(getTypeErrorMessage('toArray', ['sequence'], this._source));
+  },
   reduce() {
     throw new Error(getTypeErrorMessage('reduce', ['appendable sequence'], this._source));
   },
   merge(spec) {
     return wrap(spec);
   },
-  canMerge: falseFn,
   sliceToValue() {
     throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
   },
@@ -193,7 +195,8 @@ const baseMethods = {
     return new ObjectIterator(this._source);
   },
   isSequence: falseFn,
-  hasKeys: falseFn
+  hasKeys: falseFn,
+  isList: falseFn
 };
 
 const appendableMethods = {
@@ -234,7 +237,7 @@ const sequenceMethods = {
   merge(spec, isDeep = false) {
     if (spec && typeof spec === 'object') {
       const wrappedSpec = wrap(spec);
-      if (!wrappedSpec.canMerge()) {
+      if (!wrappedSpec.isSequence() || wrappedSpec.type() === STRING_TYPE) {
         return wrappedSpec;
       }
       wrap(spec).forEach((value, key) => {
@@ -253,7 +256,13 @@ const sequenceMethods = {
     }
     return spec;
   },
-  canMerge: trueFn
+  toArray() {
+    const array = [];
+    this.forEach((value) => {
+      array.push(value);
+    });
+    return array;
+  }
 };
 
 const methods = [];
@@ -355,23 +364,25 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
     const keys = Object.keys(source);
     const sliceBegin = normalizeIndex(begin, keys.length, 0);
     const sliceEnd = normalizeIndex(end, keys.length, keys.length);
-    newSlice = unwrap(newSlice);
-    newSlice = newSlice === undefined || isNone(newSlice) ? {} : newSlice;
-    if (typeof newSlice !== 'object') {
-      throw new Error('No way to splice a non-object into an object.');
+    newSlice = wrap(newSlice);
+    if (isNone(newSlice)) {
+      newSlice = wrap({});
+    }
+    if (!newSlice.isSequence()) {
+      throw new Error('Unable to splice a non-sequence into an object.');
     }
     const newSource = {};
     for (let i = 0; i < sliceBegin; i++) {
       newSource[keys[i]] = source[keys[i]];
     }
+    newSlice.forEach((value, key) => {
+      newSource[key] = value;
+    });
     for (let i = sliceEnd; i < keys.length; i++) {
       newSource[keys[i]] = source[keys[i]];
     }
-    objectAssign(newSource, newSlice);
-    if (newSource !== source) {
-      this._hasMutated = true;
-      this._source = newSource;
-    }
+    this._hasMutated = true;
+    this._source = newSource;
     return this;
   },
   replacePick(properties, newPick) {
@@ -414,6 +425,7 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
 });
 
 methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
+  isList: trueFn,
   set(key, value) {
     if (isNone(key)) {
       return this;
@@ -476,15 +488,17 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     const source = this._source;
     const sliceBegin = normalizeIndex(begin, source.length, 0);
     const sliceEnd = normalizeIndex(end, source.length, source.length);
-    newSlice = unwrap(newSlice);
-    newSlice = newSlice === undefined || isNone(newSlice) ? [] : newSlice;
+    newSlice = wrap(newSlice);
+    if (isNone(newSlice)) {
+      newSlice = wrap([]);
+    }
+    newSlice = newSlice.isList() ? newSlice : wrap([newSlice.value()]);
     const newSource = [];
     for (let i = 0; i < sliceBegin; i++) {
       newSource.push(source[i]);
     }
-    newSlice = [].concat(newSlice);
-    for (let i = 0; i < newSlice.length; i++) {
-      newSource.push(newSlice[i]);
+    for (let i = 0; i < newSlice.count(); i++) {
+      newSource.push(newSlice.getAtIndex(i));
     }
     for (let i = sliceEnd; i < source.length; i++) {
       newSource.push(source[i]);
@@ -625,9 +639,14 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
     const source = this._source;
     const sliceBegin = normalizeIndex(begin, source.length, 0);
     const sliceEnd = normalizeIndex(end, source.length, source.length);
-    newSlice = unwrap(newSlice);
-    newSlice = newSlice === undefined || isNone(newSlice) ? '' : newSlice;
-    this._source = source.substr(0, sliceBegin) + newSlice + source.substr(sliceEnd);
+    newSlice = wrap(newSlice);
+    if (isNone(newSlice)) {
+      newSlice = wrap([]);
+    }
+    const newSliceString = newSlice.isList() ?
+      newSlice.toArray().join('') :
+      String(newSlice.value());
+    this._source = source.substr(0, sliceBegin) + newSliceString + source.substr(sliceEnd);
     return this;
   },
   replacePick(begin, end, newPick) {
@@ -653,8 +672,7 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
     return this;
   }
 }, {
-  merge: baseMethods.merge,
-  canMerge: baseMethods.canMerge
+  merge: baseMethods.merge
 });
 
 const getType = (source) => {

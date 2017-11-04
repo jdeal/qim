@@ -17,6 +17,8 @@ const selectApplyMacro = (t, path, input, expected) => {
   t.deepEqual(result, expected);
 };
 
+selectApplyMacro.title = (title, path) => `select $apply(${util.inspect(path)})`;
+
 test(selectApplyMacro, [], 'a', ['A']);
 test(selectApplyMacro, [0], ['a'], ['A']);
 test(selectApplyMacro, ['x'], {x: 'a'}, ['A']);
@@ -30,7 +32,7 @@ const updateApplyMacro = (t, path, input, expected) => {
   t.deepEqual(result, expected);
 };
 
-updateApplyMacro.title = (title, index, value) => `$at(${index}) $set(${util.inspect(value)})`;
+updateApplyMacro.title = (title, path) => `update $apply(${util.inspect(path)})`;
 
 test(updateApplyMacro, [], 'a', 'A');
 test(updateApplyMacro, [0], ['a'], ['A']);
