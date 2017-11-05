@@ -65,4 +65,4 @@ test('object with same key', updateEachKeyMacro, [], () => 'x', {x: 'a', y: 'b',
 test('slice of object', updateEachKeyMacro, [$slice(0, 2)], toUpper, {x: 'a', y: 'b', z: 'c'}, {X: 'a', Y: 'b', z: 'c'});
 
 test('empty string', updateEachKeyMacro, [], toUpper, '', '');
-//test('string with 2 - key', updateEachKeyMacro, [], key => 2 - key, 'abc', 'cba');
+test('string with 2 - key', updateEachKeyMacro, [], key => 2 - key, 'abc', 'cba');

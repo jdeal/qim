@@ -1,3 +1,5 @@
+// TODO: clean up _hasMutated
+
 import objectAssign from 'object-assign';
 
 import {isReduced} from './reduced';
@@ -47,6 +49,20 @@ const eachFlattenedKey = (fn, keys, object) => {
       }
     }
   }
+};
+
+const removeRemovedFromArray = (array) => {
+  const newArray = [];
+  for (let i = 0; i < array.length; i++) {
+    if (i in array) {
+      if (isNotRemoved(array[i])) {
+        newArray.push(array[i]);
+      }
+    } else {
+      newArray.length = newArray.length + 1;
+    }
+  }
+  return newArray;
 };
 
 export const isWrappedUnsafe = (source) =>
@@ -161,13 +177,16 @@ const baseMethods = {
   },
   canAppend: falseFn,
   forEach() {
-    throw new Error(getTypeErrorMessage('forEach', ['appendable sequence'], this._source));
+    throw new Error(getTypeErrorMessage('forEach', ['sequence'], this._source));
   },
   toArray() {
     throw new Error(getTypeErrorMessage('toArray', ['sequence'], this._source));
   },
   reduce() {
-    throw new Error(getTypeErrorMessage('reduce', ['appendable sequence'], this._source));
+    throw new Error(getTypeErrorMessage('reduce', ['sequence'], this._source));
+  },
+  mapPairs() {
+    throw new Error(getTypeErrorMessage('mapPairs', ['sequence'], this._source));
   },
   merge(spec) {
     return wrap(spec);
@@ -185,7 +204,7 @@ const baseMethods = {
     throw new Error(getTypeErrorMessage('pickToValue', ['sequence'], this._source));
   },
   cloneEmpty() {
-    throw new Error(getTypeErrorMessage('cloneEmpty', ['appendable sequence'], this._source));
+    throw new Error(getTypeErrorMessage('cloneEmpty', ['sequence'], this._source));
   },
   isUndefined() {
     return this._source === undefined;
@@ -421,6 +440,32 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
         }
       }
     }
+  },
+  mapPairs(fn) {
+    const newObject = {};
+    let hasMutated = false;
+    this.forEach((value, key) => {
+      const newPair = fn([key, value]);
+      if (!isNone(newPair) && newPair != null) {
+        const [newKey, newValue] = newPair;
+        if (!isNone(newKey) && !isNone(newValue)) {
+          newObject[newKey] = newValue;
+          if (!hasMutated) {
+            if (newKey === key && newValue === value) {
+              return;
+            }
+          }
+        }
+      }
+      hasMutated = true;
+    });
+    if (!hasMutated) {
+      return wrap(this._source);
+    }
+    const wrapped = wrap(newObject);
+    wrapped._hasMutated = true;
+    wrapped._type = OBJECT_TYPE;
+    return wrapped;
   }
 });
 
@@ -535,12 +580,7 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
       curr = iter.next();
     }
     if (hasRemoved) {
-      newSource = [];
-      newSource.forEach((value) => {
-        if (isNotRemoved(value)) {
-          newSource.push(value);
-        }
-      });
+      newSource = removeRemovedFromArray(newSource);
     }
     this._source = newSource;
     return this;
@@ -577,6 +617,46 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     }
     this._source.length = this._source.length + 1;
     return this;
+  },
+  mapPairs(fn) {
+    let newArray = [];
+    let hasMutated = false;
+    let hasRemoved = false;
+    this.forEach((value, key) => {
+      const newPair = fn([key, value]);
+      let hasRemovedPair = true;
+      if (!isNone(newPair) && newPair != null) {
+        const [newKey, newValue] = newPair;
+        if (!isNone(newKey) && !isNone(newValue)) {
+          newArray[newKey] = newValue;
+          if (newKey === key) {
+            hasRemovedPair = false;
+            if (!hasMutated) {
+              if (newValue === value) {
+                return;
+              }
+            }
+          } else if (key in newArray) {
+            hasRemovedPair = false;
+          }
+        }
+      }
+      if (hasRemovedPair) {
+        hasRemoved = true;
+        newArray[key] = removed;
+      }
+      hasMutated = true;
+    });
+    if (!hasMutated) {
+      return wrap(this._source);
+    }
+    if (hasRemoved) {
+      newArray = removeRemovedFromArray(newArray);
+    }
+    const wrapped = wrap(newArray);
+    wrapped._hasMutated = true;
+    wrapped._type = ARRAY_TYPE;
+    return wrapped;
   }
 });
 
@@ -678,6 +758,13 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
   append(value) {
     this._source += value;
     return this;
+  },
+  mapPairs(fn) {
+    const arrayWrapper = wrap(this._source.split(''));
+    arrayWrapper._type = ARRAY_TYPE;
+    const wrapper = wrap(arrayWrapper.mapPairs(fn).value().join(''));
+    wrapper._type = STRING_TYPE;
+    return wrapper;
   }
 }, {
   merge: baseMethods.merge

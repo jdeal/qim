@@ -1,6 +1,5 @@
 import $traverse from './$traverse';
-import {wrap, isNone} from './utils/data';
-import removed, {isNotRemoved} from './utils/removed';
+import {wrap} from './utils/data';
 
 const $eachKey = $traverse({
   select: (object, next) => {
@@ -12,47 +11,9 @@ const $eachKey = $traverse({
   },
   update: (object, next) => {
     const wrapped = wrap(object);
-    const newWrapped = wrapped.cloneEmpty();
-    let hasMutated = false;
-    let hasRemoved = false;
-    const canAppend = wrapped.canAppend();
-    wrapped.forEach((value, oldKey) => {
-      const newKey = next(oldKey);
-      if (!hasMutated) {
-        if (oldKey !== newKey || isNone(newKey)) {
-          hasMutated = true;
-        }
-      }
-      if (canAppend) {
-        if (isNone(newKey)) {
-          hasRemoved = true;
-          newWrapped.set(oldKey, removed);
-        } else {
-          if (newKey !== oldKey) {
-            if (!newWrapped.has(oldKey)) {
-              hasRemoved = true;
-              newWrapped.set(oldKey, removed);
-            }
-          }
-          newWrapped.set(newKey, value);
-        }
-      } else {
-        newWrapped.set(newKey, value);
-      }
-    });
-    if (!hasMutated) {
-      return object;
-    }
-    if (canAppend && hasRemoved) {
-      const newWrappedWithoutRemoved = newWrapped.cloneEmpty();
-      newWrapped.forEach((value) => {
-        if (isNotRemoved(value)) {
-          newWrappedWithoutRemoved.append(value);
-        }
-      });
-      return newWrappedWithoutRemoved.value();
-    }
-    return newWrapped.value();
+    return wrapped.mapPairs((pair) => {
+      return [next(pair[0]), pair[1]];
+    }).value();
   }
 });
 
