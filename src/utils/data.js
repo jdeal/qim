@@ -599,6 +599,14 @@ const setProperty_String = (key, value, source) => {
 };
 
 methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
+  has(key) {
+    if (isInteger(key)) {
+      if (key >= 0) {
+        return this._source.length > key;
+      }
+    }
+    return false;
+  },
   set(key, value) {
     this._source = setProperty_String(key, value, this._source);
     return this;

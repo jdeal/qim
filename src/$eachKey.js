@@ -29,8 +29,10 @@ const $eachKey = $traverse({
           newWrapped.set(oldKey, removed);
         } else {
           if (newKey !== oldKey) {
-            hasRemoved = true;
-            newWrapped.set(oldKey, removed);
+            if (!newWrapped.has(oldKey)) {
+              hasRemoved = true;
+              newWrapped.set(oldKey, removed);
+            }
           }
           newWrapped.set(newKey, value);
         }
