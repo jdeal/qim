@@ -622,13 +622,18 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     let newArray = [];
     let hasMutated = false;
     let hasRemoved = false;
+    const source = this._source;
     this.forEach((value, key) => {
       const newPair = fn([key, value]);
       let hasRemovedPair = true;
       if (!isNone(newPair) && newPair != null) {
         const [newKey, newValue] = newPair;
         if (!isNone(newKey) && !isNone(newValue)) {
-          newArray[newKey] = newValue;
+          if (!(key in source)) {
+            newArray.length = newArray.length + 1;
+          } else {
+            newArray[newKey] = newValue;
+          }
           if (newKey === key) {
             hasRemovedPair = false;
             if (!hasMutated) {

@@ -1,5 +1,5 @@
 import $traverse from './$traverse';
-import {wrap, isNone} from './utils/data';
+import {wrap} from './utils/data';
 
 const $each = $traverse({
   select: (object, next) => {
@@ -11,32 +11,9 @@ const $each = $traverse({
   },
   update: (object, next) => {
     const wrapped = wrap(object);
-    const newWrapped = wrapped.cloneEmpty();
-    let hasMutated = false;
-    const canAppend = wrapped.canAppend();
-    wrapped.forEach((oldValue, key) => {
-      const newValue = next(oldValue);
-      if (!hasMutated) {
-        if (oldValue !== newValue || isNone(newValue)) {
-          hasMutated = true;
-        }
-      }
-      if (canAppend) {
-        if (newValue === undefined && oldValue === undefined) {
-          if (!wrapped.has(key)) {
-            newWrapped.appendHole();
-            return;
-          }
-        }
-        newWrapped.append(newValue);
-      } else {
-        newWrapped.set(key, newValue);
-      }
-    });
-    if (!hasMutated) {
-      return object;
-    }
-    return newWrapped.value();
+    return wrapped.mapPairs((pair) => {
+      return [pair[0], next(pair[1])];
+    }).value();
   }
 });
 
