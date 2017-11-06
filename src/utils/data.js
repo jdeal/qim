@@ -8,7 +8,6 @@ import normalizeIndex, {normalizeIndexIfValid} from './normalizeIndex';
 import unwrapMacro from '../macros/unwrap.macro';
 import isWrappedMacro from '../macros/isWrapped.macro';
 import isWrappedUnsafeMacro from '../macros/isWrappedUnsafe.macro';
-import removed, {isNotRemoved} from './removed';
 
 const hasSymbol = typeof Symbol !== 'undefined';
 
@@ -51,12 +50,19 @@ const eachFlattenedKey = (fn, keys, object) => {
   }
 };
 
+const removed = {};
+const hole = {};
+
 const removeRemovedFromArray = (array) => {
   const newArray = [];
   for (let i = 0; i < array.length; i++) {
     if (i in array) {
-      if (isNotRemoved(array[i])) {
-        newArray.push(array[i]);
+      if (array[i] !== removed) {
+        if (array[i] === hole) {
+          newArray.length = newArray.length + 1;
+        } else {
+          newArray.push(array[i]);
+        }
       }
     } else {
       newArray.length = newArray.length + 1;
@@ -630,7 +636,7 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
         const [newKey, newValue] = newPair;
         if (!isNone(newKey) && !isNone(newValue)) {
           if (!(key in source)) {
-            newArray.length = newArray.length + 1;
+            newArray[newKey] = hole;
           } else {
             newArray[newKey] = newValue;
           }

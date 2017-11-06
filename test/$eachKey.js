@@ -58,6 +58,10 @@ test('array with key + 1', updateEachKeyMacro, [], key => key + 1, ['a', 'b', 'c
 test('array with same key', updateEachKeyMacro, [], () => 0, ['a', 'b', 'c'], ['c']);
 test('array with x key', updateEachKeyMacro, [], () => 'x', ['a', 'b', 'c'], []);
 
+const arrayWithHoles = ['a'];
+arrayWithHoles[2] = 'c';
+test('array with holes with key + 1', updateEachKeyMacro, [], key => key + 1, arrayWithHoles, ['a', undefined, 'c']);
+
 test('empty object', updateEachKeyMacro, [], toUpper, {}, {});
 test('object', updateEachKeyMacro, [], toUpper, {x: 'a', y: 'b', z: 'c'}, {X: 'a', Y: 'b', Z: 'c'});
 test('object with none keys', updateEachKeyMacro, [], key => key === 'y' ? $none : key, {x: 'a', y: 'b', z: 'c'}, {x: 'a', z: 'c'});
