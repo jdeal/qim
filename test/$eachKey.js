@@ -54,6 +54,7 @@ const toUpper = s => s.toUpperCase();
 test('array with 2 - key', updateEachKeyMacro, [], key => 2 - key, ['a', 'b', 'c'], ['c', 'b', 'a']);
 test('array with 3 - key', updateEachKeyMacro, [], key => 3 - key, ['a', 'b', 'c'], ['c', 'b', 'a']);
 test('array with none key', updateEachKeyMacro, [], key => key === 1 ? $none : key, ['a', 'b', 'c'], ['a', 'c']);
+test('array with undefined key', updateEachKeyMacro, [], key => key === 1 ? undefined : key, ['a', 'b', 'c'], ['a', 'c']);
 test('array with key + 1', updateEachKeyMacro, [], key => key + 1, ['a', 'b', 'c'], ['a', 'b', 'c']);
 test('array with same key', updateEachKeyMacro, [], () => 0, ['a', 'b', 'c'], ['c']);
 test('array with x key', updateEachKeyMacro, [], () => 'x', ['a', 'b', 'c'], []);
@@ -64,7 +65,8 @@ test('array with holes with key + 1', updateEachKeyMacro, [], key => key + 1, ar
 
 test('empty object', updateEachKeyMacro, [], toUpper, {}, {});
 test('object', updateEachKeyMacro, [], toUpper, {x: 'a', y: 'b', z: 'c'}, {X: 'a', Y: 'b', Z: 'c'});
-test('object with none keys', updateEachKeyMacro, [], key => key === 'y' ? $none : key, {x: 'a', y: 'b', z: 'c'}, {x: 'a', z: 'c'});
+test('object with none key', updateEachKeyMacro, [], key => key === 'y' ? $none : key, {x: 'a', y: 'b', z: 'c'}, {x: 'a', z: 'c'});
+test('object with undefined key', updateEachKeyMacro, [], key => key === 'y' ? undefined : key, {x: 'a', y: 'b', z: 'c'}, {x: 'a', undefined: 'b', z: 'c'});
 test('object with same key', updateEachKeyMacro, [], () => 'x', {x: 'a', y: 'b', z: 'c'}, {x: 'c'});
 test('slice of object', updateEachKeyMacro, [$slice(0, 2)], toUpper, {x: 'a', y: 'b', z: 'c'}, {X: 'a', Y: 'b', z: 'c'});
 
