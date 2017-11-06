@@ -70,3 +70,8 @@ test('slice of object', updateEachKeyMacro, [$slice(0, 2)], toUpper, {x: 'a', y:
 
 test('empty string', updateEachKeyMacro, [], toUpper, '', '');
 test('string with 2 - key', updateEachKeyMacro, [], key => 2 - key, 'abc', 'cba');
+test('string with 3 - key', updateEachKeyMacro, [], key => 3 - key, 'abc', 'cba');
+test('string with none key', updateEachKeyMacro, [], key => key === 1 ? $none : key, 'abc', 'ac');
+test('string with key + 1', updateEachKeyMacro, [], key => key + 1, 'abc', 'abc');
+test('string with same key', updateEachKeyMacro, [], () => 0, 'abc', 'c');
+test('string with x key', updateEachKeyMacro, [], () => 'x', 'abc', '');
