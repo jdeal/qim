@@ -3,6 +3,8 @@ import util from 'util';
 
 import 'babel-core/register';
 
+import {valueToString} from './_TestUtils';
+
 import {
   select,
   update,
@@ -37,7 +39,7 @@ const updateFirstMacro = (t, firstValue, input, expected) => {
   t.deepEqual(result, expected);
 };
 
-updateFirstMacro.title = (title, firstValue, input) => `update $first of ${util.inspect(input)} with ${util.inspect(firstValue)}`;
+updateFirstMacro.title = (title, firstValue, input) => `update $first set to ${valueToString(firstValue)} for ${util.inspect(input)}`;
 
 test(updateFirstMacro, 'X', ['a', 'b', 'c'], ['X', 'b', 'c']);
 test(updateFirstMacro, $none, ['a', 'b', 'c'], ['b', 'c']);
