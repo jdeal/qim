@@ -7,7 +7,6 @@ import {
   $each,
   $eachKey,
   $eachPair,
-  $pick,
   $nav,
   $apply
 } from 'qim/src';
@@ -90,16 +89,6 @@ test('select pairs', t => {
   t.deepEqual(
     select([$eachPair, 1], {x: 1, y: 2}),
     [1, 2]
-  );
-});
-
-test('$pick', t => {
-  t.deepEqual(
-    select(
-      [$pick('joe', 'mary'), $each, 'name'],
-      {joe: {name: 'Joe'}, mary: {name: 'Mary'}, bob: {name: 'Bob'}}
-    ),
-    ['Joe', 'Mary']
   );
 });
 

@@ -12,7 +12,6 @@ import {
   $apply,
   $none,
   $slice,
-  $pick,
   $nav,
   $end
 } from 'qim/src';
@@ -253,27 +252,6 @@ test('replace slice with dynamic', t => {
   t.deepEqual(
     update([$slice(0, 2), $each, $apply(toUpperCase)], ['a', 'b', 'c', 'd']),
     ['A', 'B', 'c', 'd']
-  );
-});
-
-test('replace pick', t => {
-  t.deepEqual(
-    update([$pick('x', 'y'), $each, $apply(increment)], {x: 1, y: 1, z: 1}),
-    {x: 2, y: 2, z: 1}
-  );
-});
-
-test('replace pick with dynamic', t => {
-  t.deepEqual(
-    update([$pick('x', 'y'), $set({a: 1})], {x: 1, y: 1, z: 1}),
-    {a: 1, z: 1}
-  );
-});
-
-test('apply pick', t => {
-  t.deepEqual(
-    update([$pick(['x', 'y']), $each, $apply(val => val + 1)], {x: 1, y: 1, z: 1}),
-    {x: 2, y: 2, z: 1}
   );
 });
 
