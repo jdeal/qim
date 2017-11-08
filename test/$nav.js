@@ -7,6 +7,7 @@ import {
   $eachPair,
   $apply,
   $nav,
+  $set,
   select,
   update,
   has
@@ -38,5 +39,38 @@ test('parameterized path navigator', t => {
       {a: 1, aa: 2, b: 3, bb: 4}
     ),
     {a: 10, aa: 20, b: 3, bb: 4}
+  );
+});
+
+test('$nav', t => {
+  t.deepEqual(
+    update(
+      [$nav('x'), 'y', $set(2)],
+      {x: {y: 1}}
+    ),
+    {x: {y: 2}}
+  );
+
+  t.deepEqual(
+    update(
+      [$nav(['x', 'y']), 'z', $set(2)],
+      {x: {y: {z: 1}}}
+    ),
+    {x: {y: {z: 2}}}
+  );
+
+  t.deepEqual(
+    update(
+      [
+        $each, $nav(
+          obj => ['isEqual', $set(obj.x === obj.y)]
+        )
+      ],
+      [{x: 1, y: 1}, {x: 1, y: 2}]
+    ),
+    [
+      {x: 1, y: 1, isEqual: true},
+      {x: 1, y: 2, isEqual: false}
+    ]
   );
 });

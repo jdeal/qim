@@ -115,3 +115,18 @@ test('multi $nav', t => {
     [10, 20]
   );
 });
+
+test('stop with undefined', t => {
+  t.deepEqual(
+    select(['x', undefined, 'y'], {x: {y: 1}}),
+    []
+  );
+
+  t.deepEqual(
+    select([
+      ['a', undefined, 'x'],
+      ['b', 'x']
+    ], {a: {x: 'ax'}, b: {x: 'bx'}}),
+    ['bx']
+  );
+});

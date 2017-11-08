@@ -319,3 +319,18 @@ test('multi $nav', t => {
     {x: 10, y: 20}
   );
 });
+
+test('stop with undefined', t => {
+  t.deepEqual(
+    update(['x', undefined, 'y', $apply(value => value + 1)], {x: {y: 1}}),
+    {x: {y: 1}}
+  );
+
+  t.deepEqual(
+    update([
+      ['a', undefined, 'x', $apply(s => s.toUpperCase())],
+      ['b', 'x', $apply(s => s.toUpperCase())]
+    ], {a: {x: 'ax'}, b: {x: 'bx'}}),
+    {a: {x: 'ax'}, b: {x: 'BX'}}
+  );
+});
