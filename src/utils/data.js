@@ -51,18 +51,13 @@ const eachFlattenedKey = (fn, keys, object) => {
 };
 
 const removed = {};
-const hole = {};
 
 const removeRemovedFromArray = (array) => {
   const newArray = [];
   for (let i = 0; i < array.length; i++) {
     if (i in array) {
       if (array[i] !== removed) {
-        if (array[i] === hole) {
-          newArray.length = newArray.length + 1;
-        } else {
-          newArray.push(array[i]);
-        }
+        newArray.push(array[i]);
       }
     } else {
       newArray.length = newArray.length + 1;
@@ -164,10 +159,10 @@ const baseMethods = {
     return this;
   },
   getAtIndex() {
-    return undefined;
+    throw new Error(getTypeErrorMessage('getAtIndex', ['sequence'], this._source));
   },
   setAtIndex() {
-    return this;
+    throw new Error(getTypeErrorMessage('setAtIndex', ['sequence'], this._source));
   },
   count() {
     throw new Error(getTypeErrorMessage('count', ['sequence'], this._source));
@@ -177,9 +172,6 @@ const baseMethods = {
   },
   append() {
     throw new Error(getTypeErrorMessage('append', ['appendable sequence'], this._source));
-  },
-  appendHole() {
-    return this.append();
   },
   canAppend: falseFn,
   forEach() {
@@ -616,18 +608,11 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
     this._source.push(value);
     return this;
   },
-  appendHole() {
-    if (!this._hasMutated) {
-      this._source = this._source.slice(0);
-      this._hasMutated = true;
-    }
-    this._source.length = this._source.length + 1;
-    return this;
-  },
   mapPairs(fn) {
     let newArray = [];
     let hasMutated = false;
     let hasRemoved = false;
+    let holes = null;
     const source = this._source;
     this.forEach((value, key) => {
       const newPair = fn([key, value]);
@@ -636,7 +621,11 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
         const [newKey, newValue] = newPair;
         if (!isNone(newKey) && !isNone(newValue)) {
           if (!(key in source)) {
-            newArray[newKey] = hole;
+            newArray.length = newArray.length + 1;
+            if (!holes) {
+              holes = {};
+            }
+            holes[newKey] = true;
           } else {
             newArray[newKey] = newValue;
           }
@@ -647,7 +636,7 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
                 return;
               }
             }
-          } else if (key in newArray) {
+          } else if (key in newArray || (holes && key in holes)) {
             hasRemovedPair = false;
           }
         }
@@ -682,9 +671,7 @@ const setProperty_String = (key, value, source) => {
     if (source.charAt(key) === '') {
       return source;
     }
-    if (typeof value === 'string') {
-      return source.substr(0, key) + value + source.substr(key + 1);
-    }
+    return source.substr(0, key) + String(value) + source.substr(key + 1);
   }
   return source;
 };

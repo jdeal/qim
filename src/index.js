@@ -41,3 +41,4 @@ export {default as $traverse} from './$traverse';
 
 // Utilities
 export {isReduced as isReduced} from './utils/reduced';
+export {isNone as isNone} from './utils/data';

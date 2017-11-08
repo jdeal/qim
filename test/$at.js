@@ -1,7 +1,8 @@
 import test from 'ava';
-import util from 'util';
 
 import 'babel-core/register';
+
+import {getType, valueToString} from './_TestUtils';
 
 import {
   select,
@@ -12,11 +13,15 @@ import {
 } from 'qim/src';
 
 const selectAtMacro = (t, index, input, expected) => {
+  if (expected instanceof Error) {
+    t.throws(() => select([$at(index)], input));
+    return;
+  }
   const result = select([$at(index)], input);
   t.deepEqual(result, expected);
 };
 
-selectAtMacro.title = (title, index) => `select $at(${index})`;
+selectAtMacro.title = (title, index, input) => `select at ${index} from ${getType(input)}`;
 
 test(selectAtMacro, 0, ['a', 'b', 'c'], ['a']);
 test(selectAtMacro, 1, ['a', 'b', 'c'], ['b']);
@@ -39,17 +44,21 @@ test(selectAtMacro, -2, 'abc', ['b']);
 test(selectAtMacro, 3, 'abc', [undefined]);
 test(selectAtMacro, -4, 'abc', [undefined]);
 
-test(selectAtMacro, 0, undefined, [undefined]);
-test(selectAtMacro, 0, null, [undefined]);
-test(selectAtMacro, 0, 0, [undefined]);
-test(selectAtMacro, 0, true, [undefined]);
+test(selectAtMacro, 0, undefined, new Error());
+test(selectAtMacro, 0, null, new Error());
+test(selectAtMacro, 0, 0, new Error());
+test(selectAtMacro, 0, true, new Error());
 
 const updateAtMacro = (t, index, value, input, expected) => {
+  if (expected instanceof Error) {
+    t.throws(() => select([$at(index)], input));
+    return;
+  }
   const result = update([$at(index), $set(value)], input);
   t.deepEqual(result, expected);
 };
 
-updateAtMacro.title = (title, index, value) => `update $at(${index}) $set(${util.inspect(value)})`;
+updateAtMacro.title = (title, index, value, input) => `update at ${index} set to ${valueToString(value)} for ${getType(input)}`;
 
 test(updateAtMacro, 0, 'X', ['a', 'b', 'c'], ['X', 'b', 'c']);
 test(updateAtMacro, 1, 'X', ['a', 'b', 'c'], ['a', 'X', 'c']);
@@ -94,7 +103,7 @@ test(updateAtMacro, -2, $none, 'abc', 'ac');
 test(updateAtMacro, 3, $none, 'abc', 'abc');
 test(updateAtMacro, -4, $none, 'abc', 'abc');
 
-test(updateAtMacro, 0, 'X', undefined, undefined);
-test(updateAtMacro, 0, 'X', null, null);
-test(updateAtMacro, 0, 'X', 0, 0);
-test(updateAtMacro, 0, 'X', true, true);
+test(updateAtMacro, 0, 'X', undefined, new Error());
+test(updateAtMacro, 0, 'X', null, new Error());
+test(updateAtMacro, 0, 'X', 0, new Error());
+test(updateAtMacro, 0, 'X', true, new Error());
