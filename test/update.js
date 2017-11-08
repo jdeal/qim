@@ -193,13 +193,6 @@ test('remove non-existent key', t => {
   );
 });
 
-test('remove non-existent path', t => {
-  t.deepEqual(
-    update(['x', 'y', $none], {}),
-    {}
-  );
-});
-
 test('remove item', t => {
   t.deepEqual(
     update([0, $none], ['a', 'b']),
