@@ -1,5 +1,4 @@
 import test from 'ava';
-import util from 'util';
 
 import 'babel-core/register';
 
@@ -12,32 +11,76 @@ import {
 
 const toUpperCase = s => s.toUpperCase();
 
-const selectApplyMacro = (t, path, input, expected) => {
-  const result = select([...path, $apply(toUpperCase)], input);
-  t.deepEqual(result, expected);
-};
+const selectApply = (path, input) => select([...path, $apply(toUpperCase)], input);
 
-selectApplyMacro.title = (title, path) => `select $apply(${util.inspect(path)})`;
+test('select from string', t => t.deepEqual(
+  selectApply([], 'a'),
+  ['A']
+));
 
-test(selectApplyMacro, [], 'a', ['A']);
-test(selectApplyMacro, [0], ['a'], ['A']);
-test(selectApplyMacro, ['x'], {x: 'a'}, ['A']);
-test(selectApplyMacro, [0], 'abc', ['A']);
-test(selectApplyMacro, [$each], ['a', 'b', 'c'], ['A', 'B', 'C']);
-test(selectApplyMacro, [$each], {x: 'a', y: 'b'}, ['A', 'B']);
-test(selectApplyMacro, [$each], 'abc', ['A', 'B', 'C']);
+test('select from index of array', t => t.deepEqual(
+  selectApply([0], ['a']),
+  ['A']
+));
 
-const updateApplyMacro = (t, path, input, expected) => {
-  const result = update([...path, $apply(toUpperCase)], input);
-  t.deepEqual(result, expected);
-};
+test('select from property of object', t => t.deepEqual(
+  selectApply(['x'], {x: 'a'}),
+  ['A']
+));
 
-updateApplyMacro.title = (title, path) => `update $apply(${util.inspect(path)})`;
+test('select from index of string', t => t.deepEqual(
+  selectApply([0], 'abc'),
+  ['A']
+));
 
-test(updateApplyMacro, [], 'a', 'A');
-test(updateApplyMacro, [0], ['a'], ['A']);
-test(updateApplyMacro, ['x'], {x: 'a'}, {x: 'A'});
-test(updateApplyMacro, [0], 'abc', 'Abc');
-test(updateApplyMacro, [$each], ['a', 'b', 'c'], ['A', 'B', 'C']);
-test(updateApplyMacro, [$each], {x: 'a', y: 'b'}, {x: 'A', y: 'B'});
-test(updateApplyMacro, [$each], 'abc', 'ABC');
+test('select from each of array', t => t.deepEqual(
+  selectApply([$each], ['a', 'b', 'c']),
+  ['A', 'B', 'C']
+));
+
+test('select from each of object', t => t.deepEqual(
+  selectApply([$each], {x: 'a', y: 'b'}),
+  ['A', 'B']
+));
+
+test('select from each of string', t => t.deepEqual(
+  selectApply([$each], 'abc'),
+  ['A', 'B', 'C']
+));
+
+const updateApply = (path, input) => update([...path, $apply(toUpperCase)], input);
+
+test('update of string', t => t.deepEqual(
+  updateApply([], 'a'),
+  'A'
+));
+
+test('update index of array', t => t.deepEqual(
+  updateApply([0], ['a']),
+  ['A']
+));
+
+test('update property of object', t => t.deepEqual(
+  updateApply(['x'], {x: 'a'}),
+  {x: 'A'}
+));
+
+test('update index of string', t => t.deepEqual(
+  updateApply([0], 'abc'),
+  'Abc'
+));
+
+test('update each of array', t => t.deepEqual(
+  updateApply([$each], ['a', 'b', 'c']),
+  ['A', 'B', 'C']
+));
+
+test('update each of object', t => t.deepEqual(
+  updateApply([$each], {x: 'a', y: 'b'}),
+  {x: 'A', y: 'B'}
+));
+
+test('update each of string', t => t.deepEqual(
+  updateApply([$each], 'abc'),
+  'ABC'
+));
