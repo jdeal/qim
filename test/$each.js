@@ -12,54 +12,75 @@ import {
 
 const toUpperCase = s => s.toUpperCase();
 
-const selectEachMacro = (t, path, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => select([...path, $each], input));
-    return;
-  }
-  const result = select([...path, $each], input);
-  t.deepEqual(result, expected);
-};
+const selectEach = (path, input) => select([...path, $each], input);
 
-selectEachMacro.title = (title) => `select $each of ${title}`;
+test('select empty array', t => t.deepEqual(selectEach([], []), []));
+test(
+  'select array',
+  t => t.deepEqual(selectEach([], ['a', 'b', 'c']), ['a', 'b', 'c'])
+);
+test(
+  'select slice of array',
+  t => t.deepEqual(selectEach([$slice(0, 2)], ['a', 'b', 'c']), ['a', 'b'])
+);
 
-test('empty array', selectEachMacro, [], [], []);
-test('array', selectEachMacro, [], ['a', 'b', 'c'], ['a', 'b', 'c']);
-test('slice of array', selectEachMacro, [$slice(0, 2)], ['a', 'b', 'c'], ['a', 'b']);
+test('select empty object', t => t.deepEqual(selectEach([], {}), []));
+test(
+  'select object',
+  t => t.deepEqual(selectEach([], {x: 'a', y: 'b', z: 'c'}), ['a', 'b', 'c'])
+);
+test(
+  'select slice of object',
+  t => t.deepEqual(selectEach([$slice(0, 2)], {x: 'a', y: 'b', z: 'c'}), ['a', 'b'])
+);
 
-test('empty object', selectEachMacro, [], {}, []);
-test('object', selectEachMacro, [], {x: 'a', y: 'b', z: 'c'}, ['a', 'b', 'c']);
-test('slice of object', selectEachMacro, [$slice(0, 2)], {x: 'a', y: 'b', z: 'c'}, ['a', 'b']);
+test('select empty string', t => t.deepEqual(selectEach([], ''), []));
+test(
+  'select string',
+  t => t.deepEqual(selectEach([], 'abc'), ['a', 'b', 'c'])
+);
+test(
+  'select slice of string',
+  t => t.deepEqual(selectEach([$slice(0, 2)], 'abc'), ['a', 'b'])
+);
 
-test('empty string', selectEachMacro, [], '', []);
-test('string', selectEachMacro, [], 'abc', ['a', 'b', 'c']);
-test('slice of string', selectEachMacro, [$slice(0, 2)], 'abc', ['a', 'b']);
+test('select number', t => t.throws(() => selectEach([], 5)));
+test(
+  'select undefined',
+  t => t.throws(() => selectEach([], undefined))
+);
 
-test('number', selectEachMacro, [], 5, new Error());
-test('undefined', selectEachMacro, [], undefined, new Error());
+const updateEach = (path, input) => update([...path, $each, $apply(toUpperCase)], input);
 
-const updateEachMacro = (t, path, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => update([...path, $each, $apply(toUpperCase)], input));
-    return;
-  }
-  const result = update([...path, $each, $apply(toUpperCase)], input);
-  t.deepEqual(result, expected);
-};
+test('update empty array', t => t.deepEqual(updateEach([], []), []));
+test(
+  'update array',
+  t => t.deepEqual(updateEach([], ['a', 'b', 'c']), ['A', 'B', 'C'])
+);
+test(
+  'update slice of array',
+  t => t.deepEqual(updateEach([$slice(0, 2)], ['a', 'b', 'c']), ['A', 'B', 'c'])
+);
 
-updateEachMacro.title = (title) => `update $each of ${title}`;
+test('update empty object', t => t.deepEqual(updateEach([], {}), {}));
+test(
+  'update object',
+  t => t.deepEqual(updateEach([], {x: 'a', y: 'b', z: 'c'}), {x: 'A', y: 'B', z: 'C'})
+);
+test('update slice of object', t => t.deepEqual(
+  updateEach([$slice(0, 2)], {x: 'a', y: 'b', z: 'c'}),
+  {x: 'A', y: 'B', z: 'c'}
+));
 
-test('empty array', updateEachMacro, [], [], []);
-test('array', updateEachMacro, [], ['a', 'b', 'c'], ['A', 'B', 'C']);
-test('slice of array', updateEachMacro, [$slice(0, 2)], ['a', 'b', 'c'], ['A', 'B', 'c']);
+test('update empty string', t => t.deepEqual(updateEach([], ''), ''));
+test('update string', t => t.deepEqual(updateEach([], 'abc'), 'ABC'));
+test(
+  'update slice of string',
+  t => t.deepEqual(updateEach([$slice(0, 2)], 'abc'), 'ABc')
+);
 
-test('empty object', updateEachMacro, [], {}, {});
-test('object', updateEachMacro, [], {x: 'a', y: 'b', z: 'c'}, {x: 'A', y: 'B', z: 'C'});
-test('slice of object', updateEachMacro, [$slice(0, 2)], {x: 'a', y: 'b', z: 'c'}, {x: 'A', y: 'B', z: 'c'});
-
-test('empty string', updateEachMacro, [], '', '');
-test('string', updateEachMacro, [], 'abc', 'ABC');
-test('slice of string', updateEachMacro, [$slice(0, 2)], 'abc', 'ABc');
-
-test('number', updateEachMacro, [], 5, new Error());
-test('undefined', updateEachMacro, [], undefined, new Error());
+test('update number', t => t.throws(() => updateEach([], 5)));
+test(
+  'update undefined',
+  t => t.throws(() => updateEach([], undefined))
+);
