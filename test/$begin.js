@@ -1,67 +1,116 @@
 import test from 'ava';
-import util from 'util';
 
 import 'babel-core/register';
 
-import {
-  select,
-  update,
-  $begin,
-  $set,
-  $none,
-} from 'qim/src';
+import { select, update, $begin, $set, $none } from 'qim/src';
 
-const selectBeginMacro = (t, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => select([$begin], input));
-    return;
-  }
-  const result = select([$begin], input);
-  t.deepEqual(result, expected);
-};
+const selectBegin = input => select([$begin], input);
 
-selectBeginMacro.title = (title, input) => `select $begin of ${util.inspect(input)}`;
+test('select begin of array', t =>
+  t.deepEqual(selectBegin(['a', 'b', 'c']), [[]]));
 
-test(selectBeginMacro, ['a', 'b', 'c'], [[]]);
-test(selectBeginMacro, {a: 1, b: 2, c: 3}, [{}]);
-test(selectBeginMacro, 'abc', ['']);
-test(selectBeginMacro, 5, new Error());
-test(selectBeginMacro, undefined, new Error());
+test('select begin of object', t =>
+  t.deepEqual(selectBegin({ a: 1, b: 2, c: 3 }), [{}]));
 
-const updateBeginMacro = (t, beginArray, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => update([$begin, $set(beginArray)], input));
-    return;
-  }
-  const result = update([$begin, $set(beginArray)], input);
-  t.deepEqual(result, expected);
-};
+test('select begin of string', t => t.deepEqual(selectBegin('abc'), ['']));
 
-updateBeginMacro.title = (title, beginArray, input) => `update $begin of ${util.inspect(input)} with ${util.inspect(beginArray)}`;
+test('select begin of number', t => t.throws(() => selectBegin(5)));
 
-test(updateBeginMacro, 'X', ['a', 'b', 'c'], ['X', 'a', 'b', 'c']);
-test(updateBeginMacro, ['X'], ['a', 'b', 'c'], ['X', 'a', 'b', 'c']);
-test(updateBeginMacro, [], ['a', 'b', 'c'], ['a', 'b', 'c']);
-test(updateBeginMacro, $none, ['a', 'b', 'c'], ['a', 'b', 'c']);
-test(updateBeginMacro, {x: 1}, ['a', 'b', 'c'], [{x: 1}, 'a', 'b', 'c']);
-test(updateBeginMacro, undefined, ['a', 'b', 'c'], [undefined, 'a', 'b', 'c']);
+test('select begin of undefined', t => t.throws(() => selectBegin(undefined)));
 
-test(updateBeginMacro, {x: 10}, {a: 1, b: 2, c: 3}, {x: 10, a: 1, b: 2, c: 3});
-test(updateBeginMacro, {}, {a: 1, b: 2, c: 3}, {a: 1, b: 2, c: 3});
-test(updateBeginMacro, $none, {a: 1, b: 2, c: 3}, {a: 1, b: 2, c: 3});
-test(updateBeginMacro, [10], {a: 1, b: 2, c: 3}, {0: 10, a: 1, b: 2, c: 3});
-test(updateBeginMacro, 'x', {a: 1, b: 2, c: 3}, {0: 'x', a: 1, b: 2, c: 3});
-test(updateBeginMacro, undefined, {a: 1, b: 2, c: 3}, new Error());
-test(updateBeginMacro, 1, {a: 1, b: 2, c: 3}, new Error());
+const updateBegin = (beginArray, input) =>
+  update([$begin, $set(beginArray)], input);
 
-test(updateBeginMacro, 'X', 'abc', 'Xabc');
-test(updateBeginMacro, ['X'], 'abc', 'Xabc');
-test(updateBeginMacro, '', 'abc', 'abc');
-test(updateBeginMacro, [], 'abc', 'abc');
-test(updateBeginMacro, $none, 'abc', 'abc');
-test(updateBeginMacro, 5, 'abc', '5abc');
-test(updateBeginMacro, undefined, 'abc', 'undefinedabc');
+test('update begin of array with string', t =>
+  t.deepEqual(updateBegin('X', ['a', 'b', 'c']), ['X', 'a', 'b', 'c']));
 
-test(updateBeginMacro, ['X'], 0, new Error());
-test(updateBeginMacro, ['X'], true, new Error());
-test(updateBeginMacro, ['X'], undefined, new Error());
+test('update begin of array with array', t =>
+  t.deepEqual(updateBegin(['X'], ['a', 'b', 'c']), ['X', 'a', 'b', 'c']));
+
+test('update begin of array with empty', t =>
+  t.deepEqual(updateBegin([], ['a', 'b', 'c']), ['a', 'b', 'c']));
+
+test('update begin of array with $none', t =>
+  t.deepEqual(updateBegin($none, ['a', 'b', 'c']), ['a', 'b', 'c']));
+
+test('update begin of object with object', t =>
+  t.deepEqual(updateBegin({ x: 1 }, ['a', 'b', 'c']), [
+    { x: 1 },
+    'a',
+    'b',
+    'c'
+  ]));
+
+test('update begin of array with undefined', t =>
+  t.deepEqual(updateBegin(undefined, ['a', 'b', 'c']), [
+    undefined,
+    'a',
+    'b',
+    'c'
+  ]));
+
+test('update begin of object with object', t =>
+  t.deepEqual(updateBegin({ x: 10 }, { a: 1, b: 2, c: 3 }), {
+    x: 10,
+    a: 1,
+    b: 2,
+    c: 3
+  }));
+
+test('update begin of object with empty object', t =>
+  t.deepEqual(updateBegin({}, { a: 1, b: 2, c: 3 }), { a: 1, b: 2, c: 3 }));
+
+test('update begin of object with $none', t =>
+  t.deepEqual(updateBegin($none, { a: 1, b: 2, c: 3 }), { a: 1, b: 2, c: 3 }));
+
+test('update begin of object with array', t =>
+  t.deepEqual(updateBegin([10], { a: 1, b: 2, c: 3 }), {
+    0: 10,
+    a: 1,
+    b: 2,
+    c: 3
+  }));
+
+test('update begin of object with string', t =>
+  t.deepEqual(updateBegin('x', { a: 1, b: 2, c: 3 }), {
+    0: 'x',
+    a: 1,
+    b: 2,
+    c: 3
+  }));
+
+test('update begin of object with undefined', t =>
+  t.throws(() => updateBegin(undefined, { a: 1, b: 2, c: 3 })));
+
+test('update begin of object with number', t =>
+  t.throws(() => updateBegin(1, { a: 1, b: 2, c: 3 })));
+
+test('update begin of string with string', t =>
+  t.deepEqual(updateBegin('X', 'abc'), 'Xabc'));
+
+test('update begin of string with array', t =>
+  t.deepEqual(updateBegin(['X'], 'abc'), 'Xabc'));
+
+test('update begin of string with empty string', t =>
+  t.deepEqual(updateBegin('', 'abc'), 'abc'));
+
+test('update begin of string with empty array', t =>
+  t.deepEqual(updateBegin([], 'abc'), 'abc'));
+
+test('update begin of string with $none', t =>
+  t.deepEqual(updateBegin($none, 'abc'), 'abc'));
+
+test('update begin of string with number', t =>
+  t.deepEqual(updateBegin(5, 'abc'), '5abc'));
+
+test('update begin of string with undefined', t =>
+  t.deepEqual(updateBegin(undefined, 'abc'), 'undefinedabc'));
+
+test('update begin of number with array', t =>
+  t.throws(() => updateBegin(['X'], 0)));
+
+test('update begin of true with array', t =>
+  t.throws(() => updateBegin(['X'], true)));
+
+test('update begin of undefine with array', t =>
+  t.throws(() => updateBegin(['X'], undefined)));
