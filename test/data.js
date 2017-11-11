@@ -21,11 +21,7 @@ test('wrap already wrapped', t => {
 const wrapMethodsMacro = (t, input, expected) => {
   const clone = _.cloneDeep(input);
   const wrapped = wrap(input);
-  const output = Object.keys(expected).reduce((result, method) => {
-    const expectedResult = expected[method];
-    const calls = Array.isArray(expectedResult)
-      ? _.chunk(expectedResult, 2)
-      : [[[], expectedResult]];
+  const output = expected.map(call => {
     const callMethod = (wrappedMethod, args) => {
       try {
         return _.cloneDeep(unwrap(wrappedMethod.apply(wrapped, args)));
@@ -33,14 +29,9 @@ const wrapMethodsMacro = (t, input, expected) => {
         return new Error();
       }
     };
-    result[method] = _.flatten(
-      calls.map(([args]) => [args, callMethod(wrapped[method], args)])
-    );
-    if (!Array.isArray(expectedResult)) {
-      result[method] = result[method][1];
-    }
-    return result;
-  }, {});
+    const result = callMethod(wrapped[call[0]], call[1]);
+    return [call[0], call[1], result];
+  });
   t.deepEqual(output, expected);
   t.deepEqual(input, clone);
 };
@@ -48,294 +39,214 @@ const wrapMethodsMacro = (t, input, expected) => {
 wrapMethodsMacro.title = (title, input) =>
   `wrapper methods for value: ${input}`;
 
-// prettier-ignore
-test(wrapMethodsMacro, undefined, {
-  get: [
-    ['foo'], undefined,
-    [0], undefined
-  ],
-  has: [
-    ['foo'], false
-  ],
-  set: [
-    ['x', 0], undefined
-  ],
-  delete: [
-    ['foo'], undefined
-  ],
-  getAtIndex: new Error(),
-  setAtIndex: new Error(),
-  count: new Error(),
-  value: undefined,
-  canAppend: false,
-  toArray: new Error(),
-  reduce: new Error(),
-  mapPairs: new Error(),
-  merge: [
-    [1], 1,
-    [{}], {}
-  ],
-  sliceToValue: new Error(),
-  replaceSlice: new Error(),
-  replacePick: new Error(),
-  cloneEmpty: new Error(),
-  isUndefined: true,
-  isNone: false,
-  isSequence: false,
-  hasKeys: false,
-  isList: false
-});
+test(wrapMethodsMacro, undefined, [
+  ['get', ['foo'], undefined],
+  ['get', [0], undefined]
+]);
 
-// prettier-ignore
-test(wrapMethodsMacro, 1, {
-  get: [
-    ['foo'], undefined,
-    [0], undefined
-  ],
-  has: [
-    ['foo'], false
-  ],
-  set: [
-    ['x', 0], 1
-  ],
-  delete: [
-    ['foo'], 1
-  ],
-  getAtIndex: new Error(),
-  setAtIndex: new Error(),
-  count: new Error(),
-  value: 1,
-  canAppend: false,
-  toArray: new Error(),
-  reduce: new Error(),
-  mapPairs: new Error(),
-  merge: [
-    [2], 2,
-    [{}], {}
-  ],
-  sliceToValue: new Error(),
-  replaceSlice: new Error(),
-  replacePick: new Error(),
-  cloneEmpty: new Error(),
-  isUndefined: false,
-  isNone: false,
-  isSequence: false,
-  hasKeys: false,
-  isList: false
-});
+test(wrapMethodsMacro, undefined, [
+  ['get', ['foo'], undefined],
+  ['get', [0], undefined],
+  ['has', ['foo'], false],
+  ['set', ['x', 0], undefined],
+  ['delete', ['foo'], undefined],
+  ['getAtIndex', [], new Error()],
+  ['setAtIndex', [], new Error()],
+  ['count', [], new Error()],
+  ['value', [], undefined],
+  ['canAppend', [], false],
+  ['toArray', [], new Error()],
+  ['reduce', [], new Error()],
+  ['mapPairs', [], new Error()],
+  ['merge', [1], 1],
+  ['merge', [{}], {}],
+  ['sliceToValue', [], new Error()],
+  ['replaceSlice', [], new Error()],
+  ['replacePick', [], new Error()],
+  ['cloneEmpty', [], new Error()],
+  ['isUndefined', [], true],
+  ['isNone', [], false],
+  ['isSequence', [], false],
+  ['hasKeys', [], false],
+  ['isList', [], false]
+]);
 
-// prettier-ignore
-test(wrapMethodsMacro, {foo: 'bar'}, {
-  get: [
-    ['foo'], 'bar',
-    [0], undefined
-  ],
-  has: [
-    ['foo'], true,
-    ['bar'], false,
-  ],
-  set: [
-    ['foo', 'baz'], {foo: 'baz'},
-    ['x', 1], {foo: 'baz', x: 1},
-    [0, 'zero'], {foo: 'baz', x: 1, 0: 'zero'}
-  ],
-  delete: [
-    ['x'], {foo: 'baz', 0: 'zero'}
-  ],
-  getAtIndex: [
-    [0], 'zero',
-    [1], 'baz'
-  ],
-  setAtIndex: [
-    [1, 'bar'], {0: 'zero', foo: 'bar'}
-  ],
-  count: 2,
-  value: {0: 'zero', foo: 'bar'},
-  canAppend: false,
-  toArray: [
-    [], ['zero', 'bar']
-  ],
-  reduce: [
+test(wrapMethodsMacro, 1, [
+  ['get', ['foo'], undefined],
+  ['get', [0], undefined],
+  ['has', ['foo'], false],
+  ['set', ['x', 0], 1],
+  ['delete', ['foo'], 1],
+  ['getAtIndex', [], new Error()],
+  ['setAtIndex', [], new Error()],
+  ['count', [], new Error()],
+  ['value', [], 1],
+  ['canAppend', [], false],
+  ['toArray', [], new Error()],
+  ['reduce', [], new Error()],
+  ['mapPairs', [], new Error()],
+  ['merge', [2], 2],
+  ['merge', [{}], {}],
+  ['sliceToValue', [], new Error()],
+  ['replaceSlice', [], new Error()],
+  ['replacePick', [], new Error()],
+  ['cloneEmpty', [], new Error()],
+  ['isUndefined', [], false],
+  ['isNone', [], false],
+  ['isSequence', [], false],
+  ['hasKeys', [], false],
+  ['isList', [], false]
+]);
+
+test(wrapMethodsMacro, { foo: 'bar' }, [
+  ['get', ['foo'], 'bar'],
+  ['get', [0], undefined],
+  ['has', ['foo'], true],
+  ['has', ['bar'], false],
+  ['set', ['foo', 'baz'], { foo: 'baz' }],
+  ['set', ['x', 1], { foo: 'baz', x: 1 }],
+  ['set', [0, 'zero'], { foo: 'baz', x: 1, 0: 'zero' }],
+  ['delete', ['x'], { foo: 'baz', 0: 'zero' }],
+  ['getAtIndex', [0], 'zero'],
+  ['getAtIndex', [1], 'baz'],
+  ['setAtIndex', [1, 'bar'], { 0: 'zero', foo: 'bar' }],
+  ['count', [], 2],
+  ['value', [], { 0: 'zero', foo: 'bar' }],
+  ['canAppend', [], false],
+  ['toArray', [], ['zero', 'bar']],
+  [
+    'reduce',
     [
       (result, value, key) => {
         result.push([key, value]);
         return result;
-      }, [],
-    ], [['0', 'zero'], ['foo', 'bar']]
+      },
+      []
+    ],
+    [['0', 'zero'], ['foo', 'bar']]
   ],
-  mapPairs: [
-    [
-      ([key, value]) => [key.toUpperCase(), value.toUpperCase()]
-    ], {0: 'ZERO', 'FOO': 'BAR'}
+  [
+    'mapPairs',
+    [([key, value]) => [key.toUpperCase(), value.toUpperCase()]],
+    { 0: 'ZERO', FOO: 'BAR' }
   ],
-  merge: [
-    [{x: 1}], {0: 'zero', foo: 'bar', x: 1}
-  ],
-  sliceToValue: [
-    [1, 2], {foo: 'bar'}
-  ],
-  replaceSlice: [
-    [1, 2, {foo: 'baz'}], {0: 'zero', foo: 'baz', x: 1}
-  ],
-  replacePick: [
-    [['foo', 'x'], {foo: 'bar'}], {0: 'zero', foo: 'bar'}
-  ],
-  cloneEmpty: [
-    [], {}
-  ],
-  isUndefined: false,
-  isNone: false,
-  isSequence: true,
-  hasKeys: true,
-  isList: false
-});
+  ['merge', [{ x: 1 }], { 0: 'zero', foo: 'bar', x: 1 }],
+  ['sliceToValue', [1, 2], { foo: 'bar' }],
+  ['replaceSlice', [1, 2, { foo: 'baz' }], { 0: 'zero', foo: 'baz', x: 1 }],
+  ['replacePick', [['foo', 'x'], { foo: 'bar' }], { 0: 'zero', foo: 'bar' }],
+  ['cloneEmpty', [], {}],
+  ['isUndefined', [], false],
+  ['isNone', [], false],
+  ['isSequence', [], true],
+  ['hasKeys', [], true],
+  ['isList', [], false]
+]);
 
-// prettier-ignore
-test(wrapMethodsMacro, ['a'], {
-  get: [
-    ['b'], undefined,
-    [0], 'a',
-    [1], undefined
-  ],
-  has: [
-    ['x'], false,
-    [0], true,
-    [1], false
-  ],
-  set: [
-    [0, 'aa'], ['aa'],
-    [1, 'xx'], ['aa', 'xx'],
-    [2, 'cc'], ['aa', 'xx', 'cc'],
-    [1, 'bb'], ['aa', 'bb', 'cc']
-  ],
-  delete: [
-    ['x'], ['aa', 'bb', 'cc'],
-    [1], ['aa', 'cc'],
-  ],
-  getAtIndex: [
-    [0], 'aa',
-    [1], 'cc'
-  ],
-  setAtIndex: [
-    [1, 'bb'], ['aa', 'bb'],
-    [10, $none], ['aa', 'bb']
-  ],
-  count: 2,
-  value: [
-    [], ['aa', 'bb']
-  ],
-  canAppend: true,
-  toArray: [
-    [], ['aa', 'bb']
-  ],
-  reduce: [
+test(
+  wrapMethodsMacro,
+  ['a'],
+  [
+    ['get', ['b'], undefined],
+    ['get', [0], 'a'],
+    ['get', [1], undefined],
+    ['has', ['x'], false],
+    ['has', [0], true],
+    ['has', [1], false],
+    ['set', [0, 'aa'], ['aa']],
+    ['set', [1, 'xx'], ['aa', 'xx']],
+    ['set', [2, 'cc'], ['aa', 'xx', 'cc']],
+    ['set', [1, 'bb'], ['aa', 'bb', 'cc']],
+    ['delete', ['x'], ['aa', 'bb', 'cc']],
+    ['delete', [1], ['aa', 'cc']],
+    ['getAtIndex', [0], 'aa'],
+    ['getAtIndex', [1], 'cc'],
+    ['setAtIndex', [1, 'bb'], ['aa', 'bb']],
+    ['setAtIndex', [10, $none], ['aa', 'bb']],
+    ['count', [], 2],
+    ['value', [], ['aa', 'bb']],
+    ['canAppend', [], true],
+    ['toArray', [], ['aa', 'bb']],
+    [
+      'reduce',
+      [
+        (result, value, key) => {
+          result.push([key, value]);
+          return result;
+        },
+        []
+      ],
+      [[0, 'aa'], [1, 'bb']]
+    ],
+    [
+      'mapPairs',
+      [([key, value]) => [2 - key, value.toUpperCase()]],
+      ['BB', 'AA']
+    ],
+    ['merge', [['cc']], ['cc', 'bb']],
+    ['sliceToValue', [1, 2], ['bb']],
+    ['replaceSlice', [1, 2, ['dd']], ['cc', 'dd']],
+    ['replacePick', [[0], ['aa']], ['aa', 'dd']],
+    ['cloneEmpty', [], []],
+    ['isUndefined', [], false],
+    ['isNone', [], false],
+    ['isSequence', [], true],
+    ['hasKeys', [], false],
+    ['isList', [], true]
+  ]
+);
+
+test(wrapMethodsMacro, 'a', [
+  ['get', ['b'], undefined],
+  ['get', [0], 'a'],
+  ['get', [1], undefined],
+  ['has', ['x'], false],
+  ['has', [0], true],
+  ['has', [1], false],
+  ['set', [0, 'x'], 'x'],
+  ['set', [1, 'y'], 'xy'],
+  ['set', [2, 'z'], 'xyz'],
+  ['set', [1, 'yy'], 'xyyz'],
+  ['set', [10, $none], 'xyyz'],
+  ['delete', ['x'], 'xyyz'],
+  ['delete', [2], 'xyz'],
+  ['getAtIndex', [0], 'x'],
+  ['getAtIndex', [1], 'y'],
+  ['getAtIndex', [-1], 'z'],
+  ['getAtIndex', [10], undefined],
+  ['setAtIndex', [1, 'Y'], 'xYz'],
+  ['setAtIndex', [3, '_'], 'xYz_'],
+  ['setAtIndex', [3, ''], 'xYz'],
+  ['count', [], 3],
+  ['value', [], 'xYz'],
+  ['canAppend', [], true],
+  ['toArray', [], ['x', 'Y', 'z']],
+  [
+    'reduce',
     [
       (result, value, key) => {
         result.push([key, value]);
         return result;
-      }, [],
-    ], [[0, 'aa'], [1, 'bb']]
+      },
+      []
+    ],
+    [[0, 'x'], [1, 'Y'], [2, 'z']]
   ],
-  mapPairs: [
-    [
-      ([key, value]) => [2 - key, value.toUpperCase()]
-    ], ['BB', 'AA']
+  ['mapPairs', [([key, value]) => [3 - key, value.toUpperCase()]], 'ZYX'],
+  [
+    'merge', // does not mutate
+    ['abc'],
+    'abc'
   ],
-  merge: [
-    [['cc']], ['cc', 'bb']
-  ],
-  sliceToValue: [
-    [1, 2], ['bb']
-  ],
-  replaceSlice: [
-    [1, 2, ['dd']], ['cc', 'dd']
-  ],
-  replacePick: [
-    [[0], ['aa']], ['aa', 'dd']
-  ],
-  cloneEmpty: [
-    [], []
-  ],
-  isUndefined: false,
-  isNone: false,
-  isSequence: true,
-  hasKeys: false,
-  isList: true
-});
-
-// prettier-ignore
-test(wrapMethodsMacro, 'a', {
-  get: [
-    ['b'], undefined,
-    [0], 'a',
-    [1], undefined
-  ],
-  has: [
-    ['x'], false,
-    [0], true,
-    [1], false
-  ],
-  set: [
-    [0, 'x'], 'x',
-    [1, 'y'], 'xy',
-    [2, 'z'], 'xyz',
-    [1, 'yy'], 'xyyz',
-    [10, $none], 'xyyz'
-  ],
-  delete: [
-    ['x'], 'xyyz',
-    [2], 'xyz'
-  ],
-  getAtIndex: [
-    [0], 'x',
-    [1], 'y',
-    [-1], 'z',
-    [10], undefined
-  ],
-  setAtIndex: [
-    [1, 'Y'], 'xYz',
-    [3, '_'], 'xYz_',
-    [3, ''], 'xYz'
-  ],
-  count: 3,
-  value: 'xYz',
-  canAppend: true,
-  toArray: [
-    [], ['x', 'Y', 'z']
-  ],
-  reduce: [
-    [
-      (result, value, key) => {
-        result.push([key, value]);
-        return result;
-      }, [],
-    ], [[0, 'x'], [1, 'Y'], [2, 'z']]
-  ],
-  mapPairs: [
-    [
-      ([key, value]) => [3 - key, value.toUpperCase()]
-    ], 'ZYX'
-  ],
-  merge: [
-    // does not mutate
-    ['abc'], 'abc'
-  ],
-  sliceToValue: [
-    [1, 2], 'Y'
-  ],
-  replaceSlice: [
-    [1, 2, 'y'], 'xyz'
-  ],
-  replacePick: [
-    [[1], ['yy']], 'xyyz'
-  ],
-  cloneEmpty: '',
-  isUndefined: false,
-  isNone: false,
-  isSequence: true,
-  hasKeys: false,
-  isList: false
-});
+  ['sliceToValue', [1, 2], 'Y'],
+  ['replaceSlice', [1, 2, 'y'], 'xyz'],
+  ['replacePick', [[1], ['yy']], 'xyyz'],
+  ['cloneEmpty', [], ''],
+  ['isUndefined', [], false],
+  ['isNone', [], false],
+  ['isSequence', [], true],
+  ['hasKeys', [], false],
+  ['isList', [], false]
+]);
 
 test('slice', t => {
   const slice = wrapSlice(['a', 'b', 'c'], 0, 2);
