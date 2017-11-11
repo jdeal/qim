@@ -409,7 +409,7 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
     if (!newPick.isSequence()) {
       throw new Error('Pick can only be replaced with a sequence.');
     }
-    const newObject = {...source};
+    const newObject = objectAssign({}, source);
     eachFlattenedKey((key) => {
       if (newPick.has(key)) {
         newObject[key] = newPick.get(key);
