@@ -2,9 +2,9 @@
 
 import objectAssign from 'object-assign';
 
-import {isReduced} from './reduced';
+import { isReduced } from './reduced';
 import getTypeErrorMessage from './getTypeErrorMessage';
-import normalizeIndex, {normalizeIndexIfValid} from './normalizeIndex';
+import normalizeIndex, { normalizeIndexIfValid } from './normalizeIndex';
 import unwrapMacro from '../macros/unwrap.macro';
 import isWrappedMacro from '../macros/isWrapped.macro';
 import isWrappedUnsafeMacro from '../macros/isWrappedUnsafe.macro';
@@ -13,9 +13,10 @@ const hasSymbol = typeof Symbol !== 'undefined';
 
 const iteratorKey = hasSymbol ? Symbol.iterator : '@@iterator';
 
-const getAllProperties = (object) => Object.keys(object).concat(
-  iteratorKey === '@@iterator' ? [] : Object.getOwnPropertySymbols(object)
-);
+const getAllProperties = object =>
+  Object.keys(object).concat(
+    iteratorKey === '@@iterator' ? [] : Object.getOwnPropertySymbols(object)
+  );
 
 const cloneEmptyObject = object =>
   Object.create((object.constructor && object.constructor.prototype) || null);
@@ -29,8 +30,12 @@ const isInteger = value => {
   }
 };
 
-const falseFn = function () {return false;};
-const trueFn = function () {return true;};
+const falseFn = function() {
+  return false;
+};
+const trueFn = function() {
+  return true;
+};
 
 const eachFlattenedKey = (fn, keys, object) => {
   for (let i = 0; i < keys.length; i++) {
@@ -52,7 +57,7 @@ const eachFlattenedKey = (fn, keys, object) => {
 
 const removed = {};
 
-const removeRemovedFromArray = (array) => {
+const removeRemovedFromArray = array => {
   const newArray = [];
   for (let i = 0; i < array.length; i++) {
     if (i in array) {
@@ -66,23 +71,18 @@ const removeRemovedFromArray = (array) => {
   return newArray;
 };
 
-export const isWrappedUnsafe = (source) =>
-  isWrappedUnsafeMacro(source);
+export const isWrappedUnsafe = source => isWrappedUnsafeMacro(source);
 
-export const isWrapped = (source) =>
-  isWrappedMacro(source);
+export const isWrapped = source => isWrappedMacro(source);
 
 let Wrapper;
 
-export const wrap = (source) =>
-  isWrappedMacro(source) ?
-    source :
-    new Wrapper(source);
+export const wrap = source =>
+  isWrappedMacro(source) ? source : new Wrapper(source);
 
-export const unwrap = (wrapped) =>
-  unwrapMacro(wrapped);
+export const unwrap = wrapped => unwrapMacro(wrapped);
 
-Wrapper = function (source, type) {
+Wrapper = function(source, type) {
   this['@@qim/wrap'] = true;
   this._type = type;
   this._source = source;
@@ -95,11 +95,11 @@ const OBJECT_TYPE = 2;
 const ARRAY_TYPE = 3;
 const STRING_TYPE = 4;
 
-const hasUndefinedSource = (wrapper) => wrapper._source === undefined;
+const hasUndefinedSource = wrapper => wrapper._source === undefined;
 
-const hasNoneSource = (wrapper) => wrapper._type === NONE_TYPE;
+const hasNoneSource = wrapper => wrapper._type === NONE_TYPE;
 
-const ObjectIterator = function (source) {
+const ObjectIterator = function(source) {
   this._source = source;
   this._keys = Object.keys(source);
   this._index = 0;
@@ -121,7 +121,7 @@ ObjectIterator.prototype = {
   }
 };
 
-const IndexedIterator = function (source) {
+const IndexedIterator = function(source) {
   this._source = source;
   this._index = 0;
 };
@@ -158,51 +158,17 @@ const baseMethods = {
   delete() {
     return this;
   },
-  getAtIndex() {
-    throw new Error(getTypeErrorMessage('getAtIndex', ['sequence'], this._source));
-  },
-  setAtIndex() {
-    throw new Error(getTypeErrorMessage('setAtIndex', ['sequence'], this._source));
-  },
-  count() {
-    throw new Error(getTypeErrorMessage('count', ['sequence'], this._source));
-  },
   value() {
     return this._source;
   },
   append() {
-    throw new Error(getTypeErrorMessage('append', ['appendable sequence'], this._source));
+    throw new Error(
+      getTypeErrorMessage('append', ['appendable sequence'], this._source)
+    );
   },
   canAppend: falseFn,
-  forEach() {
-    throw new Error(getTypeErrorMessage('forEach', ['sequence'], this._source));
-  },
-  toArray() {
-    throw new Error(getTypeErrorMessage('toArray', ['sequence'], this._source));
-  },
-  reduce() {
-    throw new Error(getTypeErrorMessage('reduce', ['sequence'], this._source));
-  },
-  mapPairs() {
-    throw new Error(getTypeErrorMessage('mapPairs', ['sequence'], this._source));
-  },
   merge(spec) {
     return wrap(spec);
-  },
-  sliceToValue() {
-    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
-  },
-  replaceSlice() {
-    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
-  },
-  replacePick() {
-    throw new Error(getTypeErrorMessage('sliceToValue', ['sequence'], this._source));
-  },
-  pickToValue() {
-    throw new Error(getTypeErrorMessage('pickToValue', ['sequence'], this._source));
-  },
-  cloneEmpty() {
-    throw new Error(getTypeErrorMessage('cloneEmpty', ['sequence'], this._source));
   },
   isUndefined() {
     return this._source === undefined;
@@ -215,6 +181,27 @@ const baseMethods = {
   hasKeys: falseFn,
   isList: falseFn
 };
+
+[
+  'getAtIndex',
+  'setAtIndex',
+  'count',
+  'forEach',
+  'toArray',
+  'reduce',
+  'mapPairs',
+  'sliceToValue',
+  'replaceSlice',
+  'replacePick',
+  'pickToValue',
+  'cloneEmpty'
+].forEach(methodName => {
+  baseMethods[methodName] = function() {
+    throw new Error(
+      getTypeErrorMessage(methodName, ['sequence'], this._source)
+    );
+  };
+});
 
 const appendableMethods = {
   canAppend: trueFn
@@ -264,7 +251,12 @@ const sequenceMethods = {
         }
         const childValue = this.get(key);
         if (childValue && typeof childValue === 'object') {
-          this.set(key, wrap(childValue).merge(value, true).value());
+          this.set(
+            key,
+            wrap(childValue)
+              .merge(value, true)
+              .value()
+          );
           return;
         }
         this.set(key, value);
@@ -275,7 +267,7 @@ const sequenceMethods = {
   },
   toArray() {
     const array = [];
-    this.forEach((value) => {
+    this.forEach(value => {
       array.push(value);
     });
     return array;
@@ -288,13 +280,17 @@ const mix = (...moreMethods) => objectAssign({}, ...moreMethods);
 
 export const $noneKey = '@@qim/$noneKey';
 
-export const isNone = (value) => value && value['@@qim/nav'] === $noneKey;
+export const isNone = value => value && value['@@qim/nav'] === $noneKey;
 
-export const undefinedIfNone = (value) => isNone(value) ? undefined : value;
+export const undefinedIfNone = value => (isNone(value) ? undefined : value);
 
 methods[NONE_TYPE] = mix(baseMethods, {
-  has() {return undefined;},
-  get() {return undefined;},
+  has() {
+    return undefined;
+  },
+  get() {
+    return undefined;
+  },
   isNone: trueFn
 });
 
@@ -370,9 +366,13 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   },
   pickToValue(keys) {
     const picked = {};
-    eachFlattenedKey((key) => {
-      picked[key] = this._source[key];
-    }, keys, this._source);
+    eachFlattenedKey(
+      key => {
+        picked[key] = this._source[key];
+      },
+      keys,
+      this._source
+    );
     return picked;
   },
   // TODO: order keys correctly with object slice
@@ -405,18 +405,25 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   replacePick(properties, newPick) {
     const source = this._source;
     newPick = wrap(newPick);
-    newPick = hasUndefinedSource(newPick) || hasNoneSource(newPick) ? wrap({}) : newPick;
+    newPick =
+      hasUndefinedSource(newPick) || hasNoneSource(newPick)
+        ? wrap({})
+        : newPick;
     if (!newPick.isSequence()) {
       throw new Error('Pick can only be replaced with a sequence.');
     }
     const newObject = objectAssign({}, source);
-    eachFlattenedKey((key) => {
-      if (newPick.has(key)) {
-        newObject[key] = newPick.get(key);
-      } else {
-        delete newObject[key];
-      }
-    }, properties, source);
+    eachFlattenedKey(
+      key => {
+        if (newPick.has(key)) {
+          newObject[key] = newPick.get(key);
+        } else {
+          delete newObject[key];
+        }
+      },
+      properties,
+      source
+    );
     newPick.forEach((value, key) => {
       newObject[key] = value;
     });
@@ -467,198 +474,215 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   }
 });
 
-methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
-  isList: trueFn,
-  set(key, value) {
-    if (isNone(key)) {
-      return this;
-    }
-    if (isNone(value)) {
-      return this.delete(key);
-    }
-    if (!this._hasMutated) {
-      const source = this._source;
-      if (source[key] === value) {
-        return source;
-      }
-      this._source = source.slice(0);
-      this._hasMutated = true;
-    }
-    this._source[key] = value;
-    return this;
-  },
-  setAtIndex(i, value) {
-    if (i >= 0) {
-      return this.set(i, value);
-    } else if (this._source.length < -i) {
-      this._source = Array(-i - this._source.length).concat(this._source);
-      this._hasMutated = true;
-    }
-    i = normalizeIndexIfValid(i, this._source.length);
-    if (i !== undefined) {
-      return this.set(i, value);
-    }
-    return this;
-  },
-  delete(key, shouldLeaveHole) {
-    if (!this._hasMutated) {
-      const source = this._source;
-      if (!(key in source)) {
+methods[ARRAY_TYPE] = mix(
+  baseMethods,
+  sequenceMethods,
+  appendableMethods,
+  nativeSequenceMethods,
+  {
+    isList: trueFn,
+    set(key, value) {
+      if (isNone(key)) {
         return this;
       }
-      this._source = source.slice(0);
-      this._hasMutated = true;
-    }
-    if (isInteger(key) && !shouldLeaveHole) {
-      this._source.splice(key, 1);
-    } else {
-      delete this._source[key];
-    }
-    return this;
-  },
-  sliceToValue(begin, end) {
-    const source = this._source;
-    return source.slice(begin, end);
-  },
-  pickToValue(keys) {
-    const picked = [];
-    eachFlattenedKey((key) => {
-      picked.push(this._source[key]);
-    }, keys, this._source);
-    return picked;
-  },
-  replaceSlice(begin, end, newSlice) {
-    const source = this._source;
-    const sliceBegin = normalizeIndex(begin, source.length, 0);
-    const sliceEnd = normalizeIndex(end, source.length, source.length);
-    newSlice = wrap(newSlice);
-    if (isNone(newSlice)) {
-      newSlice = wrap([]);
-    }
-    newSlice = newSlice.isList() ? newSlice : wrap([newSlice.value()]);
-    const newSource = [];
-    for (let i = 0; i < sliceBegin; i++) {
-      newSource.push(source[i]);
-    }
-    for (let i = 0; i < newSlice.count(); i++) {
-      newSource.push(newSlice.getAtIndex(i));
-    }
-    for (let i = sliceEnd; i < source.length; i++) {
-      newSource.push(source[i]);
-    }
-    if (newSource !== this._source) {
-      this._hasMutated = true;
-      this._source = newSource;
-    }
-    return this;
-  },
-  replacePick(properties, newPick) {
-    const source = this._source;
-    newPick = wrap(newPick);
-    newPick = hasUndefinedSource(newPick) || hasNoneSource(newPick) ? wrap([]) : newPick;
-    newPick = newPick.isSequence() ? newPick : wrap([newPick.value()]);
-    let newSource = this._source.slice(0);
-    const iter = newPick[iteratorKey]();
-    let curr = iter.next();
-    let hasRemoved = false;
-    eachFlattenedKey((key) => {
-      if (curr.done) {
-        newSource[key] = removed;
-        hasRemoved = true;
-      } else {
-        const value = newPick.hasKeys() ? curr.value[1] : curr.value;
-        if (newSource[key] !== value) {
-          newSource[key] = value;
-          curr = iter.next();
+      if (isNone(value)) {
+        return this.delete(key);
+      }
+      if (!this._hasMutated) {
+        const source = this._source;
+        if (source[key] === value) {
+          return source;
         }
+        this._source = source.slice(0);
+        this._hasMutated = true;
       }
-    }, properties, source);
-    while (!curr.done) {
-      newSource.push(curr.value);
-      curr = iter.next();
-    }
-    if (hasRemoved) {
-      newSource = removeRemovedFromArray(newSource);
-    }
-    this._source = newSource;
-    return this;
-  },
-  cloneEmpty() {
-    const empty = new Wrapper([], ARRAY_TYPE);
-    empty._hasMutated = true;
-    return empty;
-  },
-  forEach(fn) {
-    const source = this._source;
-    for (var i = 0; i < source.length; i++) {
-      const shouldContinue = fn(source[i], i);
-      if (shouldContinue === false) {
-        break;
-      }
-    }
-  },
-  append(value) {
-    if (isNone(value)) {
+      this._source[key] = value;
       return this;
-    }
-    if (!this._hasMutated) {
-      this._source = this._source.slice(0);
-      this._hasMutated = true;
-    }
-    this._source.push(value);
-    return this;
-  },
-  mapPairs(fn) {
-    let newArray = [];
-    let hasMutated = false;
-    let hasRemoved = false;
-    let holes = null;
-    const source = this._source;
-    this.forEach((value, key) => {
-      const newPair = fn([key, value]);
-      let hasRemovedPair = true;
-      if (!isNone(newPair) && newPair != null) {
-        const [newKey, newValue] = newPair;
-        if (!isNone(newKey) && !isNone(newValue)) {
-          if (!(key in source)) {
-            newArray.length = newArray.length + 1;
-            if (!holes) {
-              holes = {};
-            }
-            holes[newKey] = true;
+    },
+    setAtIndex(i, value) {
+      if (i >= 0) {
+        return this.set(i, value);
+      } else if (this._source.length < -i) {
+        this._source = Array(-i - this._source.length).concat(this._source);
+        this._hasMutated = true;
+      }
+      i = normalizeIndexIfValid(i, this._source.length);
+      if (i !== undefined) {
+        return this.set(i, value);
+      }
+      return this;
+    },
+    delete(key, shouldLeaveHole) {
+      if (!this._hasMutated) {
+        const source = this._source;
+        if (!(key in source)) {
+          return this;
+        }
+        this._source = source.slice(0);
+        this._hasMutated = true;
+      }
+      if (isInteger(key) && !shouldLeaveHole) {
+        this._source.splice(key, 1);
+      } else {
+        delete this._source[key];
+      }
+      return this;
+    },
+    sliceToValue(begin, end) {
+      const source = this._source;
+      return source.slice(begin, end);
+    },
+    pickToValue(keys) {
+      const picked = [];
+      eachFlattenedKey(
+        key => {
+          picked.push(this._source[key]);
+        },
+        keys,
+        this._source
+      );
+      return picked;
+    },
+    replaceSlice(begin, end, newSlice) {
+      const source = this._source;
+      const sliceBegin = normalizeIndex(begin, source.length, 0);
+      const sliceEnd = normalizeIndex(end, source.length, source.length);
+      newSlice = wrap(newSlice);
+      if (isNone(newSlice)) {
+        newSlice = wrap([]);
+      }
+      newSlice = newSlice.isList() ? newSlice : wrap([newSlice.value()]);
+      const newSource = [];
+      for (let i = 0; i < sliceBegin; i++) {
+        newSource.push(source[i]);
+      }
+      for (let i = 0; i < newSlice.count(); i++) {
+        newSource.push(newSlice.getAtIndex(i));
+      }
+      for (let i = sliceEnd; i < source.length; i++) {
+        newSource.push(source[i]);
+      }
+      if (newSource !== this._source) {
+        this._hasMutated = true;
+        this._source = newSource;
+      }
+      return this;
+    },
+    replacePick(properties, newPick) {
+      const source = this._source;
+      newPick = wrap(newPick);
+      newPick =
+        hasUndefinedSource(newPick) || hasNoneSource(newPick)
+          ? wrap([])
+          : newPick;
+      newPick = newPick.isSequence() ? newPick : wrap([newPick.value()]);
+      let newSource = this._source.slice(0);
+      const iter = newPick[iteratorKey]();
+      let curr = iter.next();
+      let hasRemoved = false;
+      eachFlattenedKey(
+        key => {
+          if (curr.done) {
+            newSource[key] = removed;
+            hasRemoved = true;
           } else {
-            newArray[newKey] = newValue;
-          }
-          if (newKey === key) {
-            hasRemovedPair = false;
-            if (!hasMutated) {
-              if (newValue === value) {
-                return;
-              }
+            const value = newPick.hasKeys() ? curr.value[1] : curr.value;
+            if (newSource[key] !== value) {
+              newSource[key] = value;
+              curr = iter.next();
             }
-          } else if (key in newArray || (holes && key in holes)) {
-            hasRemovedPair = false;
           }
+        },
+        properties,
+        source
+      );
+      while (!curr.done) {
+        newSource.push(curr.value);
+        curr = iter.next();
+      }
+      if (hasRemoved) {
+        newSource = removeRemovedFromArray(newSource);
+      }
+      this._source = newSource;
+      return this;
+    },
+    cloneEmpty() {
+      const empty = new Wrapper([], ARRAY_TYPE);
+      empty._hasMutated = true;
+      return empty;
+    },
+    forEach(fn) {
+      const source = this._source;
+      for (var i = 0; i < source.length; i++) {
+        const shouldContinue = fn(source[i], i);
+        if (shouldContinue === false) {
+          break;
         }
       }
-      if (hasRemovedPair) {
-        hasRemoved = true;
-        newArray[key] = removed;
+    },
+    append(value) {
+      if (isNone(value)) {
+        return this;
       }
-      hasMutated = true;
-    });
-    if (!hasMutated) {
-      return wrap(this._source);
+      if (!this._hasMutated) {
+        this._source = this._source.slice(0);
+        this._hasMutated = true;
+      }
+      this._source.push(value);
+      return this;
+    },
+    mapPairs(fn) {
+      let newArray = [];
+      let hasMutated = false;
+      let hasRemoved = false;
+      let holes = null;
+      const source = this._source;
+      this.forEach((value, key) => {
+        const newPair = fn([key, value]);
+        let hasRemovedPair = true;
+        if (!isNone(newPair) && newPair != null) {
+          const [newKey, newValue] = newPair;
+          if (!isNone(newKey) && !isNone(newValue)) {
+            if (!(key in source)) {
+              newArray.length = newArray.length + 1;
+              if (!holes) {
+                holes = {};
+              }
+              holes[newKey] = true;
+            } else {
+              newArray[newKey] = newValue;
+            }
+            if (newKey === key) {
+              hasRemovedPair = false;
+              if (!hasMutated) {
+                if (newValue === value) {
+                  return;
+                }
+              }
+            } else if (key in newArray || (holes && key in holes)) {
+              hasRemovedPair = false;
+            }
+          }
+        }
+        if (hasRemovedPair) {
+          hasRemoved = true;
+          newArray[key] = removed;
+        }
+        hasMutated = true;
+      });
+      if (!hasMutated) {
+        return wrap(this._source);
+      }
+      if (hasRemoved) {
+        newArray = removeRemovedFromArray(newArray);
+      }
+      const wrapped = wrap(newArray);
+      wrapped._hasMutated = true;
+      wrapped._type = ARRAY_TYPE;
+      return wrapped;
     }
-    if (hasRemoved) {
-      newArray = removeRemovedFromArray(newArray);
-    }
-    const wrapped = wrap(newArray);
-    wrapped._hasMutated = true;
-    wrapped._type = ARRAY_TYPE;
-    return wrapped;
   }
-});
+);
 
 // TODO: setting to blank outside of range should be no-op
 const setAtIndex_String = (i, value, source) => {
@@ -696,87 +720,107 @@ const setProperty_String = (key, value, source) => {
   return source;
 };
 
-methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativeSequenceMethods, {
-  has(key) {
-    if (isInteger(key)) {
-      if (key >= 0) {
-        return this._source.length > key;
-      }
-    }
-    return false;
-  },
-  set(key, value) {
-    this._source = setProperty_String(key, value, this._source);
-    return this;
-  },
-  setAtIndex(i, value) {
-    this._source = setAtIndex_String(i, value, this._source);
-    return this;
-  },
-  delete(key) {
-    return this.set(key, '');
-  },
-  sliceToValue(begin, end) {
-    const source = this._source;
-    return source.slice(begin, end);
-  },
-  pickToValue(keys) {
-    let picked = '';
-    eachFlattenedKey((key) => {
+methods[STRING_TYPE] = mix(
+  baseMethods,
+  sequenceMethods,
+  appendableMethods,
+  nativeSequenceMethods,
+  {
+    has(key) {
       if (isInteger(key)) {
-        picked += this._source[key] || '';
+        if (key >= 0) {
+          return this._source.length > key;
+        }
       }
-    }, keys, this._source);
-    return picked;
-  },
-  replaceSlice(begin, end, newSlice) {
-    const source = this._source;
-    const sliceBegin = normalizeIndex(begin, source.length, 0);
-    const sliceEnd = normalizeIndex(end, source.length, source.length);
-    newSlice = wrap(newSlice);
-    if (isNone(newSlice)) {
-      newSlice = wrap([]);
-    }
-    const newSliceString = newSlice.isList() ?
-      newSlice.toArray().join('') :
-      String(newSlice.value());
-    this._source = source.slice(0, sliceBegin) + newSliceString + source.slice(sliceEnd);
-    return this;
-  },
-  replacePick(begin, end, newPick) {
-    this._source = wrap(this._source.split('')).replacePick(begin, end, newPick).value().join('');
-    return this;
-  },
-  cloneEmpty() {
-    const empty = new Wrapper('', STRING_TYPE);
-    empty._hasMutated = true;
-    return empty;
-  },
-  forEach(fn) {
-    const source = this._source;
-    for (var i = 0; i < source.length; i++) {
-      const shouldContinue = fn(source[i], i);
-      if (shouldContinue === false) {
-        break;
+      return false;
+    },
+    set(key, value) {
+      this._source = setProperty_String(key, value, this._source);
+      return this;
+    },
+    setAtIndex(i, value) {
+      this._source = setAtIndex_String(i, value, this._source);
+      return this;
+    },
+    delete(key) {
+      return this.set(key, '');
+    },
+    sliceToValue(begin, end) {
+      const source = this._source;
+      return source.slice(begin, end);
+    },
+    pickToValue(keys) {
+      let picked = '';
+      eachFlattenedKey(
+        key => {
+          if (isInteger(key)) {
+            picked += this._source[key] || '';
+          }
+        },
+        keys,
+        this._source
+      );
+      return picked;
+    },
+    replaceSlice(begin, end, newSlice) {
+      const source = this._source;
+      const sliceBegin = normalizeIndex(begin, source.length, 0);
+      const sliceEnd = normalizeIndex(end, source.length, source.length);
+      newSlice = wrap(newSlice);
+      if (isNone(newSlice)) {
+        newSlice = wrap([]);
       }
+      const newSliceString = newSlice.isList()
+        ? newSlice.toArray().join('')
+        : String(newSlice.value());
+      this._source =
+        source.slice(0, sliceBegin) + newSliceString + source.slice(sliceEnd);
+      return this;
+    },
+    replacePick(begin, end, newPick) {
+      this._source = wrap(this._source.split(''))
+        .replacePick(begin, end, newPick)
+        .value()
+        .join('');
+      return this;
+    },
+    cloneEmpty() {
+      const empty = new Wrapper('', STRING_TYPE);
+      empty._hasMutated = true;
+      return empty;
+    },
+    forEach(fn) {
+      const source = this._source;
+      for (var i = 0; i < source.length; i++) {
+        const shouldContinue = fn(source[i], i);
+        if (shouldContinue === false) {
+          break;
+        }
+      }
+    },
+    append(value) {
+      this._source += value;
+      return this;
+    },
+    mapPairs(fn) {
+      const arrayWrapper = wrap(this._source.split(''));
+      arrayWrapper._type = ARRAY_TYPE;
+      const wrapper = wrap(
+        arrayWrapper
+          .mapPairs(fn)
+          .value()
+          .join('')
+      );
+      wrapper._type = STRING_TYPE;
+      return wrapper;
     }
   },
-  append(value) {
-    this._source += value;
-    return this;
-  },
-  mapPairs(fn) {
-    const arrayWrapper = wrap(this._source.split(''));
-    arrayWrapper._type = ARRAY_TYPE;
-    const wrapper = wrap(arrayWrapper.mapPairs(fn).value().join(''));
-    wrapper._type = STRING_TYPE;
-    return wrapper;
+  {
+    merge: baseMethods.merge
   }
-}, {
-  merge: baseMethods.merge
-});
+);
 
-const getType = (source) => {
+const getType = source => {
   if (source == null) {
     return PRIMITIVE_TYPE;
   }
@@ -801,7 +845,7 @@ const setMethod = (wrapper, methodKey) => {
 
 Wrapper.prototype = mix(
   getAllProperties(baseMethods).reduce((base, name) => {
-    base[name] = function (a, b, c) {
+    base[name] = function(a, b, c) {
       setMethod(this, name);
       return this[name](a, b, c);
     };
@@ -814,7 +858,7 @@ Wrapper.prototype = mix(
     },
     value() {
       return this._source;
-    },
+    }
   }
 );
 
@@ -825,7 +869,7 @@ $none._source = $none;
 
 $none['@@qim/nav'] = $noneKey;
 
-const prepareDelegateSource = (wrapper) => {
+const prepareDelegateSource = wrapper => {
   if (wrapper._isPrepared) {
     return false;
   }
@@ -836,7 +880,7 @@ const prepareDelegateSource = (wrapper) => {
 
 const delegateMethods = mix(
   getAllProperties(baseMethods).reduce((base, name) => {
-    base[name] = function (a, b, c) {
+    base[name] = function(a, b, c) {
       this.value();
       setMethod(this, name);
       return this[name](a, b, c);
@@ -854,7 +898,7 @@ const delegateMethods = mix(
   }
 );
 
-const SliceWrapper = function (source, begin, end) {
+const SliceWrapper = function(source, begin, end) {
   this['@@qim/wrap'] = true;
   this._source = source;
   this._hasMutated = false;
@@ -862,9 +906,10 @@ const SliceWrapper = function (source, begin, end) {
   this._end = end;
 };
 
-export const wrapSlice = (source, begin, end) => new SliceWrapper(source, begin, end);
+export const wrapSlice = (source, begin, end) =>
+  new SliceWrapper(source, begin, end);
 
-const prepareSliceWrapper = (wrapper) => {
+const prepareSliceWrapper = wrapper => {
   if (prepareDelegateSource(wrapper)) {
     const sourceCount = wrapper._source.count();
     wrapper._begin = normalizeIndex(wrapper._begin, sourceCount, 0);
@@ -902,17 +947,18 @@ SliceWrapper.prototype = mix(delegateMethods, {
     setMethod(this, 'value');
     this._isResolved = true;
     return this._source;
-  },
+  }
 });
 
-const PickWrapper = function (source, properties) {
+const PickWrapper = function(source, properties) {
   this['@@qim/wrap'] = true;
   this._source = source;
   this._hasMutated = false;
   this._properties = properties;
 };
 
-export const wrapPick = (source, properties) => new PickWrapper(source, properties);
+export const wrapPick = (source, properties) =>
+  new PickWrapper(source, properties);
 
 PickWrapper.prototype = mix(delegateMethods, {
   value() {
@@ -923,7 +969,7 @@ PickWrapper.prototype = mix(delegateMethods, {
     this._source = this.pickToValue(this._properties);
     setMethod(this, 'value');
     return this._source;
-  },
+  }
 });
 
 export const hasPropertyUnsafe = (key, source) => {
@@ -1002,7 +1048,8 @@ const deleteProperty_Array = (key, source) => {
   return source;
 };
 
-const deleteProperty_String = (key, source) => setProperty_String(key, '', source);
+const deleteProperty_String = (key, source) =>
+  setProperty_String(key, '', source);
 
 const deleteProperty_Primitive = (key, value, source) => source;
 
@@ -1013,7 +1060,7 @@ const baseSpec = {
 const wrapperSpec = mix(baseSpec, {
   get: getProperty_Wrapper,
   set: setProperty_Wrapper,
-  delete: deleteProperty_Wrapper,
+  delete: deleteProperty_Wrapper
 });
 
 const objectSpec = mix(baseSpec, {
@@ -1044,7 +1091,7 @@ const nilSpec = mix(baseSpec, primitiveSpec, {
   isNil: true
 });
 
-export const getSpec = (source) => {
+export const getSpec = source => {
   if (source == null) {
     return nilSpec;
   }
@@ -1070,7 +1117,7 @@ export const objectReaderSpec = {
   get: getProperty_Object
 };
 
-export const getReaderSpec = (source) => {
+export const getReaderSpec = source => {
   if (source == null) {
     return nilSpec;
   }
