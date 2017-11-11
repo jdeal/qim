@@ -1,60 +1,68 @@
 import test from 'ava';
-import util from 'util';
 
 import 'babel-core/register';
 
-import {valueToString} from './_TestUtils';
+import { select, update, $last, $set, $none } from 'qim/src';
 
-import {
-  select,
-  update,
-  $last,
-  $set,
-  $none,
-} from 'qim/src';
+const selectLast = input => select([$last], input);
 
-const selectLastMacro = (t, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => select([$last], input));
-    return;
-  }
-  const result = select([$last], input);
-  t.deepEqual(result, expected);
-};
+test('select last of array', t =>
+  t.deepEqual(selectLast(['a', 'b', 'c']), ['c']));
 
-selectLastMacro.title = (title, input) => `select $last of ${util.inspect(input)}`;
+test('select last of object', t =>
+  t.deepEqual(selectLast({ a: 1, b: 2, c: 3 }), [3]));
 
-test(selectLastMacro, ['a', 'b', 'c'], ['c']);
-test(selectLastMacro, {a: 1, b: 2, c: 3}, [3]);
-test(selectLastMacro, 'abc', ['c']);
-test(selectLastMacro, 5, new Error());
-test(selectLastMacro, undefined, new Error());
+test('select last of string', t => t.deepEqual(selectLast('abc'), ['c']));
 
-const updateLastMacro = (t, lastValue, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => update([$last, $set(lastValue)], input));
-    return;
-  }
-  const result = update([$last, $set(lastValue)], input);
-  t.deepEqual(result, expected);
-};
+test('select last of number', t => t.throws(() => selectLast(5)));
 
-updateLastMacro.title = (title, lastValue, input) => `update $last set to ${valueToString(lastValue)} for ${util.inspect(input)}`;
+test('select last of undefined', t => t.throws(() => selectLast(undefined)));
 
-test(updateLastMacro, 'X', ['a', 'b', 'c'], ['a', 'b', 'X']);
-test(updateLastMacro, $none, ['a', 'b', 'c'], ['a', 'b']);
-test(updateLastMacro, undefined, ['a', 'b', 'c'], ['a', 'b', undefined]);
+const updateLast = (lastValue, input) =>
+  update([$last, $set(lastValue)], input);
 
-test(updateLastMacro, 10, {a: 1, b: 2, c: 3}, {a: 1, b: 2, c: 10});
-test(updateLastMacro, $none, {a: 1, b: 2, c: 3}, {a: 1, b: 2});
-test(updateLastMacro, undefined, {a: 1, b: 2, c: 3}, {a: 1, b: 2, c: undefined});
+test('update last of array with string', t =>
+  t.deepEqual(updateLast('X', ['a', 'b', 'c']), ['a', 'b', 'X']));
 
-test(updateLastMacro, 'X', 'abc', 'abX');
-test(updateLastMacro, '', 'abc', 'ab');
-test(updateLastMacro, $none, 'abc', 'ab');
-test(updateLastMacro, 5, 'abc', 'ab5');
-test(updateLastMacro, undefined, 'abc', 'abundefined');
+test('update last of array with none', t =>
+  t.deepEqual(updateLast($none, ['a', 'b', 'c']), ['a', 'b']));
 
-test(updateLastMacro, 'X', 0, new Error());
-test(updateLastMacro, 'X', true, new Error());
-test(updateLastMacro, 'X', undefined, new Error());
+test('update last of array with undefined', t =>
+  t.deepEqual(updateLast(undefined, ['a', 'b', 'c']), ['a', 'b', undefined]));
+
+test('update last of object with number', t =>
+  t.deepEqual(updateLast(10, { a: 1, b: 2, c: 3 }), { a: 1, b: 2, c: 10 }));
+
+test('update last of object with none', t =>
+  t.deepEqual(updateLast($none, { a: 1, b: 2, c: 3 }), { a: 1, b: 2 }));
+
+test('update last of object with undefined', t =>
+  t.deepEqual(updateLast(undefined, { a: 1, b: 2, c: 3 }), {
+    a: 1,
+    b: 2,
+    c: undefined
+  }));
+
+test('update last of string with string', t =>
+  t.deepEqual(updateLast('X', 'abc'), 'abX'));
+
+test('update last of string with empty string', t =>
+  t.deepEqual(updateLast('', 'abc'), 'ab'));
+
+test('update last of string with none', t =>
+  t.deepEqual(updateLast($none, 'abc'), 'ab'));
+
+test('update last of string with number', t =>
+  t.deepEqual(updateLast(5, 'abc'), 'ab5'));
+
+test('update last of string with undefined', t =>
+  t.deepEqual(updateLast(undefined, 'abc'), 'abundefined'));
+
+test('update last of number with string', t =>
+  t.throws(() => updateLast('X', 0)));
+
+test('update last of true with string', t =>
+  t.throws(() => updateLast('X', true)));
+
+test('update last of undefined with string', t =>
+  t.throws(() => updateLast('X', undefined)));

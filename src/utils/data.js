@@ -299,8 +299,8 @@ methods[NONE_TYPE] = mix(baseMethods, {
 });
 
 methods[PRIMITIVE_TYPE] = mix(baseMethods, {
-  has(key) {
-    return this._source == null ? undefined : key in this._source;
+  has() {
+    return false;
   },
   get(key) {
     return this._source == null ? undefined : this._source[key];
@@ -660,18 +660,38 @@ methods[ARRAY_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nativ
   }
 });
 
+// TODO: setting to blank outside of range should be no-op
+const setAtIndex_String = (i, value, source) => {
+  if (isNone(value)) {
+    value = '';
+  }
+  if (i >= 0) {
+    if (i >= source.length) {
+      if (value === '') {
+        return source;
+      }
+      source = source + Array(2 + (i - source.length)).join(' ');
+    }
+    return source.substr(0, i) + String(value) + source.substr(i + 1);
+  } else if (source.length < -i) {
+    if (value === '') {
+      return source;
+    }
+    source = Array(1 + (-i - source.length)).join(' ') + source;
+  }
+  i = normalizeIndexIfValid(i, source.length);
+  if (i !== undefined) {
+    return source.substr(0, i) + String(value) + source.substr(i + 1);
+  }
+  return source;
+};
+
 const setProperty_String = (key, value, source) => {
   if (isNone(key)) {
     return source;
   }
-  if (isNone(value)) {
-    value = '';
-  }
   if (isInteger(key)) {
-    if (source.charAt(key) === '') {
-      return source;
-    }
-    return source.substr(0, key) + String(value) + source.substr(key + 1);
+    return setAtIndex_String(key, value, source);
   }
   return source;
 };
@@ -690,19 +710,7 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
     return this;
   },
   setAtIndex(i, value) {
-    if (i >= 0) {
-      if (i >= this._source.length) {
-        this._hasMutated = true;
-        this._source = this._source + Array(2 + (i - this._source.length)).join(' ');
-      }
-      return this.set(i, value);
-    } else if (this._source.length < -i) {
-      this._source = Array(1 + (-i - this._source.length)).join(' ') + this._source;
-    }
-    i = normalizeIndexIfValid(i, this._source.length);
-    if (i !== undefined) {
-      return this.set(i, value);
-    }
+    this._source = setAtIndex_String(i, value, this._source);
     return this;
   },
   delete(key) {
@@ -710,7 +718,7 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
   },
   sliceToValue(begin, end) {
     const source = this._source;
-    return source.substr(begin, end);
+    return source.slice(begin, end);
   },
   pickToValue(keys) {
     let picked = '';
@@ -732,7 +740,7 @@ methods[STRING_TYPE] = mix(baseMethods, sequenceMethods, appendableMethods, nati
     const newSliceString = newSlice.isList() ?
       newSlice.toArray().join('') :
       String(newSlice.value());
-    this._source = source.substr(0, sliceBegin) + newSliceString + source.substr(sliceEnd);
+    this._source = source.slice(0, sliceBegin) + newSliceString + source.slice(sliceEnd);
     return this;
   },
   replacePick(begin, end, newPick) {

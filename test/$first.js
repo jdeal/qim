@@ -1,60 +1,68 @@
 import test from 'ava';
-import util from 'util';
 
 import 'babel-core/register';
 
-import {valueToString} from './_TestUtils';
+import { select, update, $first, $set, $none } from 'qim/src';
 
-import {
-  select,
-  update,
-  $first,
-  $set,
-  $none,
-} from 'qim/src';
+const selectFirst = input => select([$first], input);
 
-const selectFirstMacro = (t, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => select([$first], input));
-    return;
-  }
-  const result = select([$first], input);
-  t.deepEqual(result, expected);
-};
+test('select first of array', t =>
+  t.deepEqual(selectFirst(['a', 'b', 'c']), ['a']));
 
-selectFirstMacro.title = (title, input) => `select $first of ${util.inspect(input)}`;
+test('select first of object', t =>
+  t.deepEqual(selectFirst({ a: 1, b: 2, c: 3 }), [1]));
 
-test(selectFirstMacro, ['a', 'b', 'c'], ['a']);
-test(selectFirstMacro, {a: 1, b: 2, c: 3}, [1]);
-test(selectFirstMacro, 'abc', ['a']);
-test(selectFirstMacro, 5, new Error());
-test(selectFirstMacro, undefined, new Error());
+test('select first of string', t => t.deepEqual(selectFirst('abc'), ['a']));
 
-const updateFirstMacro = (t, firstValue, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => update([$first, $set(firstValue)], input));
-    return;
-  }
-  const result = update([$first, $set(firstValue)], input);
-  t.deepEqual(result, expected);
-};
+test('select first of number', t => t.throws(() => selectFirst(5)));
 
-updateFirstMacro.title = (title, firstValue, input) => `update $first set to ${valueToString(firstValue)} for ${util.inspect(input)}`;
+test('select first of undefined', t => t.throws(() => selectFirst(undefined)));
 
-test(updateFirstMacro, 'X', ['a', 'b', 'c'], ['X', 'b', 'c']);
-test(updateFirstMacro, $none, ['a', 'b', 'c'], ['b', 'c']);
-test(updateFirstMacro, undefined, ['a', 'b', 'c'], [undefined, 'b', 'c']);
+const updateFirst = (firstValue, input) =>
+  update([$first, $set(firstValue)], input);
 
-test(updateFirstMacro, 10, {a: 1, b: 2, c: 3}, {a: 10, b: 2, c: 3});
-test(updateFirstMacro, $none, {a: 1, b: 2, c: 3}, {b: 2, c: 3});
-test(updateFirstMacro, undefined, {a: 1, b: 2, c: 3}, {a: undefined, b: 2, c: 3});
+test('update first of array with string', t =>
+  t.deepEqual(updateFirst('X', ['a', 'b', 'c']), ['X', 'b', 'c']));
 
-test(updateFirstMacro, 'X', 'abc', 'Xbc');
-test(updateFirstMacro, '', 'abc', 'bc');
-test(updateFirstMacro, $none, 'abc', 'bc');
-test(updateFirstMacro, 5, 'abc', '5bc');
-test(updateFirstMacro, undefined, 'abc', 'undefinedbc');
+test('update first of array with none', t =>
+  t.deepEqual(updateFirst($none, ['a', 'b', 'c']), ['b', 'c']));
 
-test(updateFirstMacro, 'X', 0, new Error());
-test(updateFirstMacro, 'X', true, new Error());
-test(updateFirstMacro, 'X', undefined, new Error());
+test('update first of array with undefined', t =>
+  t.deepEqual(updateFirst(undefined, ['a', 'b', 'c']), [undefined, 'b', 'c']));
+
+test('update first of object with number', t =>
+  t.deepEqual(updateFirst(10, { a: 1, b: 2, c: 3 }), { a: 10, b: 2, c: 3 }));
+
+test('update first of object with none', t =>
+  t.deepEqual(updateFirst($none, { a: 1, b: 2, c: 3 }), { b: 2, c: 3 }));
+
+test('update first of object with undefined', t =>
+  t.deepEqual(updateFirst(undefined, { a: 1, b: 2, c: 3 }), {
+    a: undefined,
+    b: 2,
+    c: 3
+  }));
+
+test('update first of string with string', t =>
+  t.deepEqual(updateFirst('X', 'abc'), 'Xbc'));
+
+test('update first of string with empty string', t =>
+  t.deepEqual(updateFirst('', 'abc'), 'bc'));
+
+test('update first of string with none', t =>
+  t.deepEqual(updateFirst($none, 'abc'), 'bc'));
+
+test('update first of string with number', t =>
+  t.deepEqual(updateFirst(5, 'abc'), '5bc'));
+
+test('update first of string with undefined', t =>
+  t.deepEqual(updateFirst(undefined, 'abc'), 'undefinedbc'));
+
+test('update first of number with string', t =>
+  t.throws(() => updateFirst('X', 0)));
+
+test('update first of true with string', t =>
+  t.throws(() => updateFirst('X', true)));
+
+test('update first of undefined with string', t =>
+  t.throws(() => updateFirst('X', undefined)));

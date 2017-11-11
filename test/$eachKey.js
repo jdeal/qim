@@ -2,78 +2,160 @@ import test from 'ava';
 
 import 'babel-core/register';
 
-import {
-  select,
-  update,
-  $apply,
-  $eachKey,
-  $none,
-  $slice,
-} from 'qim/src';
+import { select, update, $apply, $eachKey, $none, $slice } from 'qim/src';
 
-const selectEachKeyMacro = (t, path, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => select([...path, $eachKey], input));
-    return;
-  }
-  const result = select([...path, $eachKey], input);
-  t.deepEqual(result, expected);
-};
+const selectEachKey = (path, input) => select([...path, $eachKey], input);
 
-selectEachKeyMacro.title = (title) => `select $eachKey of ${title}`;
+test('select each key empty array', t =>
+  t.deepEqual(selectEachKey([], []), []));
 
-test('empty array', selectEachKeyMacro, [], [], []);
-test('array', selectEachKeyMacro, [], ['a', 'b', 'c'], [0, 1, 2]);
-test('slice of array', selectEachKeyMacro, [$slice(0, 2)], ['a', 'b', 'c'], [0, 1]);
+test('select each key array', t =>
+  t.deepEqual(selectEachKey([], ['a', 'b', 'c']), [0, 1, 2]));
 
-test('empty object', selectEachKeyMacro, [], {}, []);
-test('object', selectEachKeyMacro, [], {x: 'a', y: 'b', z: 'c'}, ['x', 'y', 'z']);
-test('slice of object', selectEachKeyMacro, [$slice(0, 2)], {x: 'a', y: 'b', z: 'c'}, ['x', 'y']);
+test('select each key slice of array', t =>
+  t.deepEqual(selectEachKey([$slice(0, 2)], ['a', 'b', 'c']), [0, 1]));
 
-test('empty string', selectEachKeyMacro, [], '', []);
-test('string', selectEachKeyMacro, [], 'abc', [0, 1, 2]);
-test('slice of string', selectEachKeyMacro, [$slice(0, 2)], 'abc', [0, 1]);
+test('select each key empty object', t =>
+  t.deepEqual(selectEachKey([], {}), []));
 
-test('number', selectEachKeyMacro, [], 5, new Error());
-test('undefined', selectEachKeyMacro, [], undefined, new Error());
+test('select each key object', t =>
+  t.deepEqual(selectEachKey([], { x: 'a', y: 'b', z: 'c' }), ['x', 'y', 'z']));
 
+test('select each key slice of object', t =>
+  t.deepEqual(selectEachKey([$slice(0, 2)], { x: 'a', y: 'b', z: 'c' }), [
+    'x',
+    'y'
+  ]));
 
-const updateEachKeyMacro = (t, path, fn, input, expected) => {
-  if (expected instanceof Error) {
-    t.throws(() => update([...path, $eachKey, $apply(fn)], input));
-    return;
-  }
-  const result = update([...path, $eachKey, $apply(fn)], input);
-  t.deepEqual(result, expected);
-};
+test('select each key empty string', t =>
+  t.deepEqual(selectEachKey([], ''), []));
 
-updateEachKeyMacro.title = (title) => `update $eachKey of ${title}`;
+test('select each key string', t =>
+  t.deepEqual(selectEachKey([], 'abc'), [0, 1, 2]));
+
+test('select each key slice of string', t =>
+  t.deepEqual(selectEachKey([$slice(0, 2)], 'abc'), [0, 1]));
+
+test('select each key number', t => t.throws(() => selectEachKey([], 5)));
+
+test('select each key undefined', t =>
+  t.throws(() => selectEachKey([], undefined)));
+
+const updateEachKey = (path, fn, input) =>
+  update([...path, $eachKey, $apply(fn)], input);
 
 const toUpper = s => s.toUpperCase();
 
-test('array with 2 - key', updateEachKeyMacro, [], key => 2 - key, ['a', 'b', 'c'], ['c', 'b', 'a']);
-test('array with 3 - key', updateEachKeyMacro, [], key => 3 - key, ['a', 'b', 'c'], ['c', 'b', 'a']);
-test('array with none key', updateEachKeyMacro, [], key => key === 1 ? $none : key, ['a', 'b', 'c'], ['a', 'c']);
-test('array with undefined key', updateEachKeyMacro, [], key => key === 1 ? undefined : key, ['a', 'b', 'c'], ['a', 'c']);
-test('array with key + 1', updateEachKeyMacro, [], key => key + 1, ['a', 'b', 'c'], ['a', 'b', 'c']);
-test('array with same key', updateEachKeyMacro, [], () => 0, ['a', 'b', 'c'], ['c']);
-test('array with x key', updateEachKeyMacro, [], () => 'x', ['a', 'b', 'c'], []);
+test('update each key array with 2 - key', t =>
+  t.deepEqual(updateEachKey([], key => 2 - key, ['a', 'b', 'c']), [
+    'c',
+    'b',
+    'a'
+  ]));
+
+test('update each key array with 3 - key', t =>
+  t.deepEqual(updateEachKey([], key => 3 - key, ['a', 'b', 'c']), [
+    'c',
+    'b',
+    'a'
+  ]));
+
+test('update each key array with none key', t =>
+  t.deepEqual(
+    updateEachKey([], key => (key === 1 ? $none : key), ['a', 'b', 'c']),
+    ['a', 'c']
+  ));
+
+test('update each key array with undefined key', t =>
+  t.deepEqual(
+    updateEachKey([], key => (key === 1 ? undefined : key), ['a', 'b', 'c']),
+    ['a', 'c']
+  ));
+
+test('update each key array with key + 1', t =>
+  t.deepEqual(updateEachKey([], key => key + 1, ['a', 'b', 'c']), [
+    'a',
+    'b',
+    'c'
+  ]));
+
+test('update each key array with same key', t =>
+  t.deepEqual(updateEachKey([], () => 0, ['a', 'b', 'c']), ['c']));
+
+test('update each key array with x key', t =>
+  t.deepEqual(updateEachKey([], () => 'x', ['a', 'b', 'c']), []));
 
 const arrayWithHoles = ['a'];
 arrayWithHoles[2] = 'c';
-test('array with holes with key + 1', updateEachKeyMacro, [], key => key + 1, arrayWithHoles, ['a', undefined, 'c']);
 
-test('empty object', updateEachKeyMacro, [], toUpper, {}, {});
-test('object', updateEachKeyMacro, [], toUpper, {x: 'a', y: 'b', z: 'c'}, {X: 'a', Y: 'b', Z: 'c'});
-test('object with none key', updateEachKeyMacro, [], key => key === 'y' ? $none : key, {x: 'a', y: 'b', z: 'c'}, {x: 'a', z: 'c'});
-test('object with undefined key', updateEachKeyMacro, [], key => key === 'y' ? undefined : key, {x: 'a', y: 'b', z: 'c'}, {x: 'a', undefined: 'b', z: 'c'});
-test('object with same key', updateEachKeyMacro, [], () => 'x', {x: 'a', y: 'b', z: 'c'}, {x: 'c'});
-test('slice of object', updateEachKeyMacro, [$slice(0, 2)], toUpper, {x: 'a', y: 'b', z: 'c'}, {X: 'a', Y: 'b', z: 'c'});
+test('update each key array with holes with key + 1', t =>
+  t.deepEqual(updateEachKey([], key => key + 1, arrayWithHoles), [
+    'a',
+    undefined,
+    'c'
+  ]));
 
-test('empty string', updateEachKeyMacro, [], toUpper, '', '');
-test('string with 2 - key', updateEachKeyMacro, [], key => 2 - key, 'abc', 'cba');
-test('string with 3 - key', updateEachKeyMacro, [], key => 3 - key, 'abc', 'cba');
-test('string with none key', updateEachKeyMacro, [], key => key === 1 ? $none : key, 'abc', 'ac');
-test('string with key + 1', updateEachKeyMacro, [], key => key + 1, 'abc', 'abc');
-test('string with same key', updateEachKeyMacro, [], () => 0, 'abc', 'c');
-test('string with x key', updateEachKeyMacro, [], () => 'x', 'abc', '');
+test('update each key empty object', t =>
+  t.deepEqual(updateEachKey([], toUpper, {}), {}));
+
+test('update each key object', t =>
+  t.deepEqual(updateEachKey([], toUpper, { x: 'a', y: 'b', z: 'c' }), {
+    X: 'a',
+    Y: 'b',
+    Z: 'c'
+  }));
+
+test('update each key object with none key', t =>
+  t.deepEqual(
+    updateEachKey([], key => (key === 'y' ? $none : key), {
+      x: 'a',
+      y: 'b',
+      z: 'c'
+    }),
+    { x: 'a', z: 'c' }
+  ));
+
+test('update each key object with undefined key', t =>
+  t.deepEqual(
+    updateEachKey([], key => (key === 'y' ? undefined : key), {
+      x: 'a',
+      y: 'b',
+      z: 'c'
+    }),
+    { x: 'a', undefined: 'b', z: 'c' }
+  ));
+
+test('update each key object with same key', t =>
+  t.deepEqual(updateEachKey([], () => 'x', { x: 'a', y: 'b', z: 'c' }), {
+    x: 'c'
+  }));
+
+test('update each key slice of object', t =>
+  t.deepEqual(
+    updateEachKey([$slice(0, 2)], toUpper, { x: 'a', y: 'b', z: 'c' }),
+    { X: 'a', Y: 'b', z: 'c' }
+  ));
+
+test('update each key empty string', t =>
+  t.deepEqual(updateEachKey([], toUpper, ''), ''));
+
+test('update each key string with 2 - key', t =>
+  t.deepEqual(updateEachKey([], key => 2 - key, 'abc'), 'cba'));
+
+test('update each key string with 3 - key', t =>
+  t.deepEqual(updateEachKey([], key => 3 - key, 'abc'), 'cba'));
+
+test('update each key string with none key', t =>
+  t.deepEqual(
+    updateEachKey([], key => (key === 1 ? $none : key), 'abc'),
+    'ac'
+  ));
+
+test('update each key string with key + 1', t =>
+  t.deepEqual(updateEachKey([], key => key + 1, 'abc'), 'abc'));
+
+test('update each key string with same key', t =>
+  t.deepEqual(updateEachKey([], () => 0, 'abc'), 'c'));
+
+test('update each key string with x key', t =>
+  t.deepEqual(updateEachKey([], () => 'x', 'abc'), ''));
