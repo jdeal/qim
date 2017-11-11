@@ -11,6 +11,40 @@ test('wrap/unwrap', t => {
   t.is(unwrap(wrappedValue), 0);
 });
 
+test('wrapper will not mutate source object unless already mutated', t => {
+  const source = {x: 1};
+  const wrapped = wrap(source);
+  t.is(source, wrapped.value());
+  t.is(wrapped._hasMutated, false);
+  wrapped.set('x', 2);
+  t.not(source, wrapped.value());
+  t.is(wrapped._hasMutated, true);
+  t.deepEqual(source, {x: 1});
+  t.deepEqual(wrapped.value(), {x: 2});
+  const mutatedSource = wrapped.value();
+  wrapped.set('x', 3);
+  t.is(mutatedSource, wrapped.value());
+  t.deepEqual(source, {x: 1});
+  t.deepEqual(wrapped.value(), {x: 3});
+});
+
+test('wrapper will not mutate source array unless already mutated', t => {
+  const source = ['x'];
+  const wrapped = wrap(source);
+  t.is(source, wrapped.value());
+  t.is(wrapped._hasMutated, false);
+  wrapped.set(0, 'y');
+  t.not(source, wrapped.value());
+  t.is(wrapped._hasMutated, true);
+  t.deepEqual(source, ['x']);
+  t.deepEqual(wrapped.value(), ['y']);
+  const mutatedSource = wrapped.value();
+  wrapped.set(0, 'z');
+  t.is(mutatedSource, wrapped.value());
+  t.deepEqual(source, ['x']);
+  t.deepEqual(wrapped.value(), ['z']);
+});
+
 test('wrap already wrapped', t => {
   const wrappedValue = wrap(0);
   const rewrappedValue = wrap(wrappedValue);
