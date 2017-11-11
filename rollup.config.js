@@ -3,7 +3,11 @@ import commonjs from 'rollup-plugin-commonjs';
 import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 
-import {update, $begin, $end, $set} from './src/index';
+// Need to import transpiled qim; otherwise babel-macros screws with rollup.
+// Not sure why this has to be a require instead of an import. ¯\_(ツ)_/¯
+const qim = require('./build');
+
+const {update, $begin, $end, $set} = qim;
 
 const baseConfig = {
   entry: 'src/index.js',
@@ -15,7 +19,7 @@ const baseConfig = {
         ['es2015', {modules: false}],
         ['stage-2']
       ],
-      plugins: ['external-helpers']
+      plugins: ['babel-macros', 'external-helpers']
     }),
   ]
 };
