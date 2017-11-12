@@ -1,6 +1,6 @@
 // TODO: clean up _hasMutated
 
-import objectAssign from 'object-assign';
+import objectAssign from './objectAssign';
 
 import { isReduced } from './reduced';
 import getTypeErrorMessage from './getTypeErrorMessage';

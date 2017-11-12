@@ -1,8 +1,6 @@
-import objectAssign from 'object-assign';
-
 const copy = (object) => Array.isArray(object) ?
   object.slice(0) :
-  objectAssign({}, object);
+  Object.assign({}, object);
 
 const stack = [];
 const copyStack = [];

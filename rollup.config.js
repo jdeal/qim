@@ -27,7 +27,6 @@ const baseConfig = {
 const cjsConfig = update(
   [
     ['format', $set('cjs')],
-    ['external', $end, $set(['object-assign'])],
     ['dest', $set('build/index.js')]
   ],
   baseConfig
