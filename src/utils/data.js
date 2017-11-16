@@ -1079,11 +1079,11 @@ const objectSpec = mix(baseSpec, {
   delete: deleteProperty_Object
 });
 
-const arraySpec = {
+const arraySpec = mix(baseSpec, {
   get: getProperty_Array,
   set: setProperty_Array,
   delete: deleteProperty_Array
-};
+});
 
 const stringSpec = mix(baseSpec, {
   get: getProperty_String,
