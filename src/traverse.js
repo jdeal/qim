@@ -68,11 +68,6 @@ export const traverseEach = (
       const value = _get(nav, object);
       // Dig in for the new value.
       const newValue = unwrapMacro(traverseEach(navKey, state, resultFn, path, value, pathIndex + 1, returnFn, context));
-      // A new value of $none means we've removed it.
-      if (isNone(newValue)) {
-        const _delete = spec.delete;
-        return _delete(nav, object);
-      }
       const _set = spec.set;
       return _set(nav, newValue, object);
     // If we got back null/undefined, then intelligently create a new object.

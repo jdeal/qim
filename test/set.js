@@ -26,6 +26,27 @@ test('remove key', t => {
   );
 });
 
+test('remove key from object special case', t => {
+  t.deepEqual(
+    set('x', $none, {x: 1, y: 2}),
+    {y: 2}
+  );
+});
+
+test('remove key from array special case', t => {
+  t.deepEqual(
+    set(0, $none, ['x', 'y']),
+    ['y']
+  );
+});
+
+test('remove key from string special case', t => {
+  t.deepEqual(
+    set(0, $none, 'xyz'),
+    'yz'
+  );
+});
+
 test('remove item', t => {
   t.deepEqual(
     set([0], $none, ['a', 'b']),

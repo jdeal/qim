@@ -303,6 +303,27 @@ methods[PRIMITIVE_TYPE] = mix(baseMethods, {
   }
 });
 
+const deleteProperty_Object = (key, source) => {
+  if (!(key in source)) {
+    return source;
+  }
+  source = objectAssign(cloneEmptyObject(source), source);
+  delete source[key];
+  return source;
+};
+
+const setProperty_Object = (key, value, source) => {
+  if (isNone(value)) {
+    return deleteProperty_Object(key, source);
+  }
+  if (source[key] === value) {
+    return source;
+  }
+  source = objectAssign(cloneEmptyObject(source), source);
+  source[key] = value;
+  return source;
+};
+
 methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   hasKeys: trueFn,
   count() {
@@ -320,12 +341,12 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   },
   delete(key) {
     if (!this._hasMutated) {
-      const source = this._source;
-      if (!(key in source)) {
-        return this;
+      const newSource = deleteProperty_Object(key, this._source);
+      if (newSource !== this._source) {
+        this._hasMutated = true;
       }
-      this._source = objectAssign(cloneEmptyObject(source), source);
-      this._hasMutated = true;
+      this._source = newSource;
+      return this;
     }
     delete this._source[key];
     return this;
@@ -334,16 +355,13 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
     if (isNone(key)) {
       return this;
     }
-    if (isNone(value)) {
-      return this.delete(key);
-    }
     if (!this._hasMutated) {
-      const source = this._source;
-      if (source[key] === value) {
-        return this;
+      const newSource = setProperty_Object(key, value, this._source);
+      if (newSource !== this._source) {
+        this._hasMutated = true;
       }
-      this._source = objectAssign(cloneEmptyObject(source), source);
-      this._hasMutated = true;
+      this._source = newSource;
+      return this;
     }
     this._source[key] = value;
     return this;
@@ -474,6 +492,31 @@ methods[OBJECT_TYPE] = mix(baseMethods, sequenceMethods, {
   }
 });
 
+const deleteProperty_Array = (key, source) => {
+  if (!(key in source)) {
+    return source;
+  }
+  source = source.slice(0);
+  if (isInteger(key)) {
+    source.splice(key, 1);
+  } else {
+    delete source[key];
+  }
+  return source;
+};
+
+const setProperty_Array = (key, value, source) => {
+  if (isNone(value)) {
+    return deleteProperty_Array(key, source);
+  }
+  if (source[key] === value) {
+    return source;
+  }
+  source = source.slice(0);
+  source[key] = value;
+  return source;
+};
+
 methods[ARRAY_TYPE] = mix(
   baseMethods,
   sequenceMethods,
@@ -485,16 +528,21 @@ methods[ARRAY_TYPE] = mix(
       if (isNone(key)) {
         return this;
       }
-      if (isNone(value)) {
-        return this.delete(key);
-      }
       if (!this._hasMutated) {
-        const source = this._source;
-        if (source[key] === value) {
-          return source;
+        const newSource = setProperty_Array(key, value, this._source);
+        if (newSource !== this._source) {
+          this._hasMutated = true;
         }
-        this._source = source.slice(0);
-        this._hasMutated = true;
+        this._source = newSource;
+        return this;
+      }
+      if (isNone(value)) {
+        if (isInteger(key)) {
+          this._source.splice(key, 1);
+        } else {
+          delete this._source[key];
+        }
+        return this;
       }
       this._source[key] = value;
       return this;
@@ -512,7 +560,7 @@ methods[ARRAY_TYPE] = mix(
       }
       return this;
     },
-    delete(key, shouldLeaveHole) {
+    delete(key) {
       if (!this._hasMutated) {
         const source = this._source;
         if (!(key in source)) {
@@ -521,7 +569,7 @@ methods[ARRAY_TYPE] = mix(
         this._source = source.slice(0);
         this._hasMutated = true;
       }
-      if (isInteger(key) && !shouldLeaveHole) {
+      if (isInteger(key)) {
         this._source.splice(key, 1);
       } else {
         delete this._source[key];
@@ -1004,54 +1052,16 @@ export const getPropertyUnsafe = (key, source) => {
   return source[key];
 };
 
-const setProperty_Wrapper = (key, value, source) => source.set(key, value);
-
-const setProperty_Object = (key, value, source) => {
-  if (source[key] === value) {
-    return source;
-  }
-  source = objectAssign({}, source);
-  source[key] = value;
-  return source;
-};
-
-const setProperty_Array = (key, value, source) => {
-  if (source[key] === value) {
-    return source;
-  }
-  source = source.slice(0);
-  source[key] = value;
-  return source;
-};
-
-const setProperty_Primitive = (key, value, source) => source;
-
 const deleteProperty_Wrapper = (key, source) => source.delete(key);
-
-const deleteProperty_Object = (key, source) => {
-  if (!(key in source)) {
-    return source;
-  }
-  source = objectAssign({}, source);
-  delete source[key];
-  return source;
-};
-
-const deleteProperty_Array = (key, source) => {
-  if (!(key in source)) {
-    return source;
-  }
-  source = source.slice(0);
-  if (key in source) {
-    source.splice(key, 1);
-  }
-  return source;
-};
 
 const deleteProperty_String = (key, source) =>
   setProperty_String(key, '', source);
 
 const deleteProperty_Primitive = (key, value, source) => source;
+
+const setProperty_Wrapper = (key, value, source) => source.set(key, value);
+
+const setProperty_Primitive = (key, value, source) => source;
 
 const baseSpec = {
   isNil: false
