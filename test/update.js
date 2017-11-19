@@ -293,6 +293,11 @@ test('multi $nav', t => {
 
 test('stop with undefined', t => {
   t.deepEqual(
+    update(undefined, {x: 1}),
+    {x: 1}
+  );
+
+  t.deepEqual(
     update(['x', undefined, 'y', $apply(value => value + 1)], {x: {y: 1}}),
     {x: {y: 1}}
   );

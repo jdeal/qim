@@ -11,7 +11,7 @@ const selectResultFn = (state, result) => {
 
 const select = (path, object) => {
   if (path == null) {
-    return object;
+    return [];
   }
   path = arrayify(path);
   const result = [];
