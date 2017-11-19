@@ -198,6 +198,16 @@ test('$nav recursive', t => {
 
 test('stop with undefined', t => {
   t.deepEqual(
+    select(undefined, {x: 1}),
+    []
+  );
+
+  t.deepEqual(
+    update(undefined, {x: 1}),
+    {x: 1}
+  );
+
+  t.deepEqual(
     select(['x', undefined, 'y'], {x: {y: 1}}),
     []
   );
