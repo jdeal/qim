@@ -6,7 +6,7 @@ Immutable/functional select/update queries for plain JS.
 
 <img src="media/qim-logo.png" width="300">
 
-WARNING: Qim is already useful, but it's still considered experimental. It might have some rough edges, and the API might change!
+WARNING: Qim is really useful, but it's still considered somewhat experimental. It might have a few rough edges, and the API might change a little in the future! It's used in production at https://zapier.com though, so feel free to try it out!
 
 Qim makes it simple to reach in and modify complex nested JS objects. This is possible with a query path that is just a simple JS array, much like you might use with `set` and `update` from [Lodash](https://lodash.com/), but with a more powerful concept of "navigators" (borrowed from [Specter](https://github.com/nathanmarz/specter), a Clojure library). Instead of just string keys, Qim's navigators can act as predicates, wildcards, slices, and other tools. Those same navigators allow you to reach in and select parts of JS objects as well.
 
