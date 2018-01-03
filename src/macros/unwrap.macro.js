@@ -3,7 +3,7 @@ const { createMacro } = require('babel-macros');
 const templateExpression = require('./templateExpression');
 
 const ensureVar = (id, path) => {
-  if (!path.scope.hasBinding(id)) {
+  if (!path.scope.hasBinding(id.name)) {
     path.scope.push({kind: 'var', id});
   }
 };
@@ -31,7 +31,8 @@ const createUnwrapSequence = (id, node) =>
   });
 
 module.exports = createMacro(({ references }) => {
-  references.default.forEach(path => {
+  const refs = references.default.slice(0).reverse();
+  refs.forEach(path => {
     const id = t.identifier('_wrappedValue');
     const maybeValueNode = path.parentPath.node.arguments[0];
     const valueNode = maybeValueNode !== undefined ?
