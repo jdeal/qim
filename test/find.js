@@ -42,6 +42,13 @@ test('find from object', t => {
   );
 });
 
+test('find with non-array path', t => {
+  t.deepEqual(
+    find('aa', {aa: 1}),
+    1
+  );
+});
+
 test('find predicate', t => {
   t.deepEqual(
     find([isEven], 1),

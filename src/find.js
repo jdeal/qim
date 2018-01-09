@@ -14,7 +14,7 @@ const find = (path, object) => {
   if (path == null) {
     return undefined;
   }
-  if (typeof path.length !== 'number') {
+  if (typeof path !== 'object' || typeof path.length !== 'number') {
     path = [path];
   }
   const state = reduced(undefined);
