@@ -1237,7 +1237,7 @@ The `path` passed to `$nav` can also be a function, which allows it to provide a
 
 ```js
 const $fileNames = $nav(
-  path: (obj) => {
+  (obj) => {
     if (obj.type === 'folder') {
       return ['files', $each, 'name'];
     }
