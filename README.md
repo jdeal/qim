@@ -1258,9 +1258,8 @@ select(
 You can also create recursive queries using path navigators.
 
 ```js
-const $walk = $nav(
-  (item, $self) =>
-    Array.isArray(item) ? [$each, $self] : []
+const $walk = $nav(item =>
+   (Array.isArray(item) ? [$each, $walk] : [])
 );
 
 select(
